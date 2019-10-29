@@ -14,19 +14,27 @@ class SMAStrategy(StrategyParent):
     '''
 
  
+#可参考的文章：https://www.jianshu.com/p/642ad8a0366e
 
     #决定应买入的数量
     def getShareToBuy(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousFallCnt,
                      stock_hist_data,todayDate):
-        
-        todayMA5 = stock_hist_data.at[todayDate,'ma5']
-        todayMA10 = stock_hist_data.at[todayDate,'ma10']
-        todayMA20 = stock_hist_data.at[todayDate,'ma20']   
-         
 
-        return 0
+        todayMA20 = stock_hist_data.at[todayDate,'ma20']   
+        
+        stock_hist_data['close_shift']=stock_hist_data['close'].shift(1)
+
+
+#需要调整，当天，只可能知道当天开盘价，无法知道当天平均价，不能采用上帝模式
+
+
+        if stock_hist_data.at[todayDate,'close_shift']<todayMA20 and priceNow>todayMA20:
+            #前一天收盘价格低于20日均线，且当天价格高于20时均线-》上穿20日均线，可以买入
+            return math.floor(nShare/2)
+        else:
+            return 0
         
     
     #决定应当卖出的数量
@@ -35,9 +43,12 @@ class SMAStrategy(StrategyParent):
                       holdAvgPrice,continuousRiseCnt,
                       stock_hist_data,todayDate):
         
-        todayMA5 = stock_hist_data.at[todayDate,'ma5']
-        todayMA10 = stock_hist_data.at[todayDate,'ma10']
         todayMA20 = stock_hist_data.at[todayDate,'ma20']   
+        stock_hist_data['close_shift']=stock_hist_data['close'].shift(1)
         
-        return 0
+        if stock_hist_data.at[todayDate,'close_shift']>todayMA20 and priceNow<todayMA20:
+            #前一天收盘价格高于20日均线，且当天价格低于20时均线-》下穿20日均线，可以卖出
+            return math.floor(nShare/2)
+        else:
+            return 0
     

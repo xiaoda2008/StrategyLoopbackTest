@@ -6,8 +6,9 @@ Created on 2019年10月18日
 import tushare
 import math
 from datetime import datetime as dt
-
+import pandas
 import datetime
+import numpy
 
 date_string = "2018-01-01"
 
@@ -55,7 +56,35 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,totalIn
 
 
 
-stock_his = tushare.get_k_data('000029',start='2019-10-16',end='')
+stock_his = tushare.get_k_data('000001',start='2018-10-16',end='')
+
+
+
+stock_his.set_index('date',inplace=True)
+
+
+stock_his['SMA_20'] = stock_his['close'].rolling(20).mean()
+
+
+stock_his['close_shift'] = stock_his['close'].shift(1)
+
+stock_his.plot(subplots=True,figsize=(10,6))
+
+stock_his[['close','SMA_20']].plot(figsize=(10,6))
+
+print()
+
+s = pandas.Series([20, 21, 12], index=['London', 'New York', 'Helsinki'])
+
+
+def add_custom_values(x, **kwargs):
+    for month in kwargs:
+        x += kwargs[month]
+    return x
+s.apply(add_custom_values, june=30, july=20, august=25)
+
+#s.apply(numpy.log)
+
 
 
 '''

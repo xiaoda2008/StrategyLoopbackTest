@@ -15,6 +15,7 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 from datetime import datetime as dt
 import datetime
 import shutil
+from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 
 
 def printStockOutputHead():
@@ -67,6 +68,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
     returnList=[];
     
     stock_k_data = tushare.get_k_data(code=stockCode,start=firstOpenDay,end=ENDDATE)
+
     if stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
         print(stockCode, '无交易')
@@ -224,8 +226,9 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
-            elif sharesToSell>0:
-                #如果判断为应当卖出
+            elif sharesToSell>0 and holdShares>=sharesToSell:
+                #如果判断为应当卖出，而且确实有持仓可以卖出
+                #如果已经没有持仓能够卖出，那就没有任何操作
                 
                 #出现了上涨超线的情况，下跌计数器增加1
                 continuousRiseCnt+=1
@@ -234,16 +237,12 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
                     #如果之前出现下跌超线
                     #把下跌计数器归0
                     continuousFallCnt=0
-                
-                
-                if holdShares > sharesToSell:
-                    #尚未全部卖出，只是部分卖出
-                    holdAvgPrice = (holdShares*holdAvgPrice-sharesToSell*avgPriceToday)/(holdShares-sharesToSell)
-                    holdShares -= sharesToSell
+                if holdShares>sharesToSell:
+                    holdAvgPrice=(holdShares*holdAvgPrice-sharesToSell*avgPriceToday)/(holdShares-sharesToSell)
                 else:
-                    #如果全部卖出，则把平均持仓价格设置为0
-                    holdAvgPrice = 0
-                    holdShares = 0
+                    holdAvgPrice=0
+                holdShares -= sharesToSell
+
             
                 #获取卖出交易费
                 dealCharge = LoopbackTestUtils.getSellCharge(sharesToSell*100*avgPriceToday)
@@ -294,7 +293,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
 
 
 #策略的列表
-strList = [SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 
 #通过STARTDATE找到第一个交易日
