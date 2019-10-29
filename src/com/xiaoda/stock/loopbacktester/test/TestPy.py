@@ -5,6 +5,22 @@ Created on 2019年10月18日
 '''
 import tushare
 import math
+from datetime import datetime as dt
+
+import datetime
+
+date_string = "2018-01-01"
+
+cday = dt.strptime(date_string, "%Y-%m-%d").date()
+
+offset = datetime.timedelta(1)
+
+# 获取想要的日期的时间
+re_date = (cday + offset).strftime('%Y-%m-%d')
+
+
+
+print(re_date)
 
 
 #d:/stockList.txt
