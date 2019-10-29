@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 import os
 from com.xiaoda.stock.loopbacktester.utils.LoopbackTestUtils import LoopbackTestUtils
-from com.xiaoda.stock.strategies.Strategy1 import Strategy1
-from com.xiaoda.stock.strategies.Strategy2 import Strategy2
+from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 from datetime import datetime as dt
 import datetime
@@ -61,17 +61,22 @@ def readText():
 
 
 #具体处理股票的处理
-def processStock(stockCode, strategy, strOutputDir):
+def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
     
     #返回的投入和盈利信息
     returnList=[];
     
-    stock_his = tushare.get_k_data(stockCode,start=STARTDATE,end=ENDDATE)
-    
-    if stock_his.empty:
+    stock_k_data = tushare.get_k_data(code=stockCode,start=firstOpenDay,end=ENDDATE)
+    if stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
         print(stockCode, '无交易')
         return
+    
+    stock_hist_data = tushare.get_hist_data(code=stockCode, start=firstOpenDay, end=ENDDATE)
+    #stock_k_data.at[0,'date']
+    stock_hist_data = stock_hist_data.sort_index()
+    #stock_hist_data.at['2018-01-02','open']
+
 
     '''
     print(type(stock_his))
@@ -89,38 +94,16 @@ def processStock(stockCode, strategy, strOutputDir):
     
     #第一行的偏移量
     #因为如果不是从当年第一个交易日开始，标号会有一个偏移量，在后续处理时，需要进行一个处理
-    offset = stock_his.index[0]
+    offset = stock_k_data.index[0]
     
     
-    #通过STARTDATE找到第一个交易日
-    
-
-
-    firstOpenDay = STARTDATE
-    
-    #获取交易日清单
-    #openList = tushare.trade_cal()
-    
-    while True:
-        if tushare.is_holiday(firstOpenDay):
-            #当前日期为节假日，查看下一天是否是交易日
-            cday = dt.strptime(firstOpenDay, "%Y-%m-%d").date()
-            dayOffset = datetime.timedelta(1)
-            # 获取想要的日期的时间
-            firstOpenDay = (cday + dayOffset).strftime('%Y-%m-%d')
-        else:
-            #找到第一个交易日，跳出
-            break
-
-    
-    if stock_his.at[offset,'date'] > firstOpenDay:
+    if stock_k_data.at[offset,'date'] > firstOpenDay:
         #对于不是从STARTDATE开始的新上市公司，进行剔除
         print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
         return
     
     #stock_his.shape[0]
-    
-#    print(stock_his)
+    #print(stock_his)
     
     '''
     #print(stock_his.get_value(1, 'open', ))
@@ -173,10 +156,12 @@ def processStock(stockCode, strategy, strOutputDir):
     
     printStockOutputHead()
     
-    while i<stock_his.shape[0]:
+    while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
-        avgPriceToday = (stock_his.at[i+offset,'open'] + stock_his.at[i+offset,'close'])/2
-        todayDate = stock_his.at[i+offset,'date']
+        avgPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
+        todayDate = stock_k_data.at[i+offset,'date']
+
+
         
         if i==0:
             #第一个交易日，以当日均价买入n手
@@ -202,13 +187,13 @@ def processStock(stockCode, strategy, strOutputDir):
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
-            sharesToBuy = strategy.getShareToBuy(avgPriceToday, latestDealPrice, 
-                     latestDealType, holdShares,
-                     holdAvgPrice, continuousFallCnt)
+            sharesToBuy = strategy.getShareToBuy(avgPriceToday,latestDealPrice, 
+                     latestDealType,holdShares,holdAvgPrice,
+                     continuousFallCnt,stock_hist_data,todayDate)
             
-            sharesToSell = strategy.getShareToSell(avgPriceToday, latestDealPrice, 
-                      latestDealType, holdShares,
-                      holdAvgPrice, continuousRiseCnt)
+            sharesToSell = strategy.getShareToSell(avgPriceToday,latestDealPrice, 
+                      latestDealType,holdShares,holdAvgPrice,
+                      continuousRiseCnt,stock_hist_data,todayDate)
             
             if sharesToBuy>0:
                 #如果判断为应当买入
@@ -284,7 +269,7 @@ def processStock(stockCode, strategy, strOutputDir):
                
         i+=1
         
-        if i==stock_his.shape[0]:
+        if i==stock_k_data.shape[0]:
             #跳出之前进行输出
 
             outputFile = strOutputDir + 'Summary.csv'
@@ -309,8 +294,22 @@ def processStock(stockCode, strategy, strOutputDir):
 
 
 #策略的列表
-strList = [Strategy1("SimpleStrategy"),Strategy2('MultiStepStrategy')]
+strList = [SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
+
+#通过STARTDATE找到第一个交易日
+firstOpenDay = STARTDATE
+
+while True:
+    if tushare.is_holiday(firstOpenDay):
+        #当前日期为节假日，查看下一天是否是交易日
+        cday = dt.strptime(firstOpenDay, "%Y-%m-%d").date()
+        dayOffset = datetime.timedelta(1)
+        # 获取想要的日期的时间
+        firstOpenDay = (cday + dayOffset).strftime('%Y-%m-%d')
+    else:
+        #找到第一个交易日，跳出
+        break
 
 #对所有策略进行循环：
 for strategy in strList:
@@ -328,12 +327,11 @@ for strategy in strList:
 
     #对所有股票代码，循环进行处理
     in_text = open(INPUTFILE, 'r')
-
     
     #循环所有股票，使用指定策略进行处理
     for line in in_text.readlines():
         stockCode = line.rstrip("\n")
-        processStock(stockCode, strategy, OUTPUTDIR + '/'+strategy.getStrategyName()+'/')
+        processStock(stockCode, strategy, OUTPUTDIR + '/'+strategy.getStrategyName()+'/', firstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
 

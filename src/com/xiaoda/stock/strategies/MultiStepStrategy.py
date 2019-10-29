@@ -9,7 +9,7 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 
 
 
-class Strategy2(StrategyParent):
+class MultiStepStrategy(StrategyParent):
     '''规则：
     #1、以第一天中间价买入n手
     
@@ -26,9 +26,10 @@ class Strategy2(StrategyParent):
     
 
     #决定应买入的数量
-    def getShareToBuy(self, priceNow, latestDealPrice, 
-                     latestDealType, holdShares,
-                     holdAvgPrice, continuousFallCnt):
+    def getShareToBuy(self,priceNow,latestDealPrice, 
+                     latestDealType,holdShares,
+                     holdAvgPrice,continuousFallCnt,
+                     stock_hist_data,todayDate):
         
         if priceNow > (1-DOWNRATE)*latestDealPrice:
             return 0
@@ -40,9 +41,10 @@ class Strategy2(StrategyParent):
             return math.floor(nShare/2)
     
     #决定应当卖出的数量
-    def getShareToSell(self, priceNow, latestDealPrice, 
-                      latestDealType, holdShares,
-                      holdAvgPrice, continuousRiseCnt):
+    def getShareToSell(self,priceNow,latestDealPrice, 
+                      latestDealType,holdShares,
+                      holdAvgPrice,continuousRiseCnt,
+                      stock_hist_data,todayDate):
         
         if priceNow < (1+UPRATE)*holdAvgPrice or \
             priceNow < latestDealPrice*(1+UPRATE) or holdShares == 0 :
