@@ -75,6 +75,11 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
         return
     
     stock_hist_data = tushare.get_hist_data(code=stockCode, start=firstOpenDay, end=ENDDATE)
+    #存在一种特殊情况，就是类似601360,360借壳上市的情况
+    #变更了股票代码，获取的hist_data周期与k_data不同的情况
+    #需要进行判断并剔除
+    
+    
     #stock_k_data.at[0,'date']
     stock_hist_data = stock_hist_data.sort_index()
     #stock_hist_data.at['2018-01-02','open']
@@ -102,6 +107,10 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
     if stock_k_data.at[offset,'date'] > firstOpenDay:
         #对于不是从STARTDATE开始的新上市公司，进行剔除
         print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
+        return
+    
+    if stock_hist_data.shape[0] < stock_k_data.shape[0]:
+        print(stockCode, '存在借壳上市情况，进行剔除')
         return
     
     #stock_his.shape[0]

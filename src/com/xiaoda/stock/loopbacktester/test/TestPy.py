@@ -56,8 +56,13 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,totalIn
 
 
 
-stock_his = tushare.get_k_data('000001',start='2018-10-16',end='')
+stock_his = tushare.get_k_data('601366',start='2018-01-01',end='')
+stock_his.shape[0]
+stock_hist_data = tushare.get_hist_data(code='601366', start='2018-01-01')
 
+stock_hist_data = stock_hist_data.sort_index()
+stock_hist_data.shape[0]
+todayMA20 = stock_hist_data.at['2018-01-03','ma20']
 
 
 stock_his.set_index('date',inplace=True)

@@ -22,7 +22,7 @@ class SMAStrategy(StrategyParent):
                      holdAvgPrice,continuousFallCnt,
                      stock_hist_data,todayDate):
 
-        todayMA20 = stock_hist_data.at[todayDate,'ma20']   
+        todayMA20 = stock_hist_data.at[todayDate,'ma20']
         
         stock_hist_data['close_shift']=stock_hist_data['close'].shift(1)
 
