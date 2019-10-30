@@ -24,7 +24,43 @@ class MultiStepStrategy(StrategyParent):
         （3）如果上涨计数continuousRiseCnt=2，则卖出全部持仓数
     '''
     
-
+    
+    #决定买入或卖出的数量
+    #正数代表买入，负数代表卖出
+    #continuousRiseOrFallCnt，正数代表连续上涨，负数代表连续下跌
+    def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
+                     latestDealType,holdShares,
+                     holdAvgPrice,continuousRiseOrFallCnt,
+                     stock_hist_data,todayDate):
+        
+        if priceNow < (1-DOWNRATE)*latestDealPrice:
+            #如果下跌超线，应当买入
+            if continuousRiseOrFallCnt>=0:
+                #此前为上涨或未超线
+                return math.floor(nShare/6)
+            elif continuousRiseOrFallCnt==-1:
+                #此前已连续1次下跌超线
+                return math.floor(nShare/3)
+            else:
+                #此前已2次及以上下跌超线
+                return math.floor(nShare/2)
+        
+        elif priceNow > (1+UPRATE)*holdAvgPrice and priceNow > latestDealPrice*(1+UPRATE) and holdShares>0:
+            #如果上涨超线，应当卖出
+            if continuousRiseOrFallCnt<=0:
+                #此前为下跌或未超线
+                return -1*math.floor(holdShares/3)
+            elif continuousRiseOrFallCnt==1:
+                #此前已连续下跌1次
+                return -1*math.floor(holdShares/2)
+            else:
+                return -1*holdShares
+        
+        else:
+            #未上涨或下跌超线
+            return 0
+    
+'''
     #决定应买入的数量
     def getShareToBuy(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
@@ -55,3 +91,4 @@ class MultiStepStrategy(StrategyParent):
             return math.floor(holdShares/2)
         else:
             return holdShares
+'''

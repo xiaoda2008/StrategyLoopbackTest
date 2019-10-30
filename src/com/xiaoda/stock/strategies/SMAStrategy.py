@@ -16,6 +16,32 @@ class SMAStrategy(StrategyParent):
  
 #可参考的文章：https://www.jianshu.com/p/642ad8a0366e
 
+
+    #决定买入或卖出的数量
+    #正数代表买入，负数代表卖出
+    #continuousRiseOrFallCnt，正数代表连续上涨，负数代表连续下跌
+    def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
+                     latestDealType,holdShares,
+                     holdAvgPrice,continuousRiseOrFallCnt,
+                     stock_hist_data,todayDate):
+        
+        todayMA20 = stock_hist_data.at[todayDate,'ma20']
+        
+        stock_hist_data['close_shift']=stock_hist_data['close'].shift(1)
+
+        #需要调整，当天，只可能知道当天开盘价，无法知道当天平均价，不能采用上帝模式
+
+        if stock_hist_data.at[todayDate,'close_shift']<todayMA20 and priceNow>todayMA20:
+            #前一天收盘价格低于20日均线，且当天价格高于20时均线-》上穿20日均线，可以买入
+            return math.floor(nShare/2)
+        elif stock_hist_data.at[todayDate,'close_shift']>todayMA20 and priceNow<todayMA20:
+            #前一天收盘价格高于20日均线，且当天价格低于20时均线-》下穿20日均线，可以卖出
+            return -1*math.floor(nShare/2)
+        else:
+            return 0
+        
+        
+    '''
     #决定应买入的数量
     def getShareToBuy(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
@@ -51,4 +77,4 @@ class SMAStrategy(StrategyParent):
             return math.floor(nShare/2)
         else:
             return 0
-    
+    '''

@@ -153,8 +153,12 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
     #最大连续下跌/上涨计数：每当连续上涨/下跌超过上涨/下跌线，计数器加1
     #如果出现多次上涨后的下跌，则上涨计数归0
     #如果出现多次下跌后的上涨，则下跌计数归0
-    continuousFallCnt = 0
-    continuousRiseCnt = 0
+    #continuousFallCnt = 0
+    #continuousRiseCnt = 0
+    
+    #最大连续上涨/下跌买入/卖出计数：连续上涨买入为正数，连续下跌卖出为负数，连续上涨超线买入，计数器加1，连续下跌超线卖出，计数器减1
+    continuousRiseOrFallCnt = 0
+    
     
     #在获取的股票按天数据的索引
     i = 0
@@ -198,6 +202,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
+            '''
             sharesToBuy = strategy.getShareToBuy(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousFallCnt,stock_hist_data,todayDate)
@@ -205,28 +210,33 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
             sharesToSell = strategy.getShareToSell(avgPriceToday,latestDealPrice, 
                       latestDealType,holdShares,holdAvgPrice,
                       continuousRiseCnt,stock_hist_data,todayDate)
+            '''  
+                     
+            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
+                     latestDealType,holdShares,holdAvgPrice,
+                     continuousRiseOrFallCnt,stock_hist_data,todayDate)
             
-            if sharesToBuy>0:
-                #如果判断为应当买入
+            if sharesToBuyOrSell>0:
+                #如果判断为下跌超线买入
                 
-                #出现了下跌超线的情况，下跌计数器增加1
-                continuousFallCnt+=1
-                
-                if continuousRiseCnt>0:
-                    #如果之前出现上涨超线
-                    #把上涨计数器归0
-                    continuousRiseCnt=0
+                if continuousRiseOrFallCnt>=0:
+                    #此前一次是上涨超线卖出或未超线
+                    continuousRiseOrFallCnt=-1
+                else:
+                    #此前就是下跌超线买入
+                    continuousRiseOrFallCnt=continuousRiseOrFallCnt-1
+
                     
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuy*avgPriceToday)/(holdShares+sharesToBuy)
-                holdShares += sharesToBuy
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = LoopbackTestUtils.getBuyCharge(sharesToBuy*100*avgPriceToday)
+                dealCharge = LoopbackTestUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
                 
                 latestDealType = 1
                 latestDealPrice = avgPriceToday
-                totalInput += sharesToBuy*avgPriceToday*100+dealCharge
+                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
                 
                 returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
@@ -235,30 +245,32 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
-            elif sharesToSell>0 and holdShares>=sharesToSell:
+            elif sharesToBuyOrSell<0 and holdShares>=abs(sharesToBuyOrSell):
                 #如果判断为应当卖出，而且确实有持仓可以卖出
                 #如果已经没有持仓能够卖出，那就没有任何操作
                 
-                #出现了上涨超线的情况，下跌计数器增加1
-                continuousRiseCnt+=1
-               
-                if continuousFallCnt>0:
-                    #如果之前出现下跌超线
-                    #把下跌计数器归0
-                    continuousFallCnt=0
-                if holdShares>sharesToSell:
-                    holdAvgPrice=(holdShares*holdAvgPrice-sharesToSell*avgPriceToday)/(holdShares-sharesToSell)
+                
+                if continuousRiseOrFallCnt<=0:
+                    #此前一次是下跌超线买入或未超线
+                    continuousRiseOrFallCnt=1
+                else:
+                    #此前就是上涨超线买入
+                    continuousRiseOrFallCnt=continuousRiseOrFallCnt+1
+
+
+                if holdShares>abs(sharesToBuyOrSell):
+                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*avgPriceToday)/(holdShares-abs(sharesToBuyOrSell))
                 else:
                     holdAvgPrice=0
-                holdShares -= sharesToSell
+                holdShares -= abs(sharesToBuyOrSell)
 
             
                 #获取卖出交易费
-                dealCharge = LoopbackTestUtils.getSellCharge(sharesToSell*100*avgPriceToday)
+                dealCharge = LoopbackTestUtils.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
                     
                 latestDealType = -1
                 latestDealPrice = avgPriceToday
-                totalOutput += sharesToSell*avgPriceToday*100-dealCharge
+                totalOutput += abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
                 
             
                 if totalInput - totalOutput > biggestCashOccupy:
@@ -319,7 +331,7 @@ while True:
 #对所有策略进行循环：
 for strategy in strList:
     
-    strOutputDir=OUTPUTDIR+'/'+strategy.getStrategyName()+'-'+STARTDATE+'-'+ENDDATE+'/'
+    strOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'-'+strategy.getStrategyName()+'/'
     
     savedStdout = sys.stdout  #保存标准输出流
     myPath = Path(strOutputDir)

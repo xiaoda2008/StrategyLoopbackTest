@@ -6,8 +6,8 @@ Created on 2019年10月28日
 #股票代码库
 INPUTFILE = 'D:/stockList.txt'
 OUTPUTDIR = 'D:/outputDir'
-STARTDATE = '2019-01-04'
-ENDDATE = '2019-04-08'
+STARTDATE = '2018-01-25'
+ENDDATE = '2019-01-03'
 
 
 #上涨与下跌幅度的参数
