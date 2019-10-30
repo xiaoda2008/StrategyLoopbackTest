@@ -298,9 +298,6 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
 
 
 
-
-
-
 #策略的列表
 strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
@@ -322,13 +319,17 @@ while True:
 #对所有策略进行循环：
 for strategy in strList:
     
-    savedStdout = sys.stdout  #保存标准输出流
-    myPath = Path(OUTPUTDIR + '/'+strategy.getStrategyName()+'/')
-    if myPath.exists():
-        shutil.rmtree(OUTPUTDIR + '/'+strategy.getStrategyName()+'/')
+    strOutputDir=OUTPUTDIR+'/'+strategy.getStrategyName()+'-'+STARTDATE+'-'+ENDDATE+'/'
     
-    os.mkdir(OUTPUTDIR + '/'+strategy.getStrategyName()+'/')
-    outputFile = OUTPUTDIR + '/'+strategy.getStrategyName()+'/'+'Summary.csv'
+    savedStdout = sys.stdout  #保存标准输出流
+    myPath = Path(strOutputDir)
+    if myPath.exists():
+        shutil.rmtree(strOutputDir)
+    
+    os.mkdir(strOutputDir)
+    
+    outputFile = strOutputDir+'Summary.csv'
+    
     sys.stdout = open(outputFile,'wt')
     printSummaryOutputHead()
     sys.stdout = savedStdout  #恢复标准输出流
@@ -339,7 +340,7 @@ for strategy in strList:
     #循环所有股票，使用指定策略进行处理
     for line in in_text.readlines():
         stockCode = line.rstrip("\n")
-        processStock(stockCode, strategy, OUTPUTDIR + '/'+strategy.getStrategyName()+'/', firstOpenDay)
+        processStock(stockCode,strategy,strOutputDir,firstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
 
