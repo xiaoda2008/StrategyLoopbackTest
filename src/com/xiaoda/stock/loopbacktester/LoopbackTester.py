@@ -328,19 +328,24 @@ while True:
         #找到第一个交易日，跳出
         break
 
+strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE
+
+myPath = Path(strOutterOutputDir)
+
+if myPath.exists():
+    shutil.rmtree(strOutterOutputDir)
+
+os.mkdir(strOutterOutputDir)
+
 #对所有策略进行循环：
 for strategy in strList:
-    
-    strOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'-'+strategy.getStrategyName()+'/'
-    
     savedStdout = sys.stdout  #保存标准输出流
-    myPath = Path(strOutputDir)
-    if myPath.exists():
-        shutil.rmtree(strOutputDir)
+     
+    strOutputDir=strOutterOutputDir+'/'+strategy.getStrategyName()+'/'
     
     os.mkdir(strOutputDir)
     
-    outputFile = strOutputDir+'Summary.csv'
+    outputFile = strOutputDir+'/Summary.csv'
     
     sys.stdout = open(outputFile,'wt')
     printSummaryOutputHead()
@@ -355,4 +360,4 @@ for strategy in strList:
         processStock(stockCode,strategy,strOutputDir,firstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
-
+#可以增加一个按日收益率汇总，对比各种策略

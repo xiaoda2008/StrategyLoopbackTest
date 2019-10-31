@@ -12,7 +12,9 @@ import numpy
 
 
 import os
+import sys
 print(os.getcwd())
+path = sys.path[0]
 print(os.listdir())
 
 
