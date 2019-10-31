@@ -10,6 +10,13 @@ import pandas
 import datetime
 import numpy
 
+
+import os
+print(os.getcwd())
+print(os.listdir())
+
+
+
 date_string = "2018-01-01"
 
 cday = dt.strptime(date_string, "%Y-%m-%d").date()
