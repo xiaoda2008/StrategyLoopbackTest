@@ -16,6 +16,40 @@ import os
 import sys
 
 
+
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+
+pro = tushare.pro_api()
+
+#取000001的前复权行情
+stock_k_data = tushare.pro_bar(ts_code='000948.SZ', adj='qfq', start_date='20190112', end_date='20190420')
+
+stock_k_data.sort_index(inplace=True,ascending=False)
+
+stock_k_data.reset_index(drop=True,inplace=True)
+
+
+stock_k_data['MA20'] = stock_k_data['close'].rolling(20).mean()
+
+offset = stock_k_data.index[0]
+#剔除掉向前找的20个交易日数据
+if stock_k_data.shape[0] > 20:
+    stock_k_data = stock_k_data.drop([offset,offset+1])
+
+
+
+
+data = pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+
+
+stockCodeList = data['ts_code']
+#000948在2019.4.12等日期的复权数据有问题
+
+stock_k_data = tushare.get_k_data('000948',start='2019-04-02',end='2019-04-15')
+
+stock_k_data2 = stock_k_data.set_index('date',inplace=False)
+
+
 #股票代码库
 INPUTFILE = 'D:/stockList.txt'
 STARTDATE = '1990-12-19'#2007-10-16

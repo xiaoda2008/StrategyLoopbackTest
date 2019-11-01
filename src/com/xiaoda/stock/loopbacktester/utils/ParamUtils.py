@@ -4,10 +4,10 @@ Created on 2019年10月28日
 @author: picc
 '''
 #股票代码库
-INPUTFILE = 'D:/stockList.txt'
+#INPUTFILE = 'D:/stockList.txt'
 OUTPUTDIR = 'D:/outputDir'
-STARTDATE = '2009-10-31'#2007-10-16
-ENDDATE = '2019-10-31'#2008-10-31
+STARTDATE = '20091031'#20071016
+ENDDATE = '20191031'#20081031
 
 
 #上涨与下跌幅度的参数

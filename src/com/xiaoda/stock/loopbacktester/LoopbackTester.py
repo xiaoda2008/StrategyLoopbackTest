@@ -68,12 +68,19 @@ def readText():
 
 
 #具体处理股票的处理
-def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
+def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
     
     #返回的投入和盈利信息
     returnList=[];
     
-    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
+    stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
+                                   start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
+
+#    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
+    stock_k_data.sort_index(inplace=True,ascending=False)
+
+    stock_k_data.reset_index(drop=True,inplace=True)
+
 
     if stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
@@ -84,11 +91,15 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     offset = stock_k_data.index[0]
     #剔除掉向前找的20个交易日数据
-    if stock_k_data.shape[0] > 20:
-        stock_k_data = stock_k_data.drop([offset,offset+1,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7, \
-                                          offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14, \
-                                          offset+15,offset+16,offset+17,offset+18,offset+19])
-#    else:
+    if stock_k_data.shape[0]>20:
+        #print("Biggger than 20")
+        stock_k_data = stock_k_data.drop([offset,offset+1,offset+2,offset+3])
+        stock_k_data = stock_k_data.drop([offset+4,offset+5,offset+6,offset+7])
+        stock_k_data = stock_k_data.drop([offset+8,offset+9,offset+10,offset+11])
+        stock_k_data = stock_k_data.drop([offset+12,offset+13,offset+14,offset+15])
+        stock_k_data = stock_k_data.drop([offset+16,offset+17,offset+18,offset+19])
+    
+#    else:,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7,offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14,offset+15,offset+16,offset+17,offset+18,offset+19
         #如果向前找了20个交易日，仍然交易量不足20日，则判定长期停牌，直接剔除，到下面一个日期判断进行剔除也可以
 #        print(stockCode,'长期停牌，剔除')
 #        return
@@ -127,7 +138,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     offset = stock_k_data.index[0]
     
     
-    if stock_k_data.at[offset,'date'] != firstOpenDay:
+    if stock_k_data.at[offset,'trade_date'] != firstOpenDay:
         #对于不是从STARTDATE开始的，可能是在前20个交易日有停牌，或者在STARTDATE后有停牌，进行剔除
         print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
         return
@@ -198,7 +209,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
         avgPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
-        todayDate = stock_k_data.at[i+offset,'date']
+        todayDate = stock_k_data.at[i+offset,'trade_date']
 
 
         
@@ -331,27 +342,27 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
 
-#策略的列表
-strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 
 #通过STARTDATE找到第一个交易日
 firstOpenDay = STARTDATE
 
+
+
 while True:
-    if tushare.is_holiday(firstOpenDay):
+    if tushare.is_holiday(dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y-%m-%d')):
         #当前日期为节假日，查看下一天是否是交易日
-        cday = dt.strptime(firstOpenDay, "%Y-%m-%d").date()
+        cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
         dayOffset = datetime.timedelta(1)
         # 获取想要的日期的时间
-        firstOpenDay = (cday + dayOffset).strftime('%Y-%m-%d')
+        firstOpenDay = (cday + dayOffset).strftime('%Y%m%d')
     else:
         #找到第一个交易日，跳出
         break
 
     
 #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
-cday = dt.strptime(firstOpenDay, "%Y-%m-%d").date()
+cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
 dayOffset = datetime.timedelta(1)
 cnt=0
 # 获取想要的日期的时间
@@ -361,8 +372,7 @@ while True:
         cnt+=1
         if cnt==20:
             break
-twentyDaysBeforeFirstOpenDay=cday.strftime('%Y-%m-%d')
-
+twentyDaysBeforeFirstOpenDay=cday.strftime('%Y%m%d')
 
 
 strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE
@@ -373,6 +383,21 @@ if myPath.exists():
     shutil.rmtree(strOutterOutputDir)
 
 os.mkdir(strOutterOutputDir)
+
+
+#使用TuShare pro版本
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+
+sdDataAPI = tushare.pro_api()
+
+sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+
+stockCodeList = sdf['ts_code']
+
+
+
+#策略的列表
+strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 #对所有策略进行循环：
 for strategy in strList:
@@ -389,12 +414,15 @@ for strategy in strList:
     sys.stdout = savedStdout  #恢复标准输出流
 
     #对所有股票代码，循环进行处理
-    in_text = open(INPUTFILE, 'r')
+    #in_text = open(INPUTFILE, 'r')
+    #直接对stockList进行遍历，不需要通过INPUTFILE获取股票列表
     
     #循环所有股票，使用指定策略进行处理
-    for line in in_text.readlines():
-        stockCode = line.rstrip("\n")
-        processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
+#    for line in in_text.readlines():  
+#        stockCode = line.rstrip("\n")
+    for index,stockCode in stockCodeList.items():
+
+        processStock(sdDataAPI,stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
 #1、可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略

@@ -25,7 +25,7 @@ class SMAStrategy(StrategyParent):
                      holdAvgPrice,continuousRiseOrFallCnt,
                      stock_k_data,todayDate):
         
-        stock_data = stock_k_data.set_index('date')
+        stock_data = stock_k_data.set_index('trade_date')
         todayMA20 = stock_data.at[todayDate,'MA20']
         
         stock_data['close_shift']=stock_data['close'].shift(1)
