@@ -88,10 +88,10 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
         stock_k_data = stock_k_data.drop([offset,offset+1,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7, \
                                           offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14, \
                                           offset+15,offset+16,offset+17,offset+18,offset+19])
-    else:
-        #如果向前找了20个交易日，仍然交易量不足20日，则判定长期停牌，直接剔除
-        print(stockCode,'长期停牌，剔除')
-        return
+#    else:
+        #如果向前找了20个交易日，仍然交易量不足20日，则判定长期停牌，直接剔除，到下面一个日期判断进行剔除也可以
+#        print(stockCode,'长期停牌，剔除')
+#        return
     
     #发现在2015年以前的股票，get_hist_data没有数据
     #所以不能再用这个数据，而是要自己去进行历史数据的处理，处理历史数据得到MA20
@@ -127,8 +127,8 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     offset = stock_k_data.index[0]
     
     
-    if stock_k_data.at[offset,'date'] > firstOpenDay:
-        #对于不是从STARTDATE开始的新上市公司，进行剔除
+    if stock_k_data.at[offset,'date'] != firstOpenDay:
+        #对于不是从STARTDATE开始的，可能是在前20个交易日有停牌，或者在STARTDATE后有停牌，进行剔除
         print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
         return
     
