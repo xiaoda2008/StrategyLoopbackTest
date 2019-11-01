@@ -11,11 +11,75 @@ import datetime
 import numpy
 
 
+import sqlalchemy
 import os
 import sys
+
+
+#股票代码库
+INPUTFILE = 'D:/stockList.txt'
+STARTDATE = '1990-12-19'#2007-10-16
+ENDDATE = '2019-10-31'#2008-10-31
+
+#写入数据库的引擎
+engine = sqlalchemy.create_engine('mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8')
+
+#对所有股票代码，循环进行处理
+in_text = open(INPUTFILE, 'r')
+
+#循环所有股票，获取数据并写入数据库
+for line in in_text.readlines():
+    stockCode = line.rstrip("\n")
+    df = tushare.get_k_data(code=stockCode,start=STARTDATE, end=ENDDATE)
+    #存入数据库
+    df.to_sql(name='k_data_'+stockCode, con=engine, chunksize=1000, if_exists='replace', index=None)
+
+
+
+
+
+
 print(os.getcwd())
 path = sys.path[0]
 print(os.listdir())
+
+
+#需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
+firstOpenDay='2014-05-19'
+'''
+cday = dt.strptime(firstOpenDay, "%Y-%m-%d").date()
+dayOffset = datetime.timedelta(1)
+cnt=0
+# 获取想要的日期的时间
+while True:
+    cday = (cday - dayOffset)
+    if not(tushare.is_holiday(cday.strftime('%Y-%m-%d'))):
+        cnt+=1
+        if cnt==20:
+            break
+firstOpenDay=cday.strftime('%Y-%m-%d')
+'''
+stock_k_data = tushare.get_k_data('000001',start=firstOpenDay,end='2015-06-12')
+
+stock_k_data2 = stock_k_data.set_index('date',inplace=False)
+
+print(stock_k_data2.at['2014-05-19','open'])
+
+stock_k_data2.reset_index()
+
+
+stock_k_data['SMA_20'] = stock_k_data['close'].rolling(20).mean()
+
+offset = stock_k_data.index[0]
+stock_k_data = stock_k_data.drop([offset,offset+1,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7, \
+                                  offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14, \
+                                  offset+15,offset+16,offset+17,offset+18,offset+19])
+
+print()
+
+
+
+
 
 
 

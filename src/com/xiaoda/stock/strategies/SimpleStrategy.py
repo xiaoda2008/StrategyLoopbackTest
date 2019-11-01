@@ -22,7 +22,7 @@ class SimpleStrategy(StrategyParent):
     def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
-                     stock_hist_data,todayDate):
+                     stock_k_data,todayDate):
         
         if priceNow < (1-DOWNRATE)*latestDealPrice:
             #如果下跌超线，应当买入

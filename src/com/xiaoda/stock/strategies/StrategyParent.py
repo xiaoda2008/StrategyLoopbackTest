@@ -22,7 +22,7 @@ class StrategyParent:
     def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
-                     stock_hist_data,todayDate):
+                     stock_k_data,todayDate):
         return 0
 '''    
     #决定应买入的数量

@@ -19,9 +19,8 @@ from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 
 
 def printStockOutputHead():
-    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当前持仓平均成本,\
+    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当前持仓平均成本,\
     当天平均价格,当前持仓盈亏,最近一次交易类型,最近一次交易价格,当前全部投入回报率,本次交易手续费')
-
     
 def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
                    totalInput,totalOutput,latestDealType,latestDealPrice,dealCharge):
@@ -31,6 +30,7 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
     print(holdShares, end=',')
     print(round(totalInput,4), end=',')
     print(round(totalOutput,4), end=',')
+    print(round(totalInput-totalOutput,4), end=',')
     print(round(holdAvgPrice,4), end=',')
     print(round(avgPriceToday,4), end=',')
     currentProfit = round(avgPriceToday*holdShares*100+totalOutput-totalInput,4)
@@ -47,6 +47,12 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
 def printSummaryOutputHead():
     print('股票代码,最大资金占用,累计资金投入,最新盈亏,当前持仓金额')
 
+def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,latestProfit,holdShares,avgPriceToday):
+    print('\''+str(stockCode),end=', ')
+    print(round(biggestCashOccupy,2), end=', ')
+    print(round(totalInput,2), end=', ')
+    print(latestProfit, end=', ')
+    print(round(holdShares*100*avgPriceToday,2), end='\n')
 
 '''
 def readText():
@@ -62,26 +68,43 @@ def readText():
 
 
 #具体处理股票的处理
-def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
+def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
     
     #返回的投入和盈利信息
     returnList=[];
     
-    stock_k_data = tushare.get_k_data(code=stockCode,start=firstOpenDay,end=ENDDATE)
+    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
 
     if stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
-        print(stockCode, '无交易')
+        print(stockCode,'无交易，剔除')
         return
     
-    stock_hist_data = tushare.get_hist_data(code=stockCode, start=firstOpenDay, end=ENDDATE)
+    stock_k_data['MA20'] = stock_k_data['close'].rolling(20).mean()
+    
+    offset = stock_k_data.index[0]
+    #剔除掉向前找的20个交易日数据
+    if stock_k_data.shape[0] > 20:
+        stock_k_data = stock_k_data.drop([offset,offset+1,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7, \
+                                          offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14, \
+                                          offset+15,offset+16,offset+17,offset+18,offset+19])
+    else:
+        #如果向前找了20个交易日，仍然交易量不足20日，则判定长期停牌，直接剔除
+        print(stockCode,'长期停牌，剔除')
+        return
+    
+    #发现在2015年以前的股票，get_hist_data没有数据
+    #所以不能再用这个数据，而是要自己去进行历史数据的处理，处理历史数据得到MA20
+    
+    #不能通过hist_data去获取数据了
+    #stock_hist_data = tushare.get_hist_data(code=stockCode, start=firstOpenDay, end=ENDDATE)
     #存在一种特殊情况，就是类似601360,360借壳上市的情况
     #变更了股票代码，获取的hist_data周期与k_data不同的情况
     #需要进行判断并剔除
     
     
     #stock_k_data.at[0,'date']
-    stock_hist_data = stock_hist_data.sort_index()
+    #stock_hist_data = stock_hist_data.sort_index()
     #stock_hist_data.at['2018-01-02','open']
 
 
@@ -109,10 +132,11 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
         print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
         return
     
+    '''
     if stock_hist_data.shape[0] < stock_k_data.shape[0]:
         print(stockCode, '存在借壳上市情况，进行剔除')
         return
-    
+    '''
     #stock_his.shape[0]
     #print(stock_his)
     
@@ -214,7 +238,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
                      
             sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
-                     continuousRiseOrFallCnt,stock_hist_data,todayDate)
+                     continuousRiseOrFallCnt,stock_k_data,todayDate)
             
             if sharesToBuyOrSell>0:
                 #如果判断为下跌超线买入
@@ -299,11 +323,8 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay):
             latestProfit = returnList[0]
             totalInput = returnList[1]
             
-            print('\''+str(stockCode),end=', ')
-            print(round(biggestCashOccupy,2), end=', ')
-            print(round(totalInput,2), end=', ')
-            print(latestProfit, end=', ')
-            print(round(holdShares*100*avgPriceToday,2), end='\n')
+            printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,
+                                  latestProfit,holdShares,avgPriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
 
@@ -327,6 +348,22 @@ while True:
     else:
         #找到第一个交易日，跳出
         break
+
+    
+#需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
+cday = dt.strptime(firstOpenDay, "%Y-%m-%d").date()
+dayOffset = datetime.timedelta(1)
+cnt=0
+# 获取想要的日期的时间
+while True:
+    cday = (cday - dayOffset)
+    if not(tushare.is_holiday(cday.strftime('%Y-%m-%d'))):
+        cnt+=1
+        if cnt==20:
+            break
+twentyDaysBeforeFirstOpenDay=cday.strftime('%Y-%m-%d')
+
+
 
 strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE
 
@@ -357,7 +394,9 @@ for strategy in strList:
     #循环所有股票，使用指定策略进行处理
     for line in in_text.readlines():
         stockCode = line.rstrip("\n")
-        processStock(stockCode,strategy,strOutputDir,firstOpenDay)
+        processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
-#可以增加一个按日收益率汇总，对比各种策略
+#1、可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略
+#2、需要注意，MA需要按照当日开盘价计算，而不应该用当日平均价，且MA应当用前一天的MA，不应该用当日MA
+#3、需要注意，在有涨停、跌停的日子，无法以涨停、跌停价进行相关交易
