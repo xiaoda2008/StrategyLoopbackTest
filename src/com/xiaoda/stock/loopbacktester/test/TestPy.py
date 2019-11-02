@@ -14,16 +14,31 @@ import numpy
 import sqlalchemy
 import os
 import sys
+from cmath import isnan
+from sqlalchemy.util.langhelpers import NoneType
 
 
 
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
-pro = tushare.pro_api()
+sdDataAPI = tushare.pro_api()
+
+sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+
+stockCodeList = sdf['ts_code']
+
+
+for index,stockCode in stockCodeList.items():
+
+    print(index, stockCode)
 
 #取000001的前复权行情
-stock_k_data = tushare.pro_bar(ts_code='000948.SZ', adj='qfq', start_date='20190112', end_date='20190420')
+stock_k_data = tushare.pro_bar(ts_code='300797.SZ', adj='qfq', start_date='20091031', end_date='20191031')
 
+
+if type(stock_k_data)==NoneType:
+    print("empty")
+    
 stock_k_data.sort_index(inplace=True,ascending=False)
 
 stock_k_data.reset_index(drop=True,inplace=True)
@@ -39,7 +54,7 @@ if stock_k_data.shape[0] > 20:
 
 
 
-data = pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+data = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
 
 
 stockCodeList = data['ts_code']
@@ -48,6 +63,7 @@ stockCodeList = data['ts_code']
 stock_k_data = tushare.get_k_data('000948',start='2019-04-02',end='2019-04-15')
 
 stock_k_data2 = stock_k_data.set_index('date',inplace=False)
+
 
 
 #股票代码库

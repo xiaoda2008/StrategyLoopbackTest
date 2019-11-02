@@ -16,7 +16,7 @@ from datetime import datetime as dt
 import datetime
 import shutil
 from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
-
+from sqlalchemy.util.langhelpers import NoneType
 
 def printStockOutputHead():
     print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当前持仓平均成本,\
@@ -76,16 +76,20 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
 
+
+
+    if type(stock_k_data)==NoneType:
+        #如果没有任何返回值，说明该日期后没有上市交易过该股票
+        print(stockCode,'无交易，剔除')
+        return
+
 #    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
     stock_k_data.sort_index(inplace=True,ascending=False)
 
     stock_k_data.reset_index(drop=True,inplace=True)
 
 
-    if stock_k_data.empty:
-        #如果没有任何返回值，说明该日期后没有上市交易过该股票
-        print(stockCode,'无交易，剔除')
-        return
+
     
     stock_k_data['MA20'] = stock_k_data['close'].rolling(20).mean()
     
