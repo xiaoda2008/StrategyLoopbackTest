@@ -16,6 +16,17 @@ import os
 import sys
 from cmath import isnan
 from sqlalchemy.util.langhelpers import NoneType
+from pandas.core.frame import DataFrame
+
+#写入数据库的引擎
+engine = sqlalchemy.create_engine('mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8')
+
+
+k_data = DataFrame()
+
+k_data.sort_index(inplace=True,ascending=False)
+
+k_data.to_sql(name='k_data_test', con=engine, chunksize=1000, if_exists='replace', index=None)
 
 
 
@@ -33,7 +44,7 @@ for index,stockCode in stockCodeList.items():
     print(index, stockCode)
 
 #取000001的前复权行情
-stock_k_data = tushare.pro_bar(ts_code='300797.SZ', adj='qfq', start_date='20091031', end_date='20191031')
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ', adj='qfq', start_date='20091031', end_date='20191031')
 
 
 if type(stock_k_data)==NoneType:

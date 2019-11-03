@@ -413,6 +413,7 @@ for strategy in strList:
     
     outputFile = strOutputDir+'/Summary.csv'
     
+    
     sys.stdout = open(outputFile,'wt')
     printSummaryOutputHead()
     sys.stdout = savedStdout  #恢复标准输出流
@@ -429,6 +430,13 @@ for strategy in strList:
         processStock(sdDataAPI,stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
-#1、可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略
+#1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取
 #2、需要注意，MA需要按照当日开盘价计算，而不应该用当日平均价，且MA应当用前一天的MA，不应该用当日MA
 #3、需要注意，在有涨停、跌停的日子，无法以涨停、跌停价进行相关交易
+#4、增加代码，在完成所有股票的输出以后，对输出进行测试，计算每天的资金占用，按照日期为维度进行一定的分析，可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略
+#5、根据实际的资金进出，进行IRR计算
+#6、计算结果也可以输出到数据库，而不是输出到文件，方便后续进行处理
+
+
+
+#最终应该是一个Tester：回测，一个Simulator：模拟交易，一个Monitor：真实交易的辅助监测
