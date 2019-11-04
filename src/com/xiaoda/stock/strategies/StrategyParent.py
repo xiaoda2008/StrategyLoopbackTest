@@ -19,6 +19,7 @@ class StrategyParent:
     #决定买入或卖出的数量
     #正数代表买入，负数代表卖出
     #continuousRiseOrFallCnt，正数代表连续上涨，负数代表连续下跌
+    #根据latestDealPrice和latestDealType，可以判断出是否是策略的第一天，不同策略对第一天的处理方式是不同的
     def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,

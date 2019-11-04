@@ -33,6 +33,11 @@ class MultiStepStrategy(StrategyParent):
                      holdAvgPrice,continuousRiseOrFallCnt,
                      stock_k_data,todayDate):
         
+        #MultiStep策略第一天，直接进行买入
+        if latestDealPrice==0 and latestDealType==0:
+            return nShare
+        
+        
         if priceNow < (1-DOWNRATE)*latestDealPrice:
             #如果下跌超线，应当买入
             if continuousRiseOrFallCnt>=0:

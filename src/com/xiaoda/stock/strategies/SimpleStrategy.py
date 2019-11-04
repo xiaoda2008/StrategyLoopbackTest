@@ -19,10 +19,14 @@ class SimpleStrategy(StrategyParent):
    #决定买入或卖出的数量
     #正数代表买入，负数代表卖出
     #continuousRiseOrFallCnt，正数代表连续上涨，负数代表连续下跌
+
     def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
                      stock_k_data,todayDate):
+        #Simple策略第一天，直接进行买入
+        if latestDealPrice==0 and latestDealType==0:
+            return nShare
         
         if priceNow < (1-DOWNRATE)*latestDealPrice:
             #如果下跌超线，应当买入

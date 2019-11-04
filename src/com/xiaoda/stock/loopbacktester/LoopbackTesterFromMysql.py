@@ -15,7 +15,7 @@ from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
 from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.loopbacktester.utils.LoopbackTestUtils import LoopbackTestUtils
+from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeUtils
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,nShare,LOGGINGDIR,OUTPUTDIR
 
 
@@ -154,26 +154,37 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
         
         if i==0:
-            #第一个交易日，以当日均价买入n手
-            holdShares = nShare
-            holdAvgPrice = openPriceToday
+            #第一个交易日的处理，需要各个策略根据自身情况进行确定
+            sharesToBuyOrSell = strategy.getShareToBuyOrSell(openPriceToday,latestDealPrice, 
+                     latestDealType,holdShares,holdAvgPrice,
+                     continuousRiseOrFallCnt,stock_k_data,todayDate)
             
-            #获取买入交易费
-            dealCharge = LoopbackTestUtils.getBuyCharge(nShare*100*openPriceToday)
+            if sharesToBuyOrSell>0:
+                #如果判断为应当买入
+                #更新持仓平均成本
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*openPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdShares += sharesToBuyOrSell
+                
+                #获取买入交易费
+                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*openPriceToday)
+                
+                latestDealType = 1
+                latestDealPrice = openPriceToday
+                totalInput += sharesToBuyOrSell*openPriceToday*100+dealCharge
+                
+                returnList = printTradeInfo(todayDate, 1, openPriceToday,holdShares,
+                                            holdAvgPrice,totalInput,totalOutput,
+                                            latestDealType,latestDealPrice,dealCharge)
+                
+                biggestCashOccupy = totalInput
             
-            #最近一笔交易类型为买入，交易价格为当日均价
-            latestDealType = 1
-            latestDealPrice = openPriceToday
-            totalInput += holdShares*holdAvgPrice*100+dealCharge
-            
-    #        print(todayDate)
-    #        print('完成买入交易，以%f价格买入%i手股票'%(avgPriceToday,nShare))
-            returnList = printTradeInfo(todayDate, 1, openPriceToday,holdShares,
-                                        holdAvgPrice,totalInput,totalOutput,
-                                        latestDealType,latestDealPrice,dealCharge)
-            
-            if totalInput - totalOutput > biggestCashOccupy:
-                biggestCashOccupy = totalInput - totalOutput
+            else:
+                #第一天判断为卖出没有意义，没有份额可以卖出
+                #既不需要买入，又不需要卖出
+                #没有任何交易，打印对账信息:
+                returnList = printTradeInfo(todayDate, 0, openPriceToday,holdShares,
+                                            holdAvgPrice,totalInput,totalOutput,
+                                            latestDealType,latestDealPrice,0)
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
@@ -183,10 +194,10 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
             if sharesToBuyOrSell>0:
-                #如果判断为下跌超线买入
+                #如果判断为应当买入
                 
                 if continuousRiseOrFallCnt>=0:
-                    #此前一次是上涨超线卖出或未超线
+                    #此前一次是上涨超线卖出或未出现买入/卖出
                     continuousRiseOrFallCnt=-1
                 else:
                     #此前就是下跌超线买入
@@ -198,7 +209,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = LoopbackTestUtils.getBuyCharge(sharesToBuyOrSell*100*openPriceToday)
+                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*openPriceToday)
                 
                 latestDealType = 1
                 latestDealPrice = openPriceToday
@@ -232,7 +243,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
             
                 #获取卖出交易费
-                dealCharge = LoopbackTestUtils.getSellCharge(abs(sharesToBuyOrSell)*100*openPriceToday)
+                dealCharge = ChargeUtils.getSellCharge(abs(sharesToBuyOrSell)*100*openPriceToday)
                     
                 latestDealType = -1
                 latestDealPrice = openPriceToday
@@ -370,7 +381,7 @@ for strategy in stgList:
 
 
 #1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取-》基本完成，20191104
-#2、需要注意，MA需要按照当日开盘价计算，而不应该用当日平均价，且MA应当用前一天的MA，不应该用当日MA
+#2、需要注意，MA需要按照当日开盘价计算，而不应该用当日平均价，且MA应当用前一天的MA，不应该用当日MA->修改完成，20191104
 #3、需要注意，在有涨停、跌停的日子，无法以涨停、跌停价进行相关交易
 #4、增加代码，在完成所有股票的输出以后，对输出进行测试，计算每天的资金占用，按照日期为维度进行一定的分析，可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略
 #5、根据实际的资金进出，进行IRR计算

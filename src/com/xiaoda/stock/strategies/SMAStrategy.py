@@ -21,6 +21,7 @@ class SMAStrategy(StrategyParent):
     #决定买入或卖出的数量
     #正数代表买入，负数代表卖出
     #continuousRiseOrFallCnt，正数代表连续上涨，负数代表连续下跌
+    #MA策略不考虑是否第一天，都按照同样的逻辑进行判断
     def getShareToBuyOrSell(self,priceNow,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
