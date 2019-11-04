@@ -373,7 +373,7 @@ cnt=0
 # 获取想要的日期的时间
 while True:
     cday = (cday - dayOffset)
-    if not(tushare.is_holiday(cday.strftime('%Y-%m-%d'))):
+    if MysqlUtils().isMarketDay(cday.strftime('%Y%m%d')):
         cnt+=1
         if cnt==20:
             break
@@ -394,6 +394,9 @@ os.mkdir(strOutterOutputDir)
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+
+
+
 
 sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
 
