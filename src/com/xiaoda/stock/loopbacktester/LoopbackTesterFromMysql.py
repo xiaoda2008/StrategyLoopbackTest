@@ -7,9 +7,9 @@ Created on 2019年10月18日
 import os
 import sys
 import shutil
-import datetime
 from pathlib import Path
 from datetime import datetime as dt
+import datetime
 from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
@@ -148,7 +148,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
-        avgPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
+        openPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
         todayDate = stock_k_data.at[i+offset,'trade_date']
 
 
@@ -156,19 +156,19 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
         if i==0:
             #第一个交易日，以当日均价买入n手
             holdShares = nShare
-            holdAvgPrice = avgPriceToday
+            holdAvgPrice = openPriceToday
             
             #获取买入交易费
-            dealCharge = LoopbackTestUtils.getBuyCharge(nShare*100*avgPriceToday)
+            dealCharge = LoopbackTestUtils.getBuyCharge(nShare*100*openPriceToday)
             
             #最近一笔交易类型为买入，交易价格为当日均价
             latestDealType = 1
-            latestDealPrice = avgPriceToday
+            latestDealPrice = openPriceToday
             totalInput += holdShares*holdAvgPrice*100+dealCharge
             
     #        print(todayDate)
     #        print('完成买入交易，以%f价格买入%i手股票'%(avgPriceToday,nShare))
-            returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+            returnList = printTradeInfo(todayDate, 1, openPriceToday,holdShares,
                                         holdAvgPrice,totalInput,totalOutput,
                                         latestDealType,latestDealPrice,dealCharge)
             
@@ -178,7 +178,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
             #不是第一个交易日
             #需要根据当前价格确定如何操作
                      
-            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
+            sharesToBuyOrSell = strategy.getShareToBuyOrSell(openPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
@@ -194,17 +194,17 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*openPriceToday)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = LoopbackTestUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                dealCharge = LoopbackTestUtils.getBuyCharge(sharesToBuyOrSell*100*openPriceToday)
                 
                 latestDealType = 1
-                latestDealPrice = avgPriceToday
-                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
+                latestDealPrice = openPriceToday
+                totalInput += sharesToBuyOrSell*openPriceToday*100+dealCharge
                 
-                returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, 1, openPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
@@ -225,31 +225,31 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
                 if holdShares>abs(sharesToBuyOrSell):
-                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*avgPriceToday)/(holdShares-abs(sharesToBuyOrSell))
+                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*openPriceToday)/(holdShares-abs(sharesToBuyOrSell))
                 else:
                     holdAvgPrice=0
                 holdShares -= abs(sharesToBuyOrSell)
 
             
                 #获取卖出交易费
-                dealCharge = LoopbackTestUtils.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
+                dealCharge = LoopbackTestUtils.getSellCharge(abs(sharesToBuyOrSell)*100*openPriceToday)
                     
                 latestDealType = -1
-                latestDealPrice = avgPriceToday
-                totalOutput += abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
+                latestDealPrice = openPriceToday
+                totalOutput += abs(sharesToBuyOrSell)*openPriceToday*100-dealCharge
                 
             
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
-                returnList = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, -1, openPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
             
             else:
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
-                returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, 0, openPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
                
@@ -266,7 +266,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
             totalInput = returnList[1]
             
             printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,
-                                  latestProfit,holdShares,avgPriceToday)
+                                  latestProfit,holdShares,openPriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
 
@@ -287,18 +287,21 @@ log.logger.warning('警告')
 log.logger.error('报错')
 log.logger.critical('严重')
 '''
-
+'''
 while True:
-    if MysqlUtils.isMarketDay(dt.strptime(firstOpenDay,"%Y%m%d").date().strftime('%Y%m%d')):
+    if MysqlUtils.isMarketDay(datetime.strptime(firstOpenDay,"%Y%m%d").date().strftime('%Y%m%d')):
         #找到第一个交易日，跳出
         break
     else:
         #当前日期为节假日，查看下一天是否是交易日
-        cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
+        cday = datetime.strptime(firstOpenDay, "%Y%m%d").date()
         dayOffset = datetime.timedelta(1)
         # 获取想要的日期的时间
         firstOpenDay = (cday + dayOffset).strftime('%Y%m%d')
-
+'''
+#如果开始日期不是交易日，找到下一个交易日
+if not(MysqlUtils.isMarketDay(firstOpenDay)):
+    firstOpenDay = MysqlUtils.getNextMarketDay(firstOpenDay)
     
 #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
 cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
@@ -365,7 +368,8 @@ for strategy in stgList:
         processStock(stockCode.ts_code,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
-#1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取
+
+#1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取-》基本完成，20191104
 #2、需要注意，MA需要按照当日开盘价计算，而不应该用当日平均价，且MA应当用前一天的MA，不应该用当日MA
 #3、需要注意，在有涨停、跌停的日子，无法以涨停、跌停价进行相关交易
 #4、增加代码，在完成所有股票的输出以后，对输出进行测试，计算每天的资金占用，按照日期为维度进行一定的分析，可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略

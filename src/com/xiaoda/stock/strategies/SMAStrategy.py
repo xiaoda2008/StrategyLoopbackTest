@@ -5,7 +5,8 @@ Created on 2019年10月29日
 '''
 import math
 from com.xiaoda.stock.strategies.StrategyParent import StrategyParent
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
 
 class SMAStrategy(StrategyParent):
     '''
@@ -26,17 +27,21 @@ class SMAStrategy(StrategyParent):
                      stock_k_data,todayDate):
         
         stock_data = stock_k_data.set_index('trade_date')
-        todayMA20 = stock_data.at[todayDate,'MA20']
+        
+        lastMarketDay=MysqlUtils.getLastMarketDay(todayDate)
+        
+        lastDayMA20 = stock_data.at[lastMarketDay,'MA20']
         
         stock_data['close_shift']=stock_data['close'].shift(1)
 
         #需要调整，当天，只可能知道当天开盘价，无法知道当天平均价，不能采用上帝模式
 
-        if stock_data.at[todayDate,'close_shift']<todayMA20 and priceNow>todayMA20:
-            #前一天收盘价格低于20日均线，且当天价格高于20时均线-》上穿20日均线，可以买入
+        #应该用当天开盘价与前一天的MA20进行比较
+        if stock_data.at[lastMarketDay,'close_shift']<lastDayMA20 and priceNow>lastDayMA20:
+            #前一天收盘价格低于20日均线，且当天开盘价格高于20日均线-》上穿20日均线，可以买入
             return math.floor(nShare/2)
-        elif stock_data.at[todayDate,'close_shift']>todayMA20 and priceNow<todayMA20:
-            #前一天收盘价格高于20日均线，且当天价格低于20时均线-》下穿20日均线，可以卖出
+        elif stock_data.at[lastMarketDay,'close_shift']>lastDayMA20 and priceNow<lastDayMA20:
+            #前一天收盘价格高于20日均线，且当天开盘价格低于20日均线-》下穿20日均线，可以卖出
             return -1*math.floor(nShare/2)
         else:
             return 0

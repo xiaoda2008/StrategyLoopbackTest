@@ -3,6 +3,7 @@ Created on 2019年10月28日
 
 @author: picc
 '''
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
 
 #券商佣金费率
 SecChargeRate = 0.00025
@@ -43,3 +44,4 @@ class LoopbackTestUtils:
             totalCharge += totalDealAmt*(SecChargeRate+0.0000687)
             
         return totalCharge
+

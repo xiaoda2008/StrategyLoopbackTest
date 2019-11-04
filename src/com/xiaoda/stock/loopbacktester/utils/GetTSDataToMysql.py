@@ -26,7 +26,7 @@ sdDataAPI = tushare.pro_api()
 
 
 #1、获取交易日信息，并存入数据库
-STARTDATE = '20000101'
+STARTDATE = '19990101'
 ENDDATE = '20191231'
 
 trade_cal_data = sdDataAPI.trade_cal(exchange='', start_date=STARTDATE, end_date=ENDDATE)
@@ -52,8 +52,8 @@ for index,stockCode in stockCodeList.items():
     #用于标记该股票是否出现过数据
     flag = False
     
-    #将2000-01-01到2009-12-31该股票数据导入数据库
-    STARTDATE = '20000101'
+    #将1999-01-01到2009-12-31该股票数据导入数据库
+    STARTDATE = '19990101'
     ENDDATE = '20091231'
     
     log.logger.debug('处理股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))

@@ -4,6 +4,8 @@ Created on 2019年11月3日
 @author: xiaoda
 '''
 import pandas
+from datetime import datetime as dt
+import datetime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String,Integer,create_engine
@@ -54,6 +56,45 @@ class MysqlUtils():
             return True
         else:
             return False
+        
+    
+    @staticmethod
+    def getNextMarketDay(todayDate):
+        '''
+        找到下一个交易日，不含当天
+        '''
+        nextMarketDay=todayDate
+        while True:
+            #当前日期为节假日，查看下一天是否是交易日
+            cday = dt.strptime(nextMarketDay, "%Y%m%d").date()
+            dayOffset = datetime.timedelta(1)
+            # 获取想要的日期的时间
+            nextMarketDay = (cday+dayOffset).strftime('%Y%m%d')
+            
+            if MysqlUtils.isMarketDay(dt.strptime(nextMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+                #找到第一个交易日，跳出
+                break
+        
+        return nextMarketDay
+
+    @staticmethod
+    def getLastMarketDay(todayDate):
+        '''
+        找到上一个交易日，不含当天
+        '''
+        lastMarketDay=todayDate
+        while True:
+            #当前日期为节假日，查看下一天是否是交易日
+            cday = dt.strptime(lastMarketDay, "%Y%m%d").date()
+            dayOffset = datetime.timedelta(1)
+            # 获取想要的日期的时间
+            lastMarketDay = (cday-dayOffset).strftime('%Y%m%d')
+            
+            if MysqlUtils.isMarketDay(dt.strptime(lastMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+                #找到第一个交易日，跳出
+                break
+        
+        return lastMarketDay
     
     @staticmethod
     def getStockList():
