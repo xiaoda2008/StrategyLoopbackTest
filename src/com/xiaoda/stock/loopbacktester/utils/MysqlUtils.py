@@ -136,7 +136,7 @@ class MysqlUtils():
     def getStockKData(stockCode,startDate,endDate):
         engine = MysqlUtils.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s'%(stockCode,startDate,endDate)
+        sql = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode,startDate,endDate)
         #查询结果
         df = pandas.read_sql_query(sql,engine)
         return df
