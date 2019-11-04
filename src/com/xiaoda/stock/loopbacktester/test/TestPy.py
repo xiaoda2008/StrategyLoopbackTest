@@ -18,6 +18,24 @@ from cmath import isnan
 from sqlalchemy.util.langhelpers import NoneType
 from pandas.core.frame import DataFrame
 
+
+
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+
+sdDataAPI = tushare.pro_api()
+
+#1、获取交易日信息，并存入数据库
+STARTDATE = '19920131'#20071016
+ENDDATE = '19920212'#20081031
+
+trade_cal_data = sdDataAPI.trade_cal(exchange='', start_date=STARTDATE, end_date=ENDDATE)
+
+
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ', adj='qfq', start_date=STARTDATE, end_date=ENDDATE)
+
+
+
+
 #写入数据库的引擎
 engine = sqlalchemy.create_engine('mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8')
 

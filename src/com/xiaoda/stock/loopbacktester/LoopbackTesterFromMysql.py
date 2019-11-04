@@ -6,13 +6,10 @@ Created on 2019年10月18日
 
 import os
 import sys
-import math
 import shutil
-import tushare
 import datetime
 from pathlib import Path
 from datetime import datetime as dt
-from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
@@ -58,41 +55,24 @@ def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,latestProfit,
     print(latestProfit, end=', ')
     print(round(holdShares*100*avgPriceToday,2), end='\n')
 
-'''
-def readText():
-    in_text = open(INPUTFILE, 'r')
-    for line in in_text.readlines():
-        stockCode = line.rstrip("\n")
-        
-    print('input OK!')
-'''
-
-#readText()
-
 
 
 #具体处理股票的处理
-def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
+def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
     
     #返回的投入和盈利信息
     returnList=[];
     
-    stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
-                                   start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
+    stock_k_data = MysqlUtils.getStockKData(stockCode[:6],twentyDaysBeforeFirstDay,ENDDATE)
 
-
-
-    if type(stock_k_data)==NoneType:
+    if len(stock_k_data)==0:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
-        print(stockCode,'无交易，剔除')
+        print('%s在%s（前推20个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,ENDDATE))
         return
 
-#    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
-    stock_k_data.sort_index(inplace=True,ascending=False)
+    #stock_k_data.sort_index(inplace=True,ascending=False)
 
-    stock_k_data.reset_index(drop=True,inplace=True)
-
-
+    #stock_k_data.reset_index(drop=True,inplace=True)
 
     
     stock_k_data['MA20'] = stock_k_data['close'].rolling(20).mean()
@@ -122,25 +102,6 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     #需要进行判断并剔除
     
     
-    #stock_k_data.at[0,'date']
-    #stock_hist_data = stock_hist_data.sort_index()
-    #stock_hist_data.at['2018-01-02','open']
-
-
-    '''
-    print(type(stock_his))
-    
-    df = stock_his.head()
-    
-    print(df)
-    print(df.dtypes)
-    
-    '''
-    
-    
-    #print(stock_his.index)
-    #type(stock_his.index)
-    
     #第一行的偏移量
     #因为如果不是从当年第一个交易日开始，标号会有一个偏移量，在后续处理时，需要进行一个处理
     offset = stock_k_data.index[0]
@@ -150,37 +111,8 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
         #对于不是从STARTDATE开始的，可能是在前20个交易日有停牌，或者在STARTDATE后有停牌，进行剔除
         print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
         return
-    
-    '''
-    if stock_hist_data.shape[0] < stock_k_data.shape[0]:
-        print(stockCode, '存在借壳上市情况，进行剔除')
-        return
-    '''
-    #stock_his.shape[0]
-    #print(stock_his)
-    
-    '''
-    #print(stock_his.get_value(1, 'open', ))
-    
-    print(stock_his.at[0,'open'])
-    
-    print(stock_his.open)
-    
-    '''
-    
-    '''
-    print(stock_his.iat[0,0])#查看具体位置数据
-    
-    print(stock_his.iloc[1])#查看某一行数据
-    
-    print(stock_his['open'])#查看某一列
-    
-    print(stock_his.shape[0])#查看行数
-    
-    print(stock_his.shape[1])#查看列数
-    '''
 
-    #{stock_his.at[0,'date']: 4098}
+
     
     holdShares = 0#持仓手数，1手为100股
     holdAvgPrice = 0#持仓的平均价格
@@ -245,15 +177,6 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
-            '''
-            sharesToBuy = strategy.getShareToBuy(avgPriceToday,latestDealPrice, 
-                     latestDealType,holdShares,holdAvgPrice,
-                     continuousFallCnt,stock_hist_data,todayDate)
-            
-            sharesToSell = strategy.getShareToSell(avgPriceToday,latestDealPrice, 
-                      latestDealType,holdShares,holdAvgPrice,
-                      continuousRiseCnt,stock_hist_data,todayDate)
-            '''  
                      
             sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
@@ -269,7 +192,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
                     #此前就是下跌超线买入
                     continuousRiseOrFallCnt=continuousRiseOrFallCnt-1
 
-                    
+
                 #更新持仓平均成本
                 holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
@@ -400,26 +323,25 @@ if myPath.exists():
 
 os.mkdir(strOutterOutputDir)
 
-
+'''
 #使用TuShare pro版本
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+'''
 
 
-
-
-sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-
-stockCodeList = sdf['ts_code']
+#获取股票列表
+#sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+stockCodeList = MysqlUtils.getStockList()
 
 
 
 #策略的列表
-strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+stgList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 #对所有策略进行循环：
-for strategy in strList:
+for strategy in stgList:
     savedStdout = sys.stdout  #保存标准输出流
      
     strOutputDir=strOutterOutputDir+'/'+strategy.getStrategyName()+'/'
@@ -438,11 +360,9 @@ for strategy in strList:
     #直接对stockList进行遍历，不需要通过INPUTFILE获取股票列表
     
     #循环所有股票，使用指定策略进行处理
-#    for line in in_text.readlines():  
-#        stockCode = line.rstrip("\n")
-    for index,stockCode in stockCodeList.items():
+    for stockCode in stockCodeList:
 
-        processStock(sdDataAPI,stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
+        processStock(stockCode.ts_code,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
 #1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取
