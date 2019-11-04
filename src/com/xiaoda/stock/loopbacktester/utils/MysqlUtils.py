@@ -8,20 +8,20 @@ from sqlalchemy import Column, String,Integer,create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pytdx import trade
-
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
 
 class MysqlUtils():
     
     
-    def __init__(self):
-        self.mysqlUrl = 'mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8'
+    @staticmethod
+    def getMysqlEngine():
+        engine = create_engine(mysqlURL)
+        return engine
     
-    def getMysqlEngine(self):
-        engine = create_engine(self.mysqlUrl)
-        return engine    
     
-    def isMarketDay(self,dtStr,engine):
-#        engine = self.getMysqlEngine()
+    @staticmethod
+    def isMarketDay(dtStr):
+        mysqlEngine = MysqlUtils.getMysqlEngine()
         
         # 创建对象的基类:
         Base = declarative_base()
@@ -40,7 +40,7 @@ class MysqlUtils():
                 return self.name
         
         # 创建DBSession类型:
-        DBSession = sessionmaker(bind=engine)
+        DBSession = sessionmaker(bind=mysqlEngine)
         
         # 创建session对象:
         session = DBSession()

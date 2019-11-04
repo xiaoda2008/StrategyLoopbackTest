@@ -3,21 +3,24 @@ Created on 2019年10月18日
 
 @author: picc
 '''
-import tushare
-import math
-import sys
-from pathlib import Path
+
 import os
-from com.xiaoda.stock.loopbacktester.utils.LoopbackTestUtils import LoopbackTestUtils
-from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
-from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
-from datetime import datetime as dt
-import datetime
+import sys
+import math
 import shutil
-from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
+import tushare
+import datetime
+from pathlib import Path
+from datetime import datetime as dt
 from sqlalchemy.util.langhelpers import NoneType
+from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
+from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
+from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
+from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.loopbacktester.utils.LoopbackTestUtils import LoopbackTestUtils
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,nShare,LOGGINGDIR,OUTPUTDIR
+
 
 def printStockOutputHead():
     print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当前持仓平均成本,\
@@ -352,10 +355,18 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
 #通过STARTDATE找到第一个交易日
 firstOpenDay = STARTDATE
 
+log = Logger(LOGGINGDIR+'/'+os.path.split(__file__)[-1].split(".")[0] + '.log',level='debug')
 
+'''
+log.logger.debug('debug')
+log.logger.info('info')
+log.logger.warning('警告')
+log.logger.error('报错')
+log.logger.critical('严重')
+'''
 
 while True:
-    if MysqlUtils().isMarketDay(dt.strptime(firstOpenDay,"%Y%m%d").date().strftime('%Y%m%d')):
+    if MysqlUtils.isMarketDay(dt.strptime(firstOpenDay,"%Y%m%d").date().strftime('%Y%m%d')):
         #找到第一个交易日，跳出
         break
     else:
@@ -373,7 +384,7 @@ cnt=0
 # 获取想要的日期的时间
 while True:
     cday = (cday - dayOffset)
-    if MysqlUtils().isMarketDay(cday.strftime('%Y%m%d')):
+    if MysqlUtils.isMarketDay(cday.strftime('%Y%m%d')):
         cnt+=1
         if cnt==20:
             break
@@ -440,7 +451,7 @@ for strategy in strList:
 #4、增加代码，在完成所有股票的输出以后，对输出进行测试，计算每天的资金占用，按照日期为维度进行一定的分析，可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略
 #5、根据实际的资金进出，进行IRR计算
 #6、计算结果也可以输出到数据库，而不是输出到文件，方便后续进行处理
-
+#7、对于SMA策略，第一个交易日可以不用买入，而是满足条件之后才买入
 
 
 #最终应该是一个Tester：回测，一个Simulator：模拟交易，一个Monitor：真实交易的辅助监测

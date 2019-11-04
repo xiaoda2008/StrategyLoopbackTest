@@ -8,7 +8,10 @@ Created on 2019年10月28日
 OUTPUTDIR = 'D:/outputDir'
 STARTDATE = '20091031'#20071016
 ENDDATE = '20191031'#20081031
+LOGGINGDIR = 'D:/outputDir'
 
+#mysql连接地址
+mysqlURL = 'mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8'
 
 #上涨与下跌幅度的参数
 UPRATE = 0.1
