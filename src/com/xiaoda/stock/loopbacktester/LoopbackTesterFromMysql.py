@@ -203,7 +203,6 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                     #此前就是下跌超线买入
                     continuousRiseOrFallCnt=continuousRiseOrFallCnt-1
 
-
                 #更新持仓平均成本
                 holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*openPriceToday)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
