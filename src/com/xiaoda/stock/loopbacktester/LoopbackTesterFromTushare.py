@@ -79,7 +79,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     time.sleep(0.31)
     #sprint(stock_k_data.columns)
 
-    if type(stock_k_data)==NoneType:
+    if type(stock_k_data)==NoneType or stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
         print('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,ENDDATE))
         return
