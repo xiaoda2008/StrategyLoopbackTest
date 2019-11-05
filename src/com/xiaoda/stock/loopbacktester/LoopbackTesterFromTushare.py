@@ -38,7 +38,10 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
     print(currentProfit, end=',')
     print(latestDealType, end=',')
     print(round(latestDealPrice,4), end=',')
-    totalProfitRate = currentProfit / totalInput * 100
+    if totalInput>0:
+        totalProfitRate=currentProfit/totalInput * 100
+    else:
+        totalProfitRate=0
     print(round(totalProfitRate,2), end='%,')
     print(round(dealCharge,2),end=', ')
     print()
@@ -231,38 +234,40 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
 
         
         if i==0:
-            #第一个交易日，以当日均价买入n手
-            holdShares = nShare
-            holdAvgPrice = avgPriceToday
+            #第一个交易日的处理，需要各个策略根据自身情况进行确定
+            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
+                     latestDealType,holdShares,holdAvgPrice,
+                     continuousRiseOrFallCnt,stock_k_data,todayDate)
             
-            #获取买入交易费
-            dealCharge = ChargeUtils.getBuyCharge(nShare*100*avgPriceToday)
-            
-            #最近一笔交易类型为买入，交易价格为当日均价
-            latestDealType = 1
-            latestDealPrice = avgPriceToday
-            totalInput += holdShares*holdAvgPrice*100+dealCharge
-            
-    #        print(todayDate)
-    #        print('完成买入交易，以%f价格买入%i手股票'%(avgPriceToday,nShare))
-            returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
-                                        holdAvgPrice,totalInput,totalOutput,
-                                        latestDealType,latestDealPrice,dealCharge)
-            
-            if totalInput - totalOutput > biggestCashOccupy:
-                biggestCashOccupy = totalInput - totalOutput
+            if sharesToBuyOrSell>0:
+                #如果判断为应当买入
+                #更新持仓平均成本
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdShares += sharesToBuyOrSell
+                
+                #获取买入交易费
+                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                
+                latestDealType = 1
+                latestDealPrice = avgPriceToday
+                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
+                
+                returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+                                            holdAvgPrice,totalInput,totalOutput,
+                                            latestDealType,latestDealPrice,dealCharge)
+                
+                biggestCashOccupy = totalInput
+            else:
+                #第一天判断为卖出没有意义，没有份额可以卖出
+                #既不需要买入，又不需要卖出
+                #没有任何交易，打印对账信息:
+                returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
+                                            holdAvgPrice,totalInput,totalOutput,
+                                            latestDealType,latestDealPrice,0)
+
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
-            '''
-            sharesToBuy = strategy.getShareToBuy(avgPriceToday,latestDealPrice, 
-                     latestDealType,holdShares,holdAvgPrice,
-                     continuousFallCnt,stock_hist_data,todayDate)
-            
-            sharesToSell = strategy.getShareToSell(avgPriceToday,latestDealPrice, 
-                      latestDealType,holdShares,holdAvgPrice,
-                      continuousRiseCnt,stock_hist_data,todayDate)
-            '''  
                      
             sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
