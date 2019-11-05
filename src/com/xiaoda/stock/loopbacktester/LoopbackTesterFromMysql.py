@@ -38,7 +38,10 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
     print(currentProfit, end=',')
     print(latestDealType, end=',')
     print(round(latestDealPrice,4), end=',')
-    totalProfitRate = currentProfit / totalInput * 100
+    if totalInput>0:
+        totalProfitRate=currentProfit/totalInput * 100
+    else:
+        totalProfitRate=0
     print(round(totalProfitRate,2), end='%,')
     print(round(dealCharge,2),end=', ')
     print()
@@ -148,31 +151,31 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
-        openPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
+        avgPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
         todayDate = stock_k_data.at[i+offset,'trade_date']
 
 
         
         if i==0:
             #第一个交易日的处理，需要各个策略根据自身情况进行确定
-            sharesToBuyOrSell = strategy.getShareToBuyOrSell(openPriceToday,latestDealPrice, 
+            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
             if sharesToBuyOrSell>0:
                 #如果判断为应当买入
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*openPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*openPriceToday)
+                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
                 
                 latestDealType = 1
-                latestDealPrice = openPriceToday
-                totalInput += sharesToBuyOrSell*openPriceToday*100+dealCharge
+                latestDealPrice = avgPriceToday
+                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
                 
-                returnList = printTradeInfo(todayDate, 1, openPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
@@ -182,14 +185,14 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 #第一天判断为卖出没有意义，没有份额可以卖出
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
-                returnList = printTradeInfo(todayDate, 0, openPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
                      
-            sharesToBuyOrSell = strategy.getShareToBuyOrSell(openPriceToday,latestDealPrice, 
+            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
@@ -204,17 +207,17 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                     continuousRiseOrFallCnt=continuousRiseOrFallCnt-1
 
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*openPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*openPriceToday)
+                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
                 
                 latestDealType = 1
-                latestDealPrice = openPriceToday
-                totalInput += sharesToBuyOrSell*openPriceToday*100+dealCharge
+                latestDealPrice = avgPriceToday
+                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
                 
-                returnList = printTradeInfo(todayDate, 1, openPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
@@ -235,31 +238,31 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
                 if holdShares>abs(sharesToBuyOrSell):
-                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*openPriceToday)/(holdShares-abs(sharesToBuyOrSell))
+                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*avgPriceToday)/(holdShares-abs(sharesToBuyOrSell))
                 else:
                     holdAvgPrice=0
                 holdShares -= abs(sharesToBuyOrSell)
 
             
                 #获取卖出交易费
-                dealCharge = ChargeUtils.getSellCharge(abs(sharesToBuyOrSell)*100*openPriceToday)
+                dealCharge = ChargeUtils.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
                     
                 latestDealType = -1
-                latestDealPrice = openPriceToday
-                totalOutput += abs(sharesToBuyOrSell)*openPriceToday*100-dealCharge
+                latestDealPrice = avgPriceToday
+                totalOutput += abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
                 
             
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
-                returnList = printTradeInfo(todayDate, -1, openPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
             
             else:
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
-                returnList = printTradeInfo(todayDate, 0, openPriceToday,holdShares,
+                returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
                                             holdAvgPrice,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
                
@@ -276,7 +279,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
             totalInput = returnList[1]
             
             printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,
-                                  latestProfit,holdShares,openPriceToday)
+                                  latestProfit,holdShares,avgPriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
 

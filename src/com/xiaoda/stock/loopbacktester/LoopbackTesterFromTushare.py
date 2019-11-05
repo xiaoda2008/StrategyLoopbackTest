@@ -8,14 +8,14 @@ import math
 import sys
 from pathlib import Path
 import os
-from com.xiaoda.stock.loopbacktester.utils.LoopbackTestUtils import LoopbackTestUtils
+from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeUtils
 from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
 from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 from datetime import datetime as dt
 import datetime
 import shutil
-from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
+from com.xiaoda.stock.strategies.SMAStrategyFromTushare import SMAStrategyFromTushare
 from sqlalchemy.util.langhelpers import NoneType
 
 def printStockOutputHead():
@@ -76,7 +76,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
 
-
+    print(stock_k_data.columns)
 
     if type(stock_k_data)==NoneType:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
@@ -88,21 +88,33 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
 
     stock_k_data.reset_index(drop=True,inplace=True)
 
+    #错位一下，以便计算的MA20不包含当天的close数据
+    #stock_k_data['close_shift']=stock_k_data['close'].shift(1)
+    #直接用pre_close即可，不用计算
 
-
-    
-    stock_k_data['MA20'] = stock_k_data['close'].rolling(20).mean()
+    #计算出MA20的数据，问题在于，这个MA20是包含当前天的，有些问题，应当不包含当前天
+    stock_k_data['yesterday_MA20'] = stock_k_data['pre_close'].rolling(20).mean()
     
     offset = stock_k_data.index[0]
-    #剔除掉向前找的20个交易日数据
-    if stock_k_data.shape[0]>20:
-        #print("Biggger than 20")
-        stock_k_data = stock_k_data.drop([offset,offset+1,offset+2,offset+3])
-        stock_k_data = stock_k_data.drop([offset+4,offset+5,offset+6,offset+7])
-        stock_k_data = stock_k_data.drop([offset+8,offset+9,offset+10,offset+11])
-        stock_k_data = stock_k_data.drop([offset+12,offset+13,offset+14,offset+15])
-        stock_k_data = stock_k_data.drop([offset+16,offset+17,offset+18,offset+19])
     
+    #剔除掉向前找的20个交易日数据
+    #不要这样剔除，而是一直剔除到firstOpenDay
+    
+    a=0
+    while True:
+        
+        #删空了，在向前推进的交易日有交易，但在查询区间内股票就没有交易
+        if stock_k_data.empty:
+            break
+        
+        #允许正好这一天股票停牌
+        if stock_k_data.at[a+offset,'trade_date']>=firstOpenDay:
+            break
+        else:
+            stock_k_data = stock_k_data.drop([offset+a])
+            a=a+1
+
+
 #    else:,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7,offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14,offset+15,offset+16,offset+17,offset+18,offset+19
         #如果向前找了20个交易日，仍然交易量不足20日，则判定长期停牌，直接剔除，到下面一个日期判断进行剔除也可以
 #        print(stockCode,'长期停牌，剔除')
@@ -133,6 +145,9 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     
     '''
     
+    if stock_k_data.empty:
+        print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
+        return
     
     #print(stock_his.index)
     #type(stock_his.index)
@@ -140,12 +155,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     #第一行的偏移量
     #因为如果不是从当年第一个交易日开始，标号会有一个偏移量，在后续处理时，需要进行一个处理
     offset = stock_k_data.index[0]
-    
-    
-    if stock_k_data.at[offset,'trade_date'] != firstOpenDay:
-        #对于不是从STARTDATE开始的，可能是在前20个交易日有停牌，或者在STARTDATE后有停牌，进行剔除
-        print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
-        return
+
     
     '''
     if stock_hist_data.shape[0] < stock_k_data.shape[0]:
@@ -223,7 +233,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
             holdAvgPrice = avgPriceToday
             
             #获取买入交易费
-            dealCharge = LoopbackTestUtils.getBuyCharge(nShare*100*avgPriceToday)
+            dealCharge = ChargeUtils.getBuyCharge(nShare*100*avgPriceToday)
             
             #最近一笔交易类型为买入，交易价格为当日均价
             latestDealType = 1
@@ -271,7 +281,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = LoopbackTestUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
                 
                 latestDealType = 1
                 latestDealPrice = avgPriceToday
@@ -305,7 +315,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
 
             
                 #获取卖出交易费
-                dealCharge = LoopbackTestUtils.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
+                dealCharge = ChargeUtils.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
                     
                 latestDealType = -1
                 latestDealPrice = avgPriceToday
@@ -366,6 +376,10 @@ while True:
 
     
 #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
+#可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
+#向前找30个交易日
+
+
 cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
 dayOffset = datetime.timedelta(1)
 cnt=0
@@ -374,7 +388,7 @@ while True:
     cday = (cday - dayOffset)
     if not(tushare.is_holiday(cday.strftime('%Y-%m-%d'))):
         cnt+=1
-        if cnt==20:
+        if cnt==30:
             break
 twentyDaysBeforeFirstOpenDay=cday.strftime('%Y%m%d')
 
@@ -401,7 +415,7 @@ stockCodeList = sdf['ts_code']
 
 
 #策略的列表
-strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+strList = [SMAStrategyFromTushare("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 #对所有策略进行循环：
 for strategy in strList:

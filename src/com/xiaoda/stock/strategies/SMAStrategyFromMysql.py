@@ -32,24 +32,29 @@ class SMAStrategy(StrategyParent):
         #如何判断第一天？？
         
             
-        stock_data = stock_k_data.set_index('trade_date')
+        stock_k_data = stock_k_data.set_index('trade_date')
         
         lastMarketDay=MysqlUtils.getLastMarketDay(todayDate)
         
-        if lastMarketDay<stock_data.index[0]:
+        if lastMarketDay<stock_k_data.index[0]:
             return 0
         
-        lastDayMA20 = stock_data.at[lastMarketDay,'MA20']
+        if (stock_k_data[(stock_k_data.index==lastMarketDay)]).empty:
+            return 0
+        
+        #股票本身可能出现临时停牌，虽然是交易日，但获取不到交易信息
+        lastDayMA20 = stock_k_data.at[lastMarketDay,'MA20']
+        
         
         #stock_data['close_shift']=stock_data['close'].shift(1)
 
         #需要调整，当天，只可能知道当天开盘价，无法知道当天平均价，不能采用上帝模式
 
         #应该用当天开盘价与前一天的MA20进行比较
-        if stock_data.at[lastMarketDay,'close']<lastDayMA20 and priceNow>lastDayMA20:
+        if stock_k_data.at[lastMarketDay,'close']<lastDayMA20 and priceNow>lastDayMA20:
             #前一天收盘价格低于20日均线，且当天开盘价格高于20日均线-》上穿20日均线，可以买入
             return math.floor(nShare/2)
-        elif stock_data.at[lastMarketDay,'close']>lastDayMA20 and priceNow<lastDayMA20:
+        elif stock_k_data.at[lastMarketDay,'close']>lastDayMA20 and priceNow<lastDayMA20:
             #前一天收盘价格高于20日均线，且当天开盘价格低于20日均线-》下穿20日均线，可以卖出
             return -1*math.floor(nShare/2)
         else:
