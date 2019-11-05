@@ -5,6 +5,7 @@ Created on 2019年10月18日
 '''
 import tushare
 import math
+import time
 import sys
 from pathlib import Path
 import os
@@ -75,7 +76,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-
+    time.sleep(0.31)
     #sprint(stock_k_data.columns)
 
     if type(stock_k_data)==NoneType:
