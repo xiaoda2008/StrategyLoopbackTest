@@ -38,31 +38,3 @@ class SimpleStrategy(StrategyParent):
             #未上涨或下跌超线
             return 0
  
-    
-#@staticmethod
-'''
-    #决定应买入的数量
-    def getShareToBuy(self,priceNow,latestDealPrice, 
-                     latestDealType,holdShares,
-                     holdAvgPrice,continuousFallCnt,
-                     stock_hist_data,todayDate):
-        
-        if priceNow <= (1-DOWNRATE)*latestDealPrice:
-            return math.floor(nShare/2)
-        else:
-            return 0
-        
-    
-    #决定应当卖出的数量
-    def getShareToSell(self,priceNow,latestDealPrice, 
-                      latestDealType,holdShares,
-                      holdAvgPrice,continuousRiseCnt,
-                      stock_hist_data,todayDate):
-        
-        if priceNow >= (1+UPRATE)*holdAvgPrice and \
-        priceNow >= latestDealPrice*(1+UPRATE) and holdShares > 0 :
-            #价格大于上次交易价格(1+UPRATE)倍，且大于平均持仓成本的(1+UPRATE)倍，卖出持仓数/2上取整手
-            return math.ceil(holdShares/2)
-        else:
-            return 0
-    '''

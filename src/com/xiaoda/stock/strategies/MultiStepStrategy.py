@@ -65,35 +65,3 @@ class MultiStepStrategy(StrategyParent):
             #未上涨或下跌超线
             return 0
     
-'''
-    #决定应买入的数量
-    def getShareToBuy(self,priceNow,latestDealPrice, 
-                     latestDealType,holdShares,
-                     holdAvgPrice,continuousFallCnt,
-                     stock_hist_data,todayDate):
-        
-        if priceNow > (1-DOWNRATE)*latestDealPrice:
-            return 0
-        elif continuousFallCnt==0:
-            return math.floor(nShare/6)
-        elif continuousFallCnt==1:
-            return math.floor(nShare/3)
-        else:
-            return math.floor(nShare/2)
-    
-    #决定应当卖出的数量
-    def getShareToSell(self,priceNow,latestDealPrice, 
-                      latestDealType,holdShares,
-                      holdAvgPrice,continuousRiseCnt,
-                      stock_hist_data,todayDate):
-        
-        if priceNow < (1+UPRATE)*holdAvgPrice or \
-            priceNow < latestDealPrice*(1+UPRATE) or holdShares == 0 :
-            return 0
-        elif continuousRiseCnt==0:
-            return math.floor(holdShares/3)
-        elif continuousRiseCnt==1:
-            return math.floor(holdShares/2)
-        else:
-            return holdShares
-'''

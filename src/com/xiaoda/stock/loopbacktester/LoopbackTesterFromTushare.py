@@ -15,7 +15,7 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 from datetime import datetime as dt
 import datetime
 import shutil
-from com.xiaoda.stock.strategies.SMAStrategyFromTushare import SMAStrategyFromTushare
+from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from sqlalchemy.util.langhelpers import NoneType
 
 def printStockOutputHead():
@@ -76,11 +76,11 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
 
-    print(stock_k_data.columns)
+    #sprint(stock_k_data.columns)
 
     if type(stock_k_data)==NoneType:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
-        print(stockCode,'无交易，剔除')
+        print('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,ENDDATE))
         return
 
 #    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
@@ -94,6 +94,8 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
 
     #计算出MA20的数据，问题在于，这个MA20是包含当前天的，有些问题，应当不包含当前天
     stock_k_data['yesterday_MA20'] = stock_k_data['pre_close'].rolling(20).mean()
+    stock_k_data['today_MA20'] = stock_k_data['close'].rolling(20).mean()
+    
     
     offset = stock_k_data.index[0]
     
@@ -415,7 +417,7 @@ stockCodeList = sdf['ts_code']
 
 
 #策略的列表
-strList = [SMAStrategyFromTushare("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 #对所有策略进行循环：
 for strategy in strList:
@@ -444,13 +446,3 @@ for strategy in strList:
         processStock(sdDataAPI,stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
     #    print('完成'+stockCode+'的处理')
 
-#1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取
-#2、需要注意，MA需要按照当日开盘价计算，而不应该用当日平均价，且MA应当用前一天的MA，不应该用当日MA
-#3、需要注意，在有涨停、跌停的日子，无法以涨停、跌停价进行相关交易
-#4、增加代码，在完成所有股票的输出以后，对输出进行测试，计算每天的资金占用，按照日期为维度进行一定的分析，可以增加一个按日收益率汇总、按天资金占用情况，对比各种策略
-#5、根据实际的资金进出，进行IRR计算
-#6、计算结果也可以输出到数据库，而不是输出到文件，方便后续进行处理
-
-
-
-#最终应该是一个Tester：回测，一个Simulator：模拟交易，一个Monitor：真实交易的辅助监测

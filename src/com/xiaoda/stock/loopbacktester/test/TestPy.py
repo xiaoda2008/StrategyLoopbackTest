@@ -25,12 +25,12 @@ tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 sdDataAPI = tushare.pro_api()
 
 #1、获取交易日信息，并存入数据库
-STARTDATE = '20000620'#20071016
-ENDDATE = '20000624'#20081031
+STARTDATE = '20050101'#20071016
+ENDDATE = '20050624'#20081031
 
 trade_cal_data = sdDataAPI.trade_cal(exchange='', start_date=STARTDATE, end_date=ENDDATE)
 
-
+#不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
 stock_k_data = tushare.pro_bar(ts_code='000001.SZ', adj='qfq', start_date=STARTDATE, end_date=ENDDATE)
 
 stock_k_data=stock_k_data.set_index('trade_date')

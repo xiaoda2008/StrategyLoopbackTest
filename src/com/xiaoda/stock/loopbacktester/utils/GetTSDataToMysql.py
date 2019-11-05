@@ -47,6 +47,8 @@ stockCodeList = sdf['ts_code']
 
 
 
+#不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
+
 #3、获取股票数据，并存入数据库
 for index,stockCode in stockCodeList.items():
     #用于标记该股票是否出现过数据

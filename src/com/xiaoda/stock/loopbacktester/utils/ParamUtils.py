@@ -6,8 +6,12 @@ Created on 2019年10月28日
 #股票代码库
 #INPUTFILE = 'D:/stockList.txt'
 OUTPUTDIR = 'D:/outputDir'
-STARTDATE = '20000101'#20071016
+
+#换成tushare pro之后，不能间隔超过4000个交易日（约18年）
+STARTDATE = '20050101'#20071016
 ENDDATE = '20191231'#20081031
+
+
 LOGGINGDIR = 'D:/outputDir'
 
 #mysql连接地址
