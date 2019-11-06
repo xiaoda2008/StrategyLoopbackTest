@@ -7,9 +7,9 @@ Created on 2019年10月28日
 #INPUTFILE = 'D:/stockList.txt'
 OUTPUTDIR = 'D:/outputDir'
 
-#换成tushare pro之后，不能间隔超过4000个交易日（约18年）
-STARTDATE = '20180101'#20071016
-ENDDATE = '20191024'#20081031
+#能间隔超过4000个交易日（约18年）
+STARTDATE = '20071016'#20071016
+ENDDATE = '20081031'#20081031
 
 
 LOGGINGDIR = 'D:/outputDir'

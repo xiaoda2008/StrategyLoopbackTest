@@ -20,17 +20,18 @@ from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from sqlalchemy.util.langhelpers import NoneType
 
 def printStockOutputHead():
-    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当前持仓平均成本,\
+    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净流量,当天资金净占用,当前持仓平均成本,\
     当天平均价格,当前持仓盈亏,最近一次交易类型,最近一次交易价格,当前全部投入回报率,本次交易手续费')
     
 def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
-                   totalInput,totalOutput,latestDealType,latestDealPrice,dealCharge):
+                   totalInput,totalOutput,netCashFlowToday,latestDealType,latestDealPrice,dealCharge):
     print(date, end=',')
     print(dealType, end=',')
     print(round(avgPriceToday*holdShares*100,4), end=',')
     print(holdShares, end=',')
     print(round(totalInput,4), end=',')
     print(round(totalOutput,4), end=',')
+    print(round(netCashFlowToday,4), end=',')
     print(round(totalInput-totalOutput,4), end=',')
     print(round(holdAvgPrice,4), end=',')
     print(round(avgPriceToday,4), end=',')
@@ -251,9 +252,10 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
                 latestDealType = 1
                 latestDealPrice = avgPriceToday
                 totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
+                netCashFlowToday = -(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
                 
                 returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,totalInput,totalOutput,netCashFlowToday,
                                             latestDealType,latestDealPrice,dealCharge)
                 
                 biggestCashOccupy = totalInput
@@ -262,7 +264,7 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
                 returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,totalInput,totalOutput,0,
                                             latestDealType,latestDealPrice,0)
 
         else:
@@ -294,9 +296,10 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
                 latestDealType = 1
                 latestDealPrice = avgPriceToday
                 totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
+                netCashFlowToday = -(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
                 
                 returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,totalInput,totalOutput,netCashFlowToday,
                                             latestDealType,latestDealPrice,dealCharge)
                 
                 if totalInput - totalOutput > biggestCashOccupy:
@@ -328,20 +331,20 @@ def processStock(sdDataAPI,stockCode, strategy, strOutputDir, firstOpenDay, twen
                 latestDealType = -1
                 latestDealPrice = avgPriceToday
                 totalOutput += abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
-                
+                netCashFlowToday = abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
             
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
                 returnList = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,totalInput,totalOutput,netCashFlowToday,
                                             latestDealType,latestDealPrice,dealCharge)
             
             else:
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
                 returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,totalInput,totalOutput,0,
                                             latestDealType,latestDealPrice,0)
                
         i+=1
