@@ -21,7 +21,9 @@ from sqlalchemy.util.langhelpers import NoneType
 from pandas.core.frame import DataFrame
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 
-fileContentTuple = []
+
+#记录csv内容的列表
+fileContentTupleList = []
 
 strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'/SMAStrategy/'
 
@@ -32,30 +34,38 @@ fileList = os.listdir(strOutterOutputDir)
 for fileStr in fileList:
     if not fileStr=="Summary.csv":
         df = FileProcessor.readFile(strOutterOutputDir+fileStr)
-        fileContentTuple.append((fileStr[:-4],df))
+        fileContentTupleList.append((fileStr[:-4],df))
 
 
+
+#对各个日期计算相应的资金净流量
+cashFlowTuple= {}
 #对已有的内容列表进行处理
-for fileName,fileDF in fileContentTuple:
+for fileName,fileDF in fileContentTupleList:
     print(fileName)
 
     #如果Summary-all.csv已经存在，则直接覆盖
-    savedStdout = sys.stdout  #保存标准输出流
-    sys.stdout = open(OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'/Summary-all.csv','wt+')
-    
+  
     i=0
     while True:
-        print(fileDF.at[i,'日期'])
-        print(fileDF.at[i,'当天资金净占用'])
+        if not (fileDF.at[i,'日期'] in cashFlowTuple):
+            cashFlowTuple[fileDF.at[i,'日期']] = float(fileDF.at[i,'当天资金净流量'])
+        else:
+            cashFlowTuple[fileDF.at[i,'日期']] = float(cashFlowTuple[fileDF.at[i,'日期']])+float(fileDF.at[i,'当天资金净流量'])
         i=i+1
+        if i==len(fileDF):
+            break
     
-    sys.stdout = savedStdout  #恢复标准输出流
 
-    
-    pass
+savedStdout = sys.stdout  #保存标准输出流
+sys.stdout = open(OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'/Summary-all.csv','wt+')
 
+print('日期,当日资金净流量')
+for key in cashFlowTuple.keys():
+    print(key,end=',')
+    print(cashFlowTuple.get(key))
 
-
+sys.stdout = savedStdout  #恢复标准输出流
 
 
 

@@ -51,16 +51,17 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
         totalProfitRate=0
     print(round(totalProfitRate,2), end='%,')
     print(round(dealCharge,2),end='\n')
-    return [currentProfit,totalInput]
-
+    #return [currentProfit,totalInput,totalOutput]
+    return currentProfit
 
 def printSummaryOutputHead():
-    print('股票代码,最大资金占用,累计资金投入,最新盈亏,当前持仓金额')
+    print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
 
-def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,latestProfit,holdShares,avgPriceToday):
+def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,avgPriceToday):
     print('\''+str(stockCode),end=', ')
     print(round(biggestCashOccupy,2), end=', ')
     print(round(totalInput,2), end=', ')
+    print(round(totalOutput,2), end=', ')    
     print(latestProfit, end=', ')
     print(round(holdShares*100*avgPriceToday,2), end='\n')
 
@@ -85,7 +86,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-    #time.sleep(0.31)
+    time.sleep(0.31)
     
     
     #sprint(stock_k_data.columns)
@@ -261,7 +262,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
                 netCashFlowToday = -(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
                 
-                returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+                returnVal = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
@@ -271,7 +272,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
                 netCashFlowToday=0
-                returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
+                returnVal = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
 
@@ -306,7 +307,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
                 netCashFlowToday = -(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
                 
-                returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+                returnVal = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
@@ -346,7 +347,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 
 
                 
-                returnList = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
+                returnVal = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
             
@@ -354,7 +355,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
                 netCashFlowToday=0
-                returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
+                returnVal = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
                
@@ -367,10 +368,9 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
             sys.stdout = open(outputFile,'at+')
     
             #最后一个交易日的盈利情况
-            latestProfit = returnList[0]
-            totalInput = returnList[1]
+            latestProfit = returnVal
             
-            printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,
+            printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,
                                   latestProfit,holdShares,avgPriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
@@ -415,7 +415,7 @@ cnt=0
 # 获取想要的日期的时间
 while True:
     cday = (cday - dayOffset)
-    if trade_cal_data.at[dt.strptime(cday, "%Y%m%d").date().strftime('%Y%m%d'),'is_open']==1:
+    if trade_cal_data.at[cday.strftime('%Y%m%d'),'is_open']==1:
         cnt+=1
         if cnt==30:
             break
@@ -493,20 +493,42 @@ for strategy in strList:
 
 
 
-    fileContentList = []
     #读取文件列表
     fileList = os.listdir(strOutputDir)
     
-    
+    #记录csv内容的列表
+    fileContentTupleList = []
     
     #对文件列表中的文件进行处理，获取内容列表
-    for file in fileList:
-        if not file=="Summary.csv":
-            df = FileProcessor.readFile(file)
-            fileContentList.append(df)
+    for fileStr in fileList:
+        if not fileStr=="Summary.csv":
+            df = FileProcessor.readFile(strOutterOutputDir+fileStr)
+            fileContentTupleList.append((fileStr[:-4],df))
 
+    #对各个日期计算相应的资金净流量
+    cashFlowTuple= {}
     #对已有的内容列表进行处理
-    for filecontent in fileContentList:
-        
-        pass
-
+    for fileName,fileDF in fileContentTupleList:
+        print(fileName)
+    
+        #如果Summary-all.csv已经存在，则直接覆盖
+      
+        i=0
+        while True:
+            if not (fileDF.at[i,'日期'] in cashFlowTuple):
+                cashFlowTuple[fileDF.at[i,'日期']] = float(fileDF.at[i,'当天资金净流量'])
+            else:
+                cashFlowTuple[fileDF.at[i,'日期']] = float(cashFlowTuple[fileDF.at[i,'日期']])+float(fileDF.at[i,'当天资金净流量'])
+            i=i+1
+            if i==len(fileDF):
+                break
+    
+    savedStdout = sys.stdout  #保存标准输出流
+    sys.stdout = open(strOutputDir+'/Summary-all.csv','wt+')
+    
+    print('日期,当日资金净流量')
+    for key in cashFlowTuple.keys():
+        print(key,end=',')
+        print(cashFlowTuple.get(key))
+    
+    sys.stdout = savedStdout  #恢复标准输出流
