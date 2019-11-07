@@ -36,6 +36,7 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
     print(holdShares, end=',')
     print(round(totalInput,4), end=',')
     print(round(totalOutput,4), end=',')
+    print(round(netCashFlowToday,4), end=',')
     print(round(totalInput-totalOutput,4), end=',')
     print(round(netCashFlowToday,4),end=',')
     
@@ -271,6 +272,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 #第一天判断为卖出没有意义，没有份额可以卖出
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
+
                 netCashFlowToday=0
                 returnVal = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
@@ -344,9 +346,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
             
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
-                
-
-                
+                        
                 returnVal = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
