@@ -36,6 +36,7 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
     print(holdShares, end=',')
     print(round(totalInput,4), end=',')
     print(round(totalOutput,4), end=',')
+    print(round(netCashFlowToday,4), end=',')
     print(round(totalInput-totalOutput,4), end=',')
     print(round(netCashFlowToday,4),end=',')
     
@@ -81,10 +82,12 @@ def readText():
 #具体处理股票的处理
 def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
     
+    #返回的投入和盈利信息
+    returnList=[];
     
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-    #time.sleep(0.31)
+    time.sleep(0.31)
     
     
     #sprint(stock_k_data.columns)
