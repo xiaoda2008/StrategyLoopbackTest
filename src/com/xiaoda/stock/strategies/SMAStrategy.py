@@ -7,7 +7,6 @@ import pandas
 import math
 from com.xiaoda.stock.strategies.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare
-from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
 
 
 class SMAStrategy(StrategyParent):

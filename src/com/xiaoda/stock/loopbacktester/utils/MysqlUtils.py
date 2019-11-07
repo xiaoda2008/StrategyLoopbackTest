@@ -13,7 +13,7 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
 
 #from sqlalchemy.sql import and_,or_
 
-class MysqlUtils():
+class MysqlProcessor():
     
     
     @staticmethod

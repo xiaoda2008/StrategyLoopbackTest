@@ -9,6 +9,8 @@ from datetime import datetime as dt
 import pandas
 import datetime
 import numpy
+from pathlib import Path
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
 
 
 import sqlalchemy
@@ -17,6 +19,48 @@ import sys
 from cmath import isnan
 from sqlalchemy.util.langhelpers import NoneType
 from pandas.core.frame import DataFrame
+from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
+
+fileContentTuple = []
+
+strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'/SMAStrategy/'
+
+#读取文件列表
+fileList = os.listdir(strOutterOutputDir)
+
+#对文件列表中的文件进行处理，获取内容列表
+for fileStr in fileList:
+    if not fileStr=="Summary.csv":
+        df = FileProcessor.readFile(strOutterOutputDir+fileStr)
+        fileContentTuple.append((fileStr[:-4],df))
+
+
+#对已有的内容列表进行处理
+for fileName,fileDF in fileContentTuple:
+    print(fileName)
+
+    #如果Summary-all.csv已经存在，则直接覆盖
+    savedStdout = sys.stdout  #保存标准输出流
+    sys.stdout = open(OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'/Summary-all.csv','wt+')
+    
+    i=0
+    while True:
+        print(fileDF.at[i,'日期'])
+        print(fileDF.at[i,'当天资金净占用'])
+        i=i+1
+    
+    sys.stdout = savedStdout  #恢复标准输出流
+
+    
+    pass
+
+
+
+
+
+
+
+
 
 
 

@@ -13,17 +13,17 @@ import datetime
 from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
-from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeUtils
+from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeProcessor
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,nShare,LOGGINGDIR,OUTPUTDIR
 
 
 def printStockOutputHead():
-    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当前持仓平均成本,\
+    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当天资金净流量,当前持仓平均成本,\
     当天平均价格,当前持仓盈亏,最近一次交易类型,最近一次交易价格,当前全部投入回报率,本次交易手续费')
     
-def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
+def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCashFlowToday,
                    totalInput,totalOutput,latestDealType,latestDealPrice,dealCharge):
     print(date, end=',')
     print(dealType, end=',')
@@ -32,6 +32,8 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
     print(round(totalInput,4), end=',')
     print(round(totalOutput,4), end=',')
     print(round(totalInput-totalOutput,4), end=',')
+    print(round(netCashFlowToday,4),end='')
+    
     print(round(holdAvgPrice,4), end=',')
     print(round(avgPriceToday,4), end=',')
     currentProfit = round(avgPriceToday*holdShares*100+totalOutput-totalInput,4)
@@ -43,8 +45,7 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,
     else:
         totalProfitRate=0
     print(round(totalProfitRate,2), end='%,')
-    print(round(dealCharge,2),end=', ')
-    print()
+    print(round(dealCharge,2),end='\n')
     return [currentProfit,totalInput]
 
 
@@ -66,7 +67,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #返回的投入和盈利信息
     returnList=[];
     
-    stock_k_data = MysqlUtils.getStockKData(stockCode[:6],twentyDaysBeforeFirstDay,ENDDATE)
+    stock_k_data = MysqlProcessor.getStockKData(stockCode[:6],twentyDaysBeforeFirstDay,ENDDATE)
 
     if len(stock_k_data)==0:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
@@ -179,14 +180,15 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                dealCharge = ChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
                 
                 latestDealType = 1
                 latestDealPrice = avgPriceToday
                 totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
+                netCashFlowToday=-(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
                 
                 returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
                 biggestCashOccupy = totalInput
@@ -195,8 +197,9 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 #第一天判断为卖出没有意义，没有份额可以卖出
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
+                netCashFlowToday=0
                 returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
         else:
             #不是第一个交易日
@@ -221,14 +224,15 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = ChargeUtils.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                dealCharge = ChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
                 
                 latestDealType = 1
                 latestDealPrice = avgPriceToday
                 totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
+                netCashFlowToday=-(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
                 
                 returnList = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
                 if totalInput - totalOutput > biggestCashOccupy:
@@ -255,25 +259,26 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
             
                 #获取卖出交易费
-                dealCharge = ChargeUtils.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
+                dealCharge = ChargeProcessor.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
                     
                 latestDealType = -1
                 latestDealPrice = avgPriceToday
                 totalOutput += abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
-                
+                netCashFlowToday=abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
             
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
                 returnList = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
             
             else:
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
+                netCashFlowToday=0
                 returnList = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
-                                            holdAvgPrice,totalInput,totalOutput,
+                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
                
         i+=1
@@ -323,8 +328,8 @@ while True:
         firstOpenDay = (cday + dayOffset).strftime('%Y%m%d')
 '''
 #如果开始日期不是交易日，找到下一个交易日
-if not(MysqlUtils.isMarketDay(firstOpenDay)):
-    firstOpenDay = MysqlUtils.getNextMarketDay(firstOpenDay)
+if not(MysqlProcessor.isMarketDay(firstOpenDay)):
+    firstOpenDay = MysqlProcessor.getNextMarketDay(firstOpenDay)
     
 #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
 #可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
@@ -335,7 +340,7 @@ cnt=0
 # 获取想要的日期的时间
 while True:
     cday = (cday - dayOffset)
-    if MysqlUtils.isMarketDay(cday.strftime('%Y%m%d')):
+    if MysqlProcessor.isMarketDay(cday.strftime('%Y%m%d')):
         cnt+=1
         if cnt==30:
             break
@@ -346,10 +351,17 @@ strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE
 
 myPath = Path(strOutterOutputDir)
 
+#如果该位置存在，则直接使用该位置，不用删除掉重新算
+if not(myPath.exists()):
+    os.mkdir(strOutterOutputDir)
+
+'''
 if myPath.exists():
     shutil.rmtree(strOutterOutputDir)
 
 os.mkdir(strOutterOutputDir)
+'''
+
 
 '''
 #使用TuShare pro版本
@@ -361,7 +373,7 @@ sdDataAPI = tushare.pro_api()
 
 #获取股票列表
 #sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-stockCodeList = MysqlUtils.getStockList()
+stockCodeList = MysqlProcessor.getStockList()
 
 
 
@@ -374,12 +386,16 @@ for strategy in stgList:
      
     strOutputDir=strOutterOutputDir+'/'+strategy.getStrategyName()+'/'
     
-    os.mkdir(strOutputDir)
+    myPath = Path(strOutputDir)
+
+    #如果该位置存在，则直接使用该位置，不用删除掉重新算
+    if not(myPath.exists()):
+        os.mkdir(strOutputDir)
     
     outputFile = strOutputDir+'/Summary.csv'
     
-    
-    sys.stdout = open(outputFile,'wt')
+    #追加方式写入，针对如果已经处理了一半的策略
+    sys.stdout = open(outputFile,'at')
     printSummaryOutputHead()
     sys.stdout = savedStdout  #恢复标准输出流
 
@@ -390,8 +406,15 @@ for strategy in stgList:
     #循环所有股票，使用指定策略进行处理
     for stockCode in stockCodeList:
 
-        processStock(stockCode.ts_code,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
-    #    print('完成'+stockCode+'的处理')
+        outputFile = strOutputDir + stockCode + '.csv'
+        myPath = Path(outputFile)
+
+        #如果文件已经存在，说明已经处理过了，直接跳过该股票即可
+        if myPath.exists():
+            continue
+        else:
+            processStock(stockCode.ts_code,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
+        #    print('完成'+stockCode+'的处理')
 
 
 #1、可以把数据下载到本地，对每支股票的分析，从mysql数据库获取数据，而不是每个都要到远程获取-》基本完成，20191104

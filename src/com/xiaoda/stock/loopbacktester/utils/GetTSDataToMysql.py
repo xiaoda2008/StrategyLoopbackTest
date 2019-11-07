@@ -8,7 +8,7 @@ import time
 import tushare
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
-from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlUtils
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import LOGGINGDIR
 
 
@@ -18,7 +18,7 @@ log = Logger(LOGGINGDIR+'/'+os.path.split(__file__)[-1].split(".")[0] + '.log',l
 #使用TuShare pro版本
 
 #写入数据库的引擎
-mysqlEngine = MysqlUtils.getMysqlEngine()
+mysqlEngine = MysqlProcessor.getMysqlEngine()
 
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 

@@ -7,7 +7,7 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import SecChargeRate
 
 
 
-class ChargeUtils:
+class ChargeProcessor:
 
     
     @staticmethod
