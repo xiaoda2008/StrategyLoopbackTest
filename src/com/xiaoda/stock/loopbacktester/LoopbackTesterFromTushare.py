@@ -64,6 +64,7 @@ def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,l
     print(round(totalOutput,2), end=', ')    
     print(latestProfit, end=', ')
     print(round(holdShares*100*avgPriceToday,2), end='\n')
+    return round(holdShares*100*avgPriceToday,2)
 
 '''
 def readText():
@@ -84,7 +85,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-    #time.sleep(0.31)
+    time.sleep(0.31)
     
     
     #sprint(stock_k_data.columns)
@@ -227,7 +228,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
     savedStdout = sys.stdout  #保存标准输出流
-    outputFile = strOutputDir + stockCode + '.csv'
+    outputFile = strOutputDir +'/'+ stockCode + '.csv'
     #print(outputFile)
     sys.stdout = open(outputFile,'wt')
     
@@ -361,16 +362,18 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
         if i==stock_k_data.shape[0]:
             #跳出之前进行输出
 
-            outputFile = strOutputDir + 'Summary.csv'
+            outputFile = strOutputDir + '/Summary.csv'
             sys.stdout = open(outputFile,'at+')
     
             #最后一个交易日的盈利情况
             latestProfit = returnVal
             
-            printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,
+            latestholdAmt = printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,
                                   latestProfit,holdShares,avgPriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
+            
+            return latestholdAmt
 
 
 
@@ -449,7 +452,7 @@ strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStep
 for strategy in strList:
     savedStdout = sys.stdout  #保存标准输出流
      
-    strOutputDir=strOutterOutputDir+'/'+strategy.getStrategyName()+'/'
+    strOutputDir=strOutterOutputDir+'/'+strategy.getStrategyName()
     
     myPath = Path(strOutputDir)
 
@@ -475,9 +478,11 @@ for strategy in strList:
     #循环所有股票，使用指定策略进行处理
 #    for line in in_text.readlines():  
 #        stockCode = line.rstrip("\n")
+    latestholdAmtDict={}
+    
     for index,stockCode in stockCodeList.items():
 
-        outputFile = strOutputDir + stockCode + '.csv'
+        outputFile = strOutputDir+'/'+ stockCode + '.csv'
         myPath = Path(outputFile)
 
         #如果文件已经存在，说明已经处理过了，直接跳过该股票即可
@@ -485,47 +490,53 @@ for strategy in strList:
             print(stockCode,'已处理过')
             continue
         else:
-            processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
+            latestholdAmt = processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
         #    print('完成'+stockCode+'的处理')
+            latestholdAmtDict[stockCode]=latestholdAmt
 
 
 
     #读取文件列表
-    fileList = os.listdir(strOutputDir)
+    stockfileList = os.listdir(strOutputDir)
     
     #记录csv内容的列表
     fileContentTupleList = []
     
     #对文件列表中的文件进行处理，获取内容列表
-    for fileStr in fileList:
-        if not fileStr=="Summary.csv":
-            df = FileProcessor.readFile(strOutterOutputDir+fileStr)
-            fileContentTupleList.append((fileStr[:-4],df))
+    for stockfileStr in stockfileList:
+        if not stockfileStr=="Summary.csv":
+            df = FileProcessor.readFile(strOutputDir+'/'+stockfileStr)
+            fileContentTupleList.append((stockfileStr[:-4],df))
+
+
 
     #对各个日期计算相应的资金净流量
-    cashFlowTuple= {}
+    cashFlowDict= {}
     #对已有的内容列表进行处理
-    for fileName,fileDF in fileContentTupleList:
-        print(fileName)
+    for stockfileName,stockfileDF in fileContentTupleList:
+        print(stockfileName)
     
         #如果Summary-all.csv已经存在，则直接覆盖
       
         i=0
         while True:
-            if not (fileDF.at[i,'日期'] in cashFlowTuple):
-                cashFlowTuple[fileDF.at[i,'日期']] = float(fileDF.at[i,'当天资金净流量'])
+            if not (stockfileDF.at[i,'日期'] in cashFlowDict):
+                cashFlowDict[stockfileDF.at[i,'日期']]=float(stockfileDF.at[i,'当天资金净流量'])
             else:
-                cashFlowTuple[fileDF.at[i,'日期']] = float(cashFlowTuple[fileDF.at[i,'日期']])+float(fileDF.at[i,'当天资金净流量'])
+                cashFlowDict[stockfileDF.at[i,'日期']]=float(cashFlowDict[stockfileDF.at[i,'日期']])+float(stockfileDF.at[i,'当天资金净流量'])
             i=i+1
-            if i==len(fileDF):
+            if i==len(stockfileDF):
+                #最后一天，要把当天的持仓增加到净现金流
+                #以便计算XIRR
+                cashFlowDict[stockfileDF.at[i-1,'日期']]=float(cashFlowDict[stockfileDF.at[i-1,'日期']])+latestholdAmtDict[stockfileName]
                 break
     
     savedStdout = sys.stdout  #保存标准输出流
-    sys.stdout = open(strOutputDir+'/Summary-all.csv','wt+')
+    sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
     
     print('日期,当日资金净流量')
-    for key in cashFlowTuple.keys():
+    for key in cashFlowDict.keys():
         print(key,end=',')
-        print(cashFlowTuple.get(key))
+        print(cashFlowDict.get(key))
     
     sys.stdout = savedStdout  #恢复标准输出流
