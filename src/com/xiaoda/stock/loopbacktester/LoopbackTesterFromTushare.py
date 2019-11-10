@@ -12,8 +12,7 @@ import os
 import csv
 import pandas
 from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeProcessor
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR,\
-    StrategyList
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
 from datetime import datetime as dt
 import datetime
 #import shutil
@@ -23,6 +22,9 @@ from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 from com.xiaoda.stock.loopbacktester.utils import IRRUtils
 from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 
+from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 
 
 def printStockOutputHead():
@@ -442,9 +444,9 @@ sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol
 stockCodeList = sdf['ts_code']
 
 
-
 #要处理的策略列表
-strList = StrategyList
+strList= [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+
 
 
 #对所有策略进行循环：
