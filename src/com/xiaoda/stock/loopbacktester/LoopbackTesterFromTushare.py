@@ -25,6 +25,7 @@ from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
 from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
 from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
+from pandas.tests.groupby.test_value_counts import keys
 
 
 def printStockOutputHead():
@@ -539,7 +540,9 @@ for strategy in strList:
     
     cashFlowList=[]
     print('日期,当日资金净流量')
-    for key in cashFlowDict.keys():
+    keysList=cashFlowDict.keys()
+    keysList.sort()
+    for key in keysList:
         print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
         print(cashFlowDict.get(key))
         cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key))))
