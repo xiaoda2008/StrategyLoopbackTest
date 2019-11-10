@@ -388,7 +388,7 @@ sdDataAPI = tushare.pro_api()
 firstOpenDay = STARTDATE
 
 
-trade_cal_data = sdDataAPI.trade_cal(exchange='', start_date='1990-12-19')
+trade_cal_data = sdDataAPI.trade_cal(start_date='1990-12-19')
 
 trade_cal_data=trade_cal_data.set_index('cal_date')
 
@@ -447,6 +447,7 @@ stockCodeList = sdf['ts_code']
 
 #要处理的策略列表
 strList= [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+#strList= [SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
 
 
 
@@ -540,7 +541,7 @@ for strategy in strList:
     
     cashFlowList=[]
     print('日期,当日资金净流量')
-    keysList=cashFlowDict.keys()
+    keysList=list(cashFlowDict.keys())
     keysList.sort()
     for key in keysList:
         print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
@@ -549,6 +550,6 @@ for strategy in strList:
     
     
     print(strategy.getStrategyName()+'在%s到%s期间内IRR为：'%(STARTDATE,ENDDATE),end=',')
-    print(IRRProcessor.xirr(cashFlowList))
+    print(IRRProcessor.xirr2(cashFlowList))
     
     sys.stdout = savedStdout #恢复标准输出流

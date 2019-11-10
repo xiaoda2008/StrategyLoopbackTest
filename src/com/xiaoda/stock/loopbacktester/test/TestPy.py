@@ -26,6 +26,27 @@ from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 import datetime
 from scipy import optimize
  
+
+
+
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+
+sdDataAPI = tushare.pro_api()
+
+#1、获取交易日信息，并存入数据库
+STARTDATE = '20050101'#20071016
+ENDDATE = '20050624'#20081031
+
+
+#不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ', adj='qfq', start_date=STARTDATE, end_date=ENDDATE)
+
+#sdDataAPI.query('trade_cal', start_date='20180101', end_date='20181231')
+
+trade_cal_data = sdDataAPI.trade_cal(exchange='', start_date=STARTDATE, end_date=ENDDATE)
+
+
+
 # 函数
 def xnpv(rate, cashflows):
     return sum([cf/(1+rate)**((t-cashflows[0][0]).days/365.0) for (t,cf) in cashflows])
@@ -311,9 +332,9 @@ stock_his['SMA_20'] = stock_his['close'].rolling(20).mean()
 
 stock_his['close_shift'] = stock_his['close'].shift(1)
 
-stock_his.plot(subplots=True,figsize=(10,6))
+#stock_his.plot(subplots=True,figsize=(10,6))
 
-stock_his[['close','SMA_20']].plot(figsize=(10,6))
+#stock_his[['close','SMA_20']].plot(figsize=(10,6))
 
 print()
 
