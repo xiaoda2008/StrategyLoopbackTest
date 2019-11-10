@@ -3,14 +3,19 @@ Created on 2019年10月28日
 
 @author: picc
 '''
+
+from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
+
 #股票代码库
 #INPUTFILE = 'D:/stockList.txt'
 OUTPUTDIR = 'D:/outputDir'
 
 
 #换成tushare pro之后，不能间隔超过4000个交易日（约18年）
-STARTDATE = '20071016'#20071016
-ENDDATE = '20081031'#20081031
+STARTDATE = '20180125'#20071016
+ENDDATE = '20190103'#20081031
 
 
 
@@ -27,3 +32,6 @@ nShare = 3 #第一次买入的数量，默认为10手，部分策略中，后续
 
 #券商佣金费率
 SecChargeRate = 0.00025
+
+#所有可用的策略列表
+StrategyList= [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]

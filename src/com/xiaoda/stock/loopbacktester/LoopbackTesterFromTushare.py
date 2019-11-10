@@ -12,15 +12,16 @@ import os
 import csv
 import pandas
 from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeProcessor
-from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
-from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR,\
+    StrategyList
 from datetime import datetime as dt
 import datetime
 #import shutil
 from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
+from com.xiaoda.stock.loopbacktester.utils import IRRUtils
+from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 
 
 
@@ -442,8 +443,9 @@ stockCodeList = sdf['ts_code']
 
 
 
-#策略的列表
-strList = [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+#要处理的策略列表
+strList = StrategyList
+
 
 #对所有策略进行循环：
 for strategy in strList:
@@ -518,8 +520,6 @@ for strategy in strList:
         while True:
             if not (stockfileDF.at[i,'日期'] in cashFlowDict):
                 cashFlowDict[stockfileDF.at[i,'日期']]=float(stockfileDF.at[i,'当天资金净流量'])
-            elif type(stockfileDF.at[i,'日期'])==NoneType:
-                print("None")
             else:    
                 cashFlowDict[stockfileDF.at[i,'日期']]=float(cashFlowDict[stockfileDF.at[i,'日期']])+float(stockfileDF.at[i,'当天资金净流量'])
             i=i+1
@@ -529,12 +529,21 @@ for strategy in strList:
                 cashFlowDict[stockfileDF.at[i-1,'日期']]=float(cashFlowDict[stockfileDF.at[i-1,'日期']])+float(stockfileDF.at[i-1,'当天持仓账面总金额'])
                 break
     
+    #对字典进行一下排序
+    sorted(cashFlowDict)
+    
     savedStdout = sys.stdout  #保存标准输出流
     sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
     
+    cashFlowList=[]
     print('日期,当日资金净流量')
     for key in cashFlowDict.keys():
         print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
         print(cashFlowDict.get(key))
+        cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key))))
     
-    sys.stdout = savedStdout  #恢复标准输出流
+    
+    print(strategy.getStrategyName()+'在%s到%s期间内IRR为：'%(STARTDATE,ENDDATE),end=',')
+    print(IRRProcessor.xirr(cashFlowList))
+    
+    sys.stdout = savedStdout #恢复标准输出流

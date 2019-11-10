@@ -22,6 +22,34 @@ from pandas.core.frame import DataFrame
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 
 
+
+import datetime
+from scipy import optimize
+ 
+# 函数
+def xnpv(rate, cashflows):
+    return sum([cf/(1+rate)**((t-cashflows[0][0]).days/365.0) for (t,cf) in cashflows])
+ 
+def xirr(cashflows, guess=0.1):
+    try:
+        return optimize.newton(lambda r: xnpv(r,cashflows),guess)
+    except:
+        print('Calc Wrong')
+ 
+ 
+# 测试
+data = [(datetime.date(2006, 1, 1), -10000), (datetime.date(2007, 1, 1), 20000)]
+print(xirr(data))
+
+
+
+
+
+
+
+
+
+
 #记录csv内容的列表
 fileContentTupleList = []
 
