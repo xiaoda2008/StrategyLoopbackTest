@@ -88,7 +88,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-    time.sleep(1)
+    #time.sleep(0.31)
     
     
     #sprint(stock_k_data.columns)
@@ -438,11 +438,25 @@ if myPath.exists():
 os.mkdir(strOutterOutputDir)
 '''
 
+'''
+df = tushare.get_stock_basics()
+df.columns
+for nm in df.name:
+    if 'ST' in nm:
+        print('ST')
+'''
 
 
 sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
 
-stockCodeList = sdf['ts_code']
+
+stockTuples={}
+
+for idx in sdf.index:
+    stockTuples[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
+    
+
+#stockCodeList = sdf['ts_code']
 
 
 #要处理的策略列表
@@ -483,8 +497,11 @@ for strategy in strList:
 #        stockCode = line.rstrip("\n")
     latestholdAmtDict={}
     
-    for index,stockCode in stockCodeList.items():
+    for stockCode,stockName in stockTuples.items():
 
+        if 'ST' in stockName or '退' in stockName:
+            print(stockCode,'为ST股或即将退市股，剔除')
+            continue
         outputFile = strOutputDir+'/'+ stockCode + '.csv'
         myPath = Path(outputFile)
 

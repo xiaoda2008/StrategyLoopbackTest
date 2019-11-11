@@ -25,6 +25,7 @@ from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 
 import datetime
 from scipy import optimize
+from Tools.scripts.nm2def import NM
  
 
 
@@ -36,6 +37,53 @@ from scipy import optimize
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+
+#gpr:毛利率
+#npr:净利率
+
+
+df= tushare.get_stock_basics()
+
+#df=df.set_index('name')
+
+
+idx=df.name.index
+val=df.name.values
+
+print(idx,val)
+
+for cd in idx:
+    
+    print(cd, df.at[cd,'name'])
+'''
+    if 'ST' in df.at[cd,'name']:
+        print('ST,%s,%s'%(cd,df.at[cd,'name']))
+        df.drop(cd,inplace=True)
+    elif '退' in df.at[cd,'name']:
+        print('退,%s,%s'%(cd,df.at[cd,'name']))
+        df.drop(cd,inplace=True)
+    elif cd=='002680':
+        print()
+'''        
+
+print()
+
+
+'''
+i=0
+
+for nm in stNames:
+    if 'ST' in nm:
+        print('ST')
+
+    i=i+1
+'''
+
+'''
+df=df[~df.name.str.contains('ST')]
+
+print(df)
+'''
 
 #获取不复权的数据
 stock_k_data = tushare.pro_bar(ts_code='000001.SZ',start_date='20000101')
