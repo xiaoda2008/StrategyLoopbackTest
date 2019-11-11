@@ -29,9 +29,26 @@ from scipy import optimize
 
 
 
+
+
+
+
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+
+#获取不复权的数据
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ',start_date='20000101')
+
+stock_k_data.to_csv('D:/outputDir/000001.csv',mode='wt')
+df = sdDataAPI.adj_factor(ts_code='000001.SZ',trade_date='')
+
+df.to_csv('D:/outputDir/000001-adj.csv',mode='wt')
+#获取不复权的数据
+
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ',adj='qfq',start_date='20000101')
+
+stock_k_data.to_csv('D:/outputDir/000001-qfq.csv',mode='wt')
 
 #1、获取交易日信息，并存入数据库
 STARTDATE = '20050101'#20071016
@@ -39,7 +56,7 @@ ENDDATE = '20050624'#20081031
 
 
 #不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
-stock_k_data = tushare.pro_bar(ts_code='000001.SZ', adj='qfq', start_date=STARTDATE, end_date=ENDDATE)
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ', adj='qfq', start_date='20000101')
 
 #sdDataAPI.query('trade_cal', start_date='20180101', end_date='20181231')
 

@@ -88,7 +88,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
                                    start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-    time.sleep(0.31)
+    time.sleep(1)
     
     
     #sprint(stock_k_data.columns)
