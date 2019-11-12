@@ -1,16 +1,16 @@
 '''
-Created on 2019年10月30日
+Created on 2019年10月31日
 
 @author: picc
 '''
 import math
-from com.xiaoda.stock.strategies.StrategyParent import StrategyParent
+from com.xiaoda.stock.strategies.tradeStrategy.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 
 class SimplePlusSMAStrategy(StrategyParent):
     '''
-    将基础的策略与SMA策略相结合
-    在跌幅达到一定程度，且股价开始上穿MA20的情况下才进行买入
+    将SMA策略与基础的策略相结合
+    在涨幅达到一定程度时，不论MA20时什么状况，都要进行卖出
     '''
     
     
@@ -21,5 +21,5 @@ class SimplePlusSMAStrategy(StrategyParent):
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
                      stock_k_data,todayDate):
-            return 0
-    
+
+        return 0

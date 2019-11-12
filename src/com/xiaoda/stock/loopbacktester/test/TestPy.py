@@ -28,15 +28,25 @@ from scipy import optimize
 from Tools.scripts.nm2def import NM
  
 
-
-
-
-
-
-
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+
+
+
+#获取资产负债表，总资产
+bs = sdDataAPI.balancesheet(ts_code='000001.SZ',start_date='20190630',end_date='20190930', fields='ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,cap_rese,total_assets')
+bs.at[0,'total_assets']
+
+#获取现金流量表中，现金等价物总数
+cf = sdDataAPI.cashflow(ts_code='000001.SZ',start_date='20190630',end_date='20190930')#, period='20190930')
+cf.at[0,'c_cash_equ_end_period']
+
+ration=cf.at[0,'c_cash_equ_end_period']/bs.at[0,'total_assets']
+
+
+
+
 
 #gpr:毛利率
 #npr:净利率

@@ -16,16 +16,13 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,O
 from datetime import datetime as dt
 import datetime
 #import shutil
-from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
-from com.xiaoda.stock.loopbacktester.utils import IRRUtils
 from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 
-from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
-from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
-from pandas.tests.groupby.test_value_counts import keys
+from com.xiaoda.stock.strategies.tradeStrategy.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.strategies.tradeStrategy.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.strategies.tradeStrategy.SMAStrategy import SMAStrategy
 
 
 def printStockOutputHead():
