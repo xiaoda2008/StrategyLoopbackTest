@@ -61,7 +61,7 @@ for index,stockCode in stockCodeList.items():
     log.logger.debug('处理股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
     
     #获取该股票数据并写入数据库
-    stock_k_data = tushare.pro_bar(ts_code=stockCode, adj='qfq', start_date=STARTDATE, end_date=ENDDATE)
+    stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
     
     if type(stock_k_data)==NoneType:
         #如果没有任何返回值，说明该时间段内没有上市交易过该股票
@@ -85,7 +85,7 @@ for index,stockCode in stockCodeList.items():
     log.logger.debug('处理股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
     
     #获取该股票数据并写入数据库
-    stock_k_data = tushare.pro_bar(ts_code=stockCode, adj='qfq', start_date=STARTDATE, end_date=ENDDATE)
+    stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
     
     if type(stock_k_data)==NoneType:
         #如果没有任何返回值，说明该时间段内没有上市交易过该股票
@@ -107,3 +107,11 @@ for index,stockCode in stockCodeList.items():
         stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
 
 
+
+    log.logger.debug('处理股票%s的复权因子'%(stockCode))
+    
+    #获取该股票的复权因子数据并写入数据库
+    adj_data = sdDataAPI.adj_factor(ts_code='000001.SZ',trade_date='')
+    
+    #存入数据库
+    adj_data.to_sql(name='s_adjdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
