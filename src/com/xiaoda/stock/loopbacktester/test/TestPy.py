@@ -56,9 +56,14 @@ sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol
 
 cfRatioDict={}
 
+cnt=0
 for idx in sdf.index:
 #    stockTuples[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
 
+    if cnt>120:
+        break
+    else:
+        cnt=cnt+1
     #获取资产负债表，总资产
     bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'), fields='ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,cap_rese,total_assets')
     bs.at[0,'total_assets']
@@ -81,7 +86,7 @@ for cd, ratio in sortedCFRatioList:
     print(cd,' : ',round(ratio*100,2),'%')
 
 
-topCFRatio100 = sortedCFRatioList[:100][0]
+topCFRatio100 = sortedCFRatioList[:100]
 
 #gpr:毛利率
 #npr:净利率
