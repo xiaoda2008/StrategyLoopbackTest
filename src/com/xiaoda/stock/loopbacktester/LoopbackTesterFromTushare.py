@@ -447,10 +447,10 @@ for nm in df.name:
 sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
 
 
-stockTuples={}
+stockDict={}
 
 for idx in sdf.index:
-    stockTuples[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
+    stockDict[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
     
 
 #stockCodeList = sdf['ts_code']
@@ -494,7 +494,7 @@ for strategy in strList:
 #        stockCode = line.rstrip("\n")
     latestholdAmtDict={}
     
-    for stockCode,stockName in stockTuples.items():
+    for stockCode,stockName in stockDict.items():
 
         if 'ST' in stockName or '退' in stockName:
             print(stockCode,'为ST股或即将退市股，剔除')
