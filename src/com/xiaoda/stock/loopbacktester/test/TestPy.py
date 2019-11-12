@@ -12,7 +12,7 @@ import numpy
 from pathlib import Path
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
 
-
+import time
 import sqlalchemy
 import os
 import sys
@@ -26,17 +26,67 @@ from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 import datetime
 from scipy import optimize
 from Tools.scripts.nm2def import NM
+from test.test_decimal import cfractions
  
-
-
-
-
-
-
 
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+
+
+def getlastquarterfirstday():
+    today=dt.now()
+    quarter = (today.month-1)/3+1
+    if quarter == 1:
+        return dt(today.year-1,10,1)
+    elif quarter == 2:
+        return dt(today.year,1,1)
+    elif quarter == 3:
+        return dt(today.year,4,1)
+    else:
+        return dt(today.year,7,1)
+
+startday=getlastquarterfirstday().strftime('%Y%m%d')
+
+
+sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+
+
+#stockTuples={}
+
+cfRatioDict={}
+
+cnt=0
+for idx in sdf.index:
+#    stockTuples[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
+
+    if cnt>120:
+        break
+    else:
+        cnt=cnt+1
+    #获取资产负债表，总资产
+    bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'), fields='ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,cap_rese,total_assets')
+    bs.at[0,'total_assets']
+    time.sleep(0.75)
+    
+    #获取现金流量表中，现金等价物总数
+    cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
+    cf.at[0,'c_cash_equ_end_period']
+
+    ratio=cf.at[0,'c_cash_equ_end_period']/bs.at[0,'total_assets']
+    
+    cfRatioDict[sdf.at[idx,'ts_code']]=ratio
+
+print()
+
+sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
+
+
+for cd, ratio in sortedCFRatioList:
+    print(cd,' : ',round(ratio*100,2),'%')
+
+
+topCFRatio100 = sortedCFRatioList[:100]
 
 #gpr:毛利率
 #npr:净利率

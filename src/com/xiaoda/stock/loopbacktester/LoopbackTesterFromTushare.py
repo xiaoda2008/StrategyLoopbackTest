@@ -16,16 +16,15 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,O
 from datetime import datetime as dt
 import datetime
 #import shutil
-from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
-from com.xiaoda.stock.loopbacktester.utils import IRRUtils
 from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 
-from com.xiaoda.stock.strategies.SimpleStrategy import SimpleStrategy
-from com.xiaoda.stock.strategies.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.strategies.SMAStrategy import SMAStrategy
-from pandas.tests.groupby.test_value_counts import keys
+from com.xiaoda.stock.strategies.tradeStrategy.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.strategies.tradeStrategy.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.strategies.tradeStrategy.SMAStrategy import SMAStrategy
+from com.xiaoda.stock.strategies.stockSelectStrategy.RawStrategy import RawStrategy
+from com.xiaoda.stock.strategies.stockSelectStrategy.CashCowStrategy import CashCowStrategy
 
 
 def printStockOutputHead():
@@ -378,195 +377,253 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
 
+import getopt
+import argparse
 
-#使用TuShare pro版本
-tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
-
-sdDataAPI = tushare.pro_api()
-
-#通过STARTDATE找到第一个交易日
-firstOpenDay = STARTDATE
-
-
-trade_cal_data = sdDataAPI.trade_cal(start_date='1990-12-19')
-
-trade_cal_data=trade_cal_data.set_index('cal_date')
-
-while True:
-    if trade_cal_data.at[dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d'),'is_open']==0:
-        #tushare.is_holiday(dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d')):
-        #当前日期为节假日，查看下一天是否是交易日
-        cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
-        dayOffset = datetime.timedelta(1)
-        # 获取想要的日期的时间
-        firstOpenDay = (cday + dayOffset).strftime('%Y%m%d')
-    else:
-        #找到第一个交易日，跳出
-        break
-
+if __name__ == '__main__':
     
-#需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
-#可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
-#向前找30个交易日
+    # 创建命令行解析器句柄，并自定义描述信息
+    parser = argparse.ArgumentParser(description="test the argparse package")
+    # 定义必选参数 positionArg
+    parser.add_argument("project_name")
+    # 定义可选参数module
+    parser.add_argument("--stockstrategy","-ss",type=str, default=1,help="Select the stock select strategy")
+    # 定义可选参数module1
+    parser.add_argument("--tradestrategy", "-ts",type=str, default=1,help="Select the trade strategy")
+    # 指定参数类型（默认是 str）
+    # parser.add_argument('x', type=int, help='test the type')
+    # 设置参数的可选范围
+    # parser.add_argument('--verbosity3', '-v3', type=str, choices=['one', 'two', 'three', 'four'], help='test choices')
+    # 设置参数默认值
+    # parser.add_argument('--verbosity4', '-v4', type=str, choices=['one', 'two', 'three'], default=1,help='test default value')
+    args = parser.parse_args()  # 返回一个命名空间
+    #print(args)
+    params = vars(args)  # 返回 args 的属性和属性值的字典
+    v1=[]
 
-
-cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
-dayOffset = datetime.timedelta(1)
-cnt=0
-# 获取想要的日期的时间
-while True:
-    cday = (cday - dayOffset)
-    if trade_cal_data.at[cday.strftime('%Y%m%d'),'is_open']==1:
-        cnt+=1
-        if cnt==30:
-            break
-twentyDaysBeforeFirstOpenDay=cday.strftime('%Y%m%d')
-
-
-strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE
-
-myPath = Path(strOutterOutputDir)
-
-#如果该位置存在，则直接使用该位置，不用删除掉重新算
-if not(myPath.exists()):
-    os.mkdir(strOutterOutputDir)
-
-'''
-if myPath.exists():
-    shutil.rmtree(strOutterOutputDir)
-
-os.mkdir(strOutterOutputDir)
-'''
-
-'''
-df = tushare.get_stock_basics()
-df.columns
-for nm in df.name:
-    if 'ST' in nm:
-        print('ST')
-'''
-
-
-sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-
-
-stockTuples={}
-
-for idx in sdf.index:
-    stockTuples[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
+    stockSelectStrategyString=''
+    tradeStrategyString=''
     
+    for k, v in params.items():
+        if k=='stockstrategy':
+            stockSelectStrategyString=v
+        elif k=='tradestrategy':
+            tradeStrategyString=v
+        #v1.append(v)
+        # print(v)
 
-#stockCodeList = sdf['ts_code']
-
-
-#要处理的策略列表
-strList= [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
-#strList= [SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
-
-
-
-#对所有策略进行循环：
-for strategy in strList:
-    savedStdout = sys.stdout  #保存标准输出流
-     
-    strOutputDir=strOutterOutputDir+'/'+strategy.getStrategyName()
+    #print(stockSelectStrategyString)
+    #print(tradeStrategyString)
     
-    myPath = Path(strOutputDir)
-
-    #如果该位置存在，则直接使用该位置，不用删除掉重新算
-    if not(myPath.exists()):
-        os.mkdir(strOutputDir)
     
-    outputFile = strOutputDir+'/Summary.csv'
     
-
-    myPath = Path(outputFile)
-    #如果Summary.csv已经存在，则直接追加即可，不用往里面继续写入抬头
-    if not(myPath.exists()):
-        #追加方式写入，针对如果已经处理了一半的策略
-        sys.stdout = open(outputFile,'at+')
-        printSummaryOutputHead()
-    sys.stdout = savedStdout  #恢复标准输出流
-
-    #对所有股票代码，循环进行处理
-    #in_text = open(INPUTFILE, 'r')
-    #直接对stockList进行遍历，不需要通过INPUTFILE获取股票列表
+    stockSelectStrategyList=[]#stockSelectStrategyString.split(',')
+    tradeStrategyList=[]#tradeStrategyString.split(',')
     
-    #循环所有股票，使用指定策略进行处理
-#    for line in in_text.readlines():  
-#        stockCode = line.rstrip("\n")
-    latestholdAmtDict={}
+    #生成选股策略
+    if 'RawStrategy' in stockSelectStrategyString:
+        stockSelectStrategyList.append(RawStrategy('RawStrategy'))
+    if 'CashCowStrategy' in stockSelectStrategyString:
+        stockSelectStrategyList.append(CashCowStrategy('CashCowStrategy'))
     
-    for stockCode,stockName in stockTuples.items():
-
-        if 'ST' in stockName or '退' in stockName:
-            print(stockCode,'为ST股或即将退市股，剔除')
-            continue
-        outputFile = strOutputDir+'/'+ stockCode + '.csv'
-        myPath = Path(outputFile)
-
-        #如果文件已经存在，说明已经处理过了，直接跳过该股票即可
-        if myPath.exists():
-            print(stockCode,'已处理过')
-            continue
+    #生成交易策略
+    if 'SimpleStrategy' in tradeStrategyString:
+        tradeStrategyList.append(SimpleStrategy('SimpleStrategy'))
+    if 'SMAStrategy' in tradeStrategyString:
+        tradeStrategyList.append(SMAStrategy('SMAStrategy'))
+    if 'MultiStepStrategy' in tradeStrategyString:
+        tradeStrategyList.append(MultiStepStrategy('MultiStepStrategy'))
+    
+    #使用TuShare pro版本
+    tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+    
+    sdDataAPI = tushare.pro_api()
+    
+    
+    #通过STARTDATE找到第一个交易日
+    firstOpenDay = STARTDATE
+    
+    
+    trade_cal_data = sdDataAPI.trade_cal(start_date='1990-12-19')
+    
+    trade_cal_data=trade_cal_data.set_index('cal_date')
+    
+    while True:
+        if trade_cal_data.at[dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d'),'is_open']==0:
+            #tushare.is_holiday(dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d')):
+            #当前日期为节假日，查看下一天是否是交易日
+            cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
+            dayOffset = datetime.timedelta(1)
+            # 获取想要的日期的时间
+            firstOpenDay = (cday + dayOffset).strftime('%Y%m%d')
         else:
-            processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
-        #    print('完成'+stockCode+'的处理')
-
-
-
-    #读取文件列表
-    stockfileList = os.listdir(strOutputDir)
+            #找到第一个交易日，跳出
+            break
     
-    #记录csv内容的列表
-    fileContentTupleList = []
+        
+    #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
+    #可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
+    #向前找30个交易日
     
-    #对文件列表中的文件进行处理，获取内容列表
-    for stockfileStr in stockfileList:
-        if not 'Summary' in stockfileStr:
-            df = FileProcessor.readFile(strOutputDir+'/'+stockfileStr)
-            fileContentTupleList.append((stockfileStr[:-4],df))
-
-
-
-    #对各个日期计算相应的资金净流量
-    cashFlowDict= {}
-    #对已有的内容列表进行处理
-    for stockfileName,stockfileDF in fileContentTupleList:
-        print(stockfileName)
     
-        #如果Summary-all.csv已经存在，则直接覆盖
-      
-        i=0
-        while True:
-            if not (stockfileDF.at[i,'日期'] in cashFlowDict):
-                cashFlowDict[stockfileDF.at[i,'日期']]=float(stockfileDF.at[i,'当天资金净流量'])
-            else:    
-                cashFlowDict[stockfileDF.at[i,'日期']]=float(cashFlowDict[stockfileDF.at[i,'日期']])+float(stockfileDF.at[i,'当天资金净流量'])
-            i=i+1
-            if i==len(stockfileDF):
-                #最后一天，要把当天的持仓增加到净现金流
-                #以便计算XIRR
-                cashFlowDict[stockfileDF.at[i-1,'日期']]=float(cashFlowDict[stockfileDF.at[i-1,'日期']])+float(stockfileDF.at[i-1,'当天持仓账面总金额'])
+    cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
+    dayOffset = datetime.timedelta(1)
+    cnt=0
+    # 获取想要的日期的时间
+    while True:
+        cday = (cday - dayOffset)
+        if trade_cal_data.at[cday.strftime('%Y%m%d'),'is_open']==1:
+            cnt+=1
+            if cnt==30:
                 break
-    
-    #对字典进行一下排序
-    sorted(cashFlowDict)
-    
-    savedStdout = sys.stdout  #保存标准输出流
-    sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
-    
-    cashFlowList=[]
-    print('日期,当日资金净流量')
-    keysList=list(cashFlowDict.keys())
-    keysList.sort()
-    for key in keysList:
-        print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
-        print(cashFlowDict.get(key))
-        cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key))))
+    twentyDaysBeforeFirstOpenDay=cday.strftime('%Y%m%d')
     
     
-    print(strategy.getStrategyName()+'在%s到%s期间内IRR为：'%(STARTDATE,ENDDATE),end=',')
-    print(IRRProcessor.xirr2(cashFlowList))
+    '''
+    if myPath.exists():
+        shutil.rmtree(strOutterOutputDir)
     
-    sys.stdout = savedStdout #恢复标准输出流
+    os.mkdir(strOutterOutputDir)
+    '''
+    
+    '''
+    df = tushare.get_stock_basics()
+    df.columns
+    for nm in df.name:
+        if 'ST' in nm:
+            print('ST')
+    '''
+    
+    '''
+    sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+    
+    
+    stockDict={}
+    
+    for idx in sdf.index:
+        stockDict[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
+        
+    '''
+    
+    #stockCodeList = sdf['ts_code']
+    
+    for stockSelectStrategy in stockSelectStrategyList:
+        
+        #从参数获取股票选取策略
+        stockList=stockSelectStrategy.getStockList(sdDataAPI)
+        
+        strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'-'+stockSelectStrategy.getStrategyName()
+        
+        myPath = Path(strOutterOutputDir)
+        
+        #如果该位置存在，则直接使用该位置，不用删除掉重新算
+        if not(myPath.exists()):
+            os.mkdir(strOutterOutputDir)
+        #从参数获取交易策略
+    #    strategyList= [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+        #strList= [SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
+        
+        
+        
+        #对所有策略进行循环：
+        for tradeStrategy in tradeStrategyList:
+            savedStdout = sys.stdout  #保存标准输出流
+             
+            strOutputDir=strOutterOutputDir+'/'+tradeStrategy.getStrategyName()
+            
+            myPath = Path(strOutputDir)
+        
+            #如果该位置存在，则直接使用该位置，不用删除掉重新算
+            if not(myPath.exists()):
+                os.mkdir(strOutputDir)
+            
+            outputFile = strOutputDir+'/Summary.csv'
+            
+        
+            myPath = Path(outputFile)
+            #如果Summary.csv已经存在，则直接追加即可，不用往里面继续写入抬头
+            if not(myPath.exists()):
+                #追加方式写入，针对如果已经处理了一半的策略
+                sys.stdout = open(outputFile,'at+')
+                printSummaryOutputHead()
+            sys.stdout = savedStdout  #恢复标准输出流
+        
+            #对所有股票代码，循环进行处理
+            #in_text = open(INPUTFILE, 'r')
+            #直接对stockList进行遍历，不需要通过INPUTFILE获取股票列表
+            
+            #循环所有股票，使用指定策略进行处理
+        #    for line in in_text.readlines():  
+        #        stockCode = line.rstrip("\n")
+            latestholdAmtDict={}
+            
+            for stockCode in stockList:
+        
+                outputFile = strOutputDir+'/'+ stockCode + '.csv'
+                myPath = Path(outputFile)
+        
+                #如果文件已经存在，说明已经处理过了，直接跳过该股票即可
+                if myPath.exists():
+                    print(stockCode,'已处理过')
+                    continue
+                else:
+                    processStock(stockCode,tradeStrategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
+                #    print('完成'+stockCode+'的处理')
+        
+        
+        
+            #读取文件列表
+            stockfileList = os.listdir(strOutputDir)
+            
+            #记录csv内容的列表
+            fileContentTupleList = []
+            
+            #对文件列表中的文件进行处理，获取内容列表
+            for stockfileStr in stockfileList:
+                if not 'Summary' in stockfileStr:
+                    df = FileProcessor.readFile(strOutputDir+'/'+stockfileStr)
+                    fileContentTupleList.append((stockfileStr[:-4],df))
+        
+        
+        
+            #对各个日期计算相应的资金净流量
+            cashFlowDict= {}
+            #对已有的内容列表进行处理
+            for stockfileName,stockfileDF in fileContentTupleList:
+                print(stockfileName)
+            
+                #如果Summary-all.csv已经存在，则直接覆盖
+              
+                i=0
+                while True:
+                    if not (stockfileDF.at[i,'日期'] in cashFlowDict):
+                        cashFlowDict[stockfileDF.at[i,'日期']]=float(stockfileDF.at[i,'当天资金净流量'])
+                    else:    
+                        cashFlowDict[stockfileDF.at[i,'日期']]=float(cashFlowDict[stockfileDF.at[i,'日期']])+float(stockfileDF.at[i,'当天资金净流量'])
+                    i=i+1
+                    if i==len(stockfileDF):
+                        #最后一天，要把当天的持仓增加到净现金流
+                        #以便计算XIRR
+                        cashFlowDict[stockfileDF.at[i-1,'日期']]=float(cashFlowDict[stockfileDF.at[i-1,'日期']])+float(stockfileDF.at[i-1,'当天持仓账面总金额'])
+                        break
+            
+            #对字典进行一下排序
+            sorted(cashFlowDict)
+            
+            savedStdout = sys.stdout  #保存标准输出流
+            sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
+            
+            cashFlowList=[]
+            print('日期,当日资金净流量')
+            keysList=list(cashFlowDict.keys())
+            keysList.sort()
+            for key in keysList:
+                print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
+                print(cashFlowDict.get(key))
+                cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key))))
+            
+            
+            print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(STARTDATE,ENDDATE),end=',')
+            print(IRRProcessor.xirr2(cashFlowList))
+            
+            sys.stdout = savedStdout #恢复标准输出流

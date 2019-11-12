@@ -5,16 +5,14 @@ Created on 2019年10月29日
 '''
 import pandas
 import math
-from com.xiaoda.stock.strategies.StrategyParent import StrategyParent
+from com.xiaoda.stock.strategies.tradeStrategy.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare
 
 
 class SMAStrategy(StrategyParent):
     '''
-    SMA+止盈策略
+    SMA（简单移动平均）策略
             根据MA的数值变化情况，决定是否买入或者卖出
-            同时考虑持仓收益情况，当持仓收益超过20%时，全部卖出
-            进入下一策略周期
     '''
 
  
@@ -45,11 +43,19 @@ class SMAStrategy(StrategyParent):
 
         #应该用当天开盘价与前一天的MA20进行比较
         if stock_k_data.at[todayDate,'pre_close']<yesterdayDayMA20 and priceNow>yesterdayDayMA20:
-            #前一天收盘价格低于20日均线，且当天开盘价格高于20日均线-》上穿20日均线，可以买入
-            return math.floor(nShare/2)
+            if priceNow < stock_k_data.at[todayDate,'pre_close']*1.09:
+                #前一天收盘价格低于20日均线，且当天开盘价格高于20日均线-》上穿20日均线，可以买入
+                #当天不是涨停状态超线，可以买入
+                return math.floor(nShare/2)
+            else:
+                return 0
         elif stock_k_data.at[todayDate,'pre_close']>yesterdayDayMA20 and priceNow<yesterdayDayMA20:
             #前一天收盘价格高于20日均线，且当天开盘价格低于20日均线-》下穿20日均线，可以卖出
-            return -1*math.floor(nShare/2)
+            #当天不是以跌停状态超线
+            if priceNow > stock_k_data.at[todayDate,'pre_close']*0.9:
+                return -1*math.floor(nShare/2)
+            else:
+                return 0
         else:
             return 0
         
