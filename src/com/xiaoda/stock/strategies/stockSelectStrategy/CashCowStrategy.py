@@ -37,7 +37,7 @@ class CashCowStrategy(StrategyParent):
             #获取资产负债表，总资产
             bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'), fields='ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,cap_rese,total_assets')
             bs.at[0,'total_assets']
-            time.sleep(0.75)
+            time.sleep(0.8)
     
             #获取现金流量表中，现金等价物总数
             cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
@@ -45,6 +45,7 @@ class CashCowStrategy(StrategyParent):
         
             ratio=cf.at[0,'c_cash_equ_end_period']/bs.at[0,'total_assets']
     
+            print('CashCowStrategy:'+sdf.at[idx,'ts_code'])
             cfRatioDict[sdf.at[idx,'ts_code']]=ratio
 
         sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)

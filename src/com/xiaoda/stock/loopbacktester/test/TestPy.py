@@ -65,7 +65,8 @@ for idx in sdf.index:
     else:
         cnt=cnt+1
     #获取资产负债表，总资产
-    bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'), fields='ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,cap_rese,total_assets')
+    bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
+    print(bs.columns)
     bs.at[0,'total_assets']
     time.sleep(0.75)
     

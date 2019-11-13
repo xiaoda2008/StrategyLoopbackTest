@@ -385,7 +385,7 @@ if __name__ == '__main__':
     # 创建命令行解析器句柄，并自定义描述信息
     parser = argparse.ArgumentParser(description="test the argparse package")
     # 定义必选参数 positionArg
-    parser.add_argument("project_name")
+   # parser.add_argument("project_name")
     # 定义可选参数module
     parser.add_argument("--stockstrategy","-ss",type=str, default=1,help="Select the stock select strategy")
     # 定义可选参数module1
