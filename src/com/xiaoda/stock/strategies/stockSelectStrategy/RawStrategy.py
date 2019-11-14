@@ -6,6 +6,7 @@ Created on 2019年11月12日
 from com.xiaoda.stock.strategies.stockSelectStrategy.StrategyParent import StrategyParent
 from datetime import datetime as dt
 import time
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 
 class RawStrategy(StrategyParent):
     '''
@@ -14,11 +15,12 @@ class RawStrategy(StrategyParent):
 
     
     #决定对哪些股票进行投资
-    def getStockList(self,sdDataAPI):
+    def getSelectedStockList(self):
         
         returnStockList=[]
         
-        sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+        sdf=MysqlProcessor.getStockList()
+        #sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
 
         stockDict={}
 

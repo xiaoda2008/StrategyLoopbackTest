@@ -44,13 +44,19 @@ startday=getlastquarterfirstday().strftime('%Y%m%d')
 
 for idx in sdf.index:
 
-    if sdf.at[idx,'ts_code'][:6]<'300108':
-        continue
+    #if not(sdf.at[idx,'ts_code'][:6]=='300802'):
+    #    continue
+    #elif sdf.at[idx,'ts_code'][:6]>'600428':
+    #    break;
+    
+    log.logger.info('处理%s的财务报表数据'%(sdf.at[idx,'ts_code']))
+    
+    
     #获取资产负债表
-    bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,
+    bs=sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,
                                 end_date=dt.now().strftime('%Y%m%d'))
     #bs.at[0,'total_assets']
-    time.sleep(1)
+    #time.sleep(1)
     bs.to_sql(name='s_balancesheet_'+sdf.at[idx,'ts_code'][:6],
               con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
@@ -60,7 +66,7 @@ for idx in sdf.index:
     cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,
                             end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
     #cf.at[0,'c_cash_equ_end_period']
-    cf.to_sql(name='s_cashfow_'+sdf.at[idx,'ts_code'][:6],
+    cf.to_sql(name='s_cashflow_'+sdf.at[idx,'ts_code'][:6],
               con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
 

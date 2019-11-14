@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
+from abc import abstractstaticmethod
 
 #from sqlalchemy.sql import and_,or_
 
@@ -24,7 +25,7 @@ class MysqlProcessor():
     
     @staticmethod
     def isMarketDay(dtStr):
-        mysqlEngine = MysqlUtils.getMysqlEngine()
+        mysqlEngine = MysqlProcessor.getMysqlEngine()
         
         # 创建对象的基类:
         Base = declarative_base()
@@ -71,7 +72,7 @@ class MysqlProcessor():
             # 获取想要的日期的时间
             nextMarketDay = (cday+dayOffset).strftime('%Y%m%d')
             
-            if MysqlUtils.isMarketDay(dt.strptime(nextMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+            if MysqlProcessor.isMarketDay(dt.strptime(nextMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
                 #找到第一个交易日，跳出
                 break
         
@@ -90,7 +91,7 @@ class MysqlProcessor():
             # 获取想要的日期的时间
             lastMarketDay = (cday-dayOffset).strftime('%Y%m%d')
             
-            if MysqlUtils.isMarketDay(dt.strptime(lastMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+            if MysqlProcessor.isMarketDay(dt.strptime(lastMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
                 #找到第一个交易日，跳出
                 break
         
@@ -98,8 +99,14 @@ class MysqlProcessor():
     
     @staticmethod
     def getStockList():
-        engine = MysqlUtils.getMysqlEngine()
+        engine = MysqlProcessor.getMysqlEngine()
+        #查询语句
+        sql = 'select * from u_stock_list'
+        #查询结果
+        df = pandas.read_sql_query(sql,engine)
+        return df
         
+        '''
         # 创建对象的基类:
         Base = declarative_base()
 
@@ -131,16 +138,36 @@ class MysqlProcessor():
         session.close()
         
         return stockList
+        '''
 
     @staticmethod
     def getStockKData(stockCode,startDate,endDate):
-        engine = MysqlUtils.getMysqlEngine()
+        engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode,startDate,endDate)
         #查询结果
         df = pandas.read_sql_query(sql,engine)
         return df
 
+
+    @staticmethod
+    def getLatestStockBalanceSheet(stockCode):
+        engine = MysqlProcessor.getMysqlEngine()
+        #查询语句
+        sql = 'select * from s_balancesheet_%s order by ann_date desc limit 1;'%(stockCode[:6])
+        #查询结果
+        df = pandas.read_sql_query(sql,engine)
+        return df
+    
+    @staticmethod
+    def getLatestStockCashFlow(stockCode):
+        engine = MysqlProcessor.getMysqlEngine()
+        #查询语句
+        sql = 'select * from s_cashflow_%s order by ann_date desc limit 1;'%(stockCode[:6])
+        #查询结果
+        df = pandas.read_sql_query(sql,engine)
+        return df
+    
         '''
         # 创建对象的基类:
         Base = declarative_base()
