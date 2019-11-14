@@ -10,11 +10,11 @@ import shutil
 from pathlib import Path
 from datetime import datetime as dt
 import datetime
-from com.xiaoda.stock.strategies.tradeStrategy.SMAStrategy import SMAStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrategy
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
-from com.xiaoda.stock.strategies.tradeStrategy.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.SimpleStrategy import SimpleStrategy
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
-from com.xiaoda.stock.strategies.tradeStrategy.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.MultiStepStrategy import MultiStepStrategy
 from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeProcessor
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,nShare,LOGGINGDIR,OUTPUTDIR
 

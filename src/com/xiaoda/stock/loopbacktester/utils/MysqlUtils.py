@@ -6,6 +6,7 @@ Created on 2019年11月3日
 import pandas
 from datetime import datetime as dt
 import datetime
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String,Integer,create_engine
@@ -22,6 +23,17 @@ class MysqlProcessor():
         engine = create_engine(mysqlURL)
         return engine
     
+    
+    @staticmethod
+    def getTradeCal():
+        engine = MysqlProcessor.getMysqlEngine()
+        #查询语句
+        sql = "select * from u_trade_cal"
+        #查询结果
+        sqltxt = sqlalchemy.text(sql)
+        df = pandas.read_sql_query(sqltxt,engine)
+        return df
+        
     
     @staticmethod
     def isMarketDay(dtStr):
@@ -101,9 +113,10 @@ class MysqlProcessor():
     def getStockList():
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from u_stock_list'
+        sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
         #查询结果
-        df = pandas.read_sql_query(sql,engine)
+        sqltxt = sqlalchemy.text(sql)
+        df = pandas.read_sql_query(sqltxt,engine)
         return df
         
         '''

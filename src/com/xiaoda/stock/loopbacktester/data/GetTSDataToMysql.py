@@ -37,10 +37,28 @@ tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
 
-sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+#1、获取交易日信息，并存入数据库
+STARTDATE = '19990101'
+ENDDATE = '20191231'
 
+trade_cal_data = sdDataAPI.trade_cal(exchange='',start_date=STARTDATE,end_date=ENDDATE,fields='exchange,cal_date,is_open,pretrade_date')
+
+#将交易日列表存入数据库表中
+trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+
+
+
+#2、获取股票列表并存入数据库
+sdf = sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')
+
+#将股票列表存入数据库表中
+sdf.to_sql(name='u_stock_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+
+stockCodeList = sdf['ts_code']
+
+
+#3、获取财务报表数据，存入数据库
 startday=getlastquarterfirstday().strftime('%Y%m%d')
-
 
 for idx in sdf.index:
 
@@ -71,31 +89,10 @@ for idx in sdf.index:
 
 
 
-#1、获取交易日信息，并存入数据库
-STARTDATE = '19990101'
-ENDDATE = '20191231'
-
-trade_cal_data = sdDataAPI.trade_cal(exchange='',start_date=STARTDATE,end_date=ENDDATE)
-
-#将交易日列表存入数据库表中
-trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
-
-
-#2、获取股票列表并存入数据库
-sdf = sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')
-
-#将股票列表存入数据库表中
-sdf.to_sql(name='u_stock_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
-
-stockCodeList = sdf['ts_code']
-
-
 
 #不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
 
-#3、获取股票数据，并存入数据库
+#3、获取股票不复权日K线、复权因子数据，并存入数据库
 for index,stockCode in stockCodeList.items():
     #用于标记该股票是否出现过数据
     flag = False
@@ -157,7 +154,7 @@ for index,stockCode in stockCodeList.items():
     log.logger.debug('处理股票%s的复权因子'%(stockCode))
     
     #获取该股票的复权因子数据并写入数据库
-    adj_data = sdDataAPI.adj_factor(ts_code='000001.SZ',trade_date='')
+    adj_data = sdDataAPI.adj_factor(ts_code=stockCode[:6],trade_date='')
     
     #存入数据库
     adj_data.to_sql(name='s_adjdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)

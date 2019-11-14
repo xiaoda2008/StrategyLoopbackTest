@@ -3,14 +3,11 @@ Created on 2019年10月18日
 
 @author: picc
 '''
-import tushare
+#import tushare
 #import math
-import time
 import sys
 from pathlib import Path
 import os
-import csv
-import pandas
 from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeProcessor
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
 from datetime import datetime as dt
@@ -19,12 +16,15 @@ import datetime
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 
-from com.xiaoda.stock.strategies.tradeStrategy.SimpleStrategy import SimpleStrategy
-from com.xiaoda.stock.strategies.tradeStrategy.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.strategies.tradeStrategy.SMAStrategy import SMAStrategy
-from com.xiaoda.stock.strategies.stockSelectStrategy.RawStrategy import RawStrategy
-from com.xiaoda.stock.strategies.stockSelectStrategy.CashCowStrategy import CashCowStrategy
+
+from com.xiaoda.stock.loopbacktester.strategy.trade.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrategy
+
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.RawStrategy import RawStrategy
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.CashCowStrategy import CashCowStrategy
 
 
 def printStockOutputHead():
@@ -85,10 +85,11 @@ def readText():
 def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
     
     
-    stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
-                                   start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
+    #stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
+    #                               start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
     #time.sleep(0.31)
     
+    stock_k_data=MysqlProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE)
     
     #sprint(stock_k_data.columns)
 
@@ -435,16 +436,17 @@ if __name__ == '__main__':
         tradeStrategyList.append(MultiStepStrategy('MultiStepStrategy'))
     
     #使用TuShare pro版本
-    tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+    #tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
     
-    sdDataAPI = tushare.pro_api()
+    #sdDataAPI = tushare.pro_api()
     
     
     #通过STARTDATE找到第一个交易日
     firstOpenDay = STARTDATE
     
     
-    trade_cal_data = sdDataAPI.trade_cal(start_date='1990-12-19')
+    trade_cal_data=MysqlProcessor.getTradeCal()
+    #trade_cal_data = sdDataAPI.trade_cal(start_date='1990-12-19')
     
     trade_cal_data=trade_cal_data.set_index('cal_date')
     
