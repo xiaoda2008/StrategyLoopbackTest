@@ -164,19 +164,29 @@ class MysqlProcessor():
 
 
     @staticmethod
-    def getLatestStockBalanceSheet(stockCode):
+    def getLatestStockBalanceSheet(stockCode,dateStr):
+        '''
+        获取指定日期上一季度的财务报表数据
+        '''
+        startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
+        
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_balancesheet_%s order by ann_date desc limit 1;'%(stockCode[:6])
+        sql = 'select * from s_balancesheet_%s where ann_date>=%s and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],startday,dateStr)
         #查询结果
         df = pandas.read_sql_query(sql,engine)
         return df
     
     @staticmethod
-    def getLatestStockCashFlow(stockCode):
+    def getLatestStockCashFlow(stockCode,dateStr):
+        '''
+        获取指定日期上一季度的财务报表数据
+        '''
+        startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
+        
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_cashflow_%s order by ann_date desc limit 1;'%(stockCode[:6])
+        sql = 'select * from s_cashflow_%s where ann_date>=%s and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],startday,dateStr)
         #查询结果
         df = pandas.read_sql_query(sql,engine)
         return df
@@ -222,4 +232,16 @@ class MysqlProcessor():
         else:
             sData=DataFrame(stockKData)
             return sData
-        '''    
+        ''' 
+    @staticmethod
+    def getlastquarterfirstday(dateStr):
+        #today=dt.now()
+        quarter = (dateStr[4:6]-1)/3+1
+        if quarter == 1:
+            return dt(dateStr[0:4]-1,10,1)
+        elif quarter == 2:
+            return dt(dateStr[0:4],1,1)
+        elif quarter == 3:
+            return dt(dateStr[0:4],4,1)
+        else:
+            return dt(dateStr[0:4],7,1)   

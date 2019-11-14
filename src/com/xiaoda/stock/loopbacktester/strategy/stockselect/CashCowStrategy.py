@@ -3,7 +3,7 @@ Created on 2019年11月12日
 
 @author: picc
 '''
-from com.xiaoda.stock.strategies.stockSelectStrategy.StrategyParent import StrategyParent
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from datetime import datetime as dt
 import time
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
@@ -12,21 +12,10 @@ class CashCowStrategy(StrategyParent):
     '''
     classdocs
     '''
-    @staticmethod
-    def getlastquarterfirstday():
-        today=dt.now()
-        quarter = (today.month-1)/3+1
-        if quarter == 1:
-            return dt(today.year-1,10,1)
-        elif quarter == 2:
-            return dt(today.year,1,1)
-        elif quarter == 3:
-            return dt(today.year,4,1)
-        else:
-            return dt(today.year,7,1)
+
     
     #决定对哪些股票进行投资
-    def getSelectedStockList(self):
+    def getSelectedStockList(self,dateStr):
         #startday=CashCowStrategy.getlastquarterfirstday().strftime('%Y%m%d')
 
 
@@ -38,14 +27,14 @@ class CashCowStrategy(StrategyParent):
         for idx in sdf.index:
 
 
-            bs=MysqlProcessor.getLatestStockBalanceSheet(sdf.at[idx,'ts_code'])
+            bs=MysqlProcessor.getLatestStockBalanceSheet(sdf.at[idx,'ts_code'],dateStr)
             #获取资产负债表，总资产
             #bs = sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'), fields='ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,cap_rese,total_assets')
             #bs.at[0,'total_assets']
             #time.sleep(0.8)
     
             #获取现金流量表中，现金等价物总数
-            cf=MysqlProcessor.getLatestStockCashFlow(sdf.at[idx,'ts_code'])
+            cf=MysqlProcessor.getLatestStockCashFlow(sdf.at[idx,'ts_code'],dateStr)
             #cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
             #cf.at[0,'c_cash_equ_end_period']
         

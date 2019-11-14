@@ -512,7 +512,7 @@ if __name__ == '__main__':
     for stockSelectStrategy in stockSelectStrategyList:
         
         #从参数获取股票选取策略
-        stockList=stockSelectStrategy.getSelectedStockList()
+        stockList=stockSelectStrategy.getSelectedStockList(STARTDATE)
         
         strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'-'+stockSelectStrategy.getStrategyName()
         

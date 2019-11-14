@@ -58,7 +58,9 @@ stockCodeList = sdf['ts_code']
 
 
 #3、获取财务报表数据，存入数据库
-startday=getlastquarterfirstday().strftime('%Y%m%d')
+#startday=getlastquarterfirstday().strftime('%Y%m%d')
+
+startday='19901219'
 
 for idx in sdf.index:
 
@@ -67,14 +69,11 @@ for idx in sdf.index:
     #elif sdf.at[idx,'ts_code'][:6]>'600428':
     #    break;
     
-    log.logger.info('处理%s的财务报表数据'%(sdf.at[idx,'ts_code']))
-    
-    
     #获取资产负债表
     bs=sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,
                                 end_date=dt.now().strftime('%Y%m%d'))
     #bs.at[0,'total_assets']
-    #time.sleep(1)
+    time.sleep(1)
     bs.to_sql(name='s_balancesheet_'+sdf.at[idx,'ts_code'][:6],
               con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
@@ -87,6 +86,8 @@ for idx in sdf.index:
     cf.to_sql(name='s_cashflow_'+sdf.at[idx,'ts_code'][:6],
               con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
+    log.logger.warn('处理完%s的财务报表数据'%(sdf.at[idx,'ts_code']))
+    
 
 
 
@@ -96,6 +97,31 @@ for idx in sdf.index:
 for index,stockCode in stockCodeList.items():
     #用于标记该股票是否出现过数据
     flag = False
+    
+    #将1990-01-01到19999-12-31该股票数据导入数据库
+    STARTDATE = '19900101'
+    ENDDATE = '19991231'
+    
+    log.logger.debug('处理股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
+    
+    #获取该股票数据并写入数据库
+    stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
+    
+    if type(stock_k_data)==NoneType:
+        #如果没有任何返回值，说明该时间段内没有上市交易过该股票
+        log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))
+                
+        #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
+        #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
+        time.sleep(0.31)
+    else:
+        #该股票出现交易数据，必然是第一次出现，直接替代即可
+        flag = True
+        stock_k_data.sort_index(inplace=True,ascending=False)
+        #存入数据库
+        stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
+
+    
     
     #将1999-01-01到2009-12-31该股票数据导入数据库
     STARTDATE = '19990101'
@@ -113,17 +139,26 @@ for index,stockCode in stockCodeList.items():
         #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
         #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
         time.sleep(0.31)
-    else:
-        #该股票出现交易数据
+    elif flag == False:
+        #该股票出现交易数据，且在上一区间未出现交易
+        #则需要重建表
         flag = True
         stock_k_data.sort_index(inplace=True,ascending=False)
         #存入数据库
         stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
 
+    else:
+        #该股票出现交易数据
+        #且在上一区间已经有过交易，直接增加数据即可
+        flag = True
+        stock_k_data.sort_index(inplace=True,ascending=False)
+        #存入数据库
+        stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
+
 
     #将2010-01-01到2009-12-31该股票数据导入数据库
     STARTDATE = '20100101'
-    ENDDATE = '20191231'
+    ENDDATE = '20191031'
 
     log.logger.debug('处理股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
     
@@ -138,12 +173,15 @@ for index,stockCode in stockCodeList.items():
         #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
         time.sleep(0.31)
     elif flag == False:
-        #该股票出现交易数据
+        #该股票出现交易数据，且在上一区间未出现交易
+        #则需要重建表
         flag = True
         stock_k_data.sort_index(inplace=True,ascending=False)
         #存入数据库
         stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
     else:
+        #该股票出现交易数据
+        #且在上一区间已经有过交易，直接增加数据即可
         flag = True
         stock_k_data.sort_index(inplace=True,ascending=False)
         #存入数据库

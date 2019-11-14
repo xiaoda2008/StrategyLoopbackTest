@@ -3,7 +3,7 @@ Created on 2019年11月12日
 
 @author: picc
 '''
-from com.xiaoda.stock.strategies.stockSelectStrategy.StrategyParent import StrategyParent
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from datetime import datetime as dt
 import time
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
@@ -15,8 +15,11 @@ class RawStrategy(StrategyParent):
 
     
     #决定对哪些股票进行投资
-    def getSelectedStockList(self):
+    def getSelectedStockList(self,dateStr):
         
+        #在MysqlProcessor获取股票列表时
+        #已经剔除掉了退市股和ST、*ST等
+        '''
         returnStockList=[]
         
         sdf=MysqlProcessor.getStockList()
@@ -33,5 +36,7 @@ class RawStrategy(StrategyParent):
                 continue
             else:
                 returnStockList.append(stockCode)
+        '''
         
-        return returnStockList
+        return MysqlProcessor.getStockList()
+    
