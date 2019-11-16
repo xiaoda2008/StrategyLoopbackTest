@@ -99,7 +99,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
         return
 
 #    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
-    stock_k_data.sort_index(inplace=True,ascending=False)
+    #stock_k_data.sort_index(inplace=True,ascending=True)
 
     stock_k_data.reset_index(drop=True,inplace=True)
 
@@ -239,7 +239,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
-        avgPriceToday = (stock_k_data.at[i+offset,'open'] + stock_k_data.at[i+offset,'close'])/2
+        avgPriceToday = (float(stock_k_data.at[i+offset,'open'])+float(stock_k_data.at[i+offset,'close']))/2
         todayDate = stock_k_data.at[i+offset,'trade_date']
 
 

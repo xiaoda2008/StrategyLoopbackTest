@@ -25,7 +25,7 @@ class Logger(object):
         
         sh = logging.StreamHandler()#往屏幕上输出
         sh.setFormatter(format_str) #设置屏幕上显示的格式
-        sh.setLevel(logging.WARNING) #设置日志等级
+        sh.setLevel(logging.INFO) #设置日志等级
         
         #实例化TimedRotatingFileHandler
         #interval是时间间隔，backupCount是备份文件的个数，如果超过这个个数，就会自动删除，when是间隔的时间单位，单位有以下几种：

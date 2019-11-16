@@ -12,6 +12,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
 from abc import abstractstaticmethod
+from pandas.core.frame import DataFrame
 
 #from sqlalchemy.sql import and_,or_
 
@@ -117,7 +118,8 @@ class MysqlProcessor():
         #查询结果
         sqltxt = sqlalchemy.text(sql)
         df = pandas.read_sql_query(sqltxt,engine)
-        return df
+        
+        return df['ts_code'].to_list()
         
         '''
         # 创建对象的基类:
@@ -155,42 +157,71 @@ class MysqlProcessor():
 
     @staticmethod
     def getStockKData(stockCode,startDate,endDate):
+        
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode,startDate,endDate)
+        sql = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
+        sqltxt = sqlalchemy.text(sql)
         #查询结果
-        df = pandas.read_sql_query(sql,engine)
-        return df
+        try:
+            df=pandas.read_sql_query(sqltxt,engine)
+        except sqlalchemy.exc.ProgrammingError:
+            #如果压根就没有这个表
+            #在kdata与股票列表数据不一致的情况下会出现
+            df=DataFrame()
+        else:
+        #获取到的数据都是未复权数据
+        #这里需要对数据进行复权处理
+            return df
 
 
     @staticmethod
     def getLatestStockBalanceSheet(stockCode,dateStr):
         '''
-        获取指定日期上一季度的财务报表数据
+        获取指定日期前最近一次的财务报表数据
         '''
-        startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
+        #startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
         
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_balancesheet_%s where ann_date>=%s and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],startday,dateStr)
+        sql = 'select * from s_balancesheet_%s where total_assets is not null and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],dateStr)
+        sqltxt = sqlalchemy.text(sql)
         #查询结果
-        df = pandas.read_sql_query(sql,engine)
-        return df
-    
+        try:
+            df=pandas.read_sql_query(sqltxt,engine)
+        except sqlalchemy.exc.ProgrammingError:
+            #如果压根就没有这个表
+            #在kdata与股票列表数据不一致的情况下会出现
+            df=DataFrame()
+        finally:
+        #获取到的数据都是未复权数据
+        #这里需要对数据进行复权处理
+            return df
+        
     @staticmethod
     def getLatestStockCashFlow(stockCode,dateStr):
         '''
-        获取指定日期上一季度的财务报表数据
+        获取指定日期前最近一次财务报表数据
         '''
-        startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
+        #startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
         
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_cashflow_%s where ann_date>=%s and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],startday,dateStr)
+        sql = 'select * from s_cashflow_%s where c_cash_equ_end_period is not null and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],dateStr)
         #查询结果
-        df = pandas.read_sql_query(sql,engine)
-        return df
-    
+        sqltxt = sqlalchemy.text(sql)
+        #查询结果
+        try:
+            df=pandas.read_sql_query(sqltxt,engine)
+        except sqlalchemy.exc.ProgrammingError:
+            #如果压根就没有这个表
+            #在kdata与股票列表数据不一致的情况下会出现
+            df=DataFrame()
+        finally:
+            return df
+        #获取到的数据都是未复权数据
+        #这里需要对数据进行复权处理
+
         '''
         # 创建对象的基类:
         Base = declarative_base()
@@ -232,7 +263,9 @@ class MysqlProcessor():
         else:
             sData=DataFrame(stockKData)
             return sData
-        ''' 
+    ''' 
+   
+    '''
     @staticmethod
     def getlastquarterfirstday(dateStr):
         #today=dt.now()
@@ -244,4 +277,5 @@ class MysqlProcessor():
         elif quarter == 3:
             return dt(dateStr[0:4],4,1)
         else:
-            return dt(dateStr[0:4],7,1)   
+            return dt(dateStr[0:4],7,1)
+    '''
