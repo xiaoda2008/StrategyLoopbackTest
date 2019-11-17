@@ -25,13 +25,99 @@ from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 
 import datetime
 from scipy import optimize
-from Tools.scripts.nm2def import NM
-from test.test_decimal import cfractions
- 
+
+import copy
+
+from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
+
+
+#显示所有列
+pandas.set_option('display.max_columns', None)
+#显示所有行
+pandas.set_option('display.max_rows',None)
+
+
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ',start_date='20100101',end_date='20191031',adj='qfq')
+stock_k_data.sort_index(inplace=True,ascending=False)
+savedStdout = sys.stdout  #保存标准输出流
+sys.stdout = open('d:/tstest.csv','wt+')
+print(stock_k_data)
+
+sys.stdout = savedStdout #恢复标准输出流
+
+'''
+stock_k_data = tushare.pro_bar(ts_code='000001.SZ',start_date='20190623',end_date='20191031',adj='None')
+
+stock_k_data.sort_index(inplace=True,ascending=False)
+print(stock_k_data)
+'''
+
+stock_k_data=MysqlProcessor.getStockKData('000001.SZ', '20100101', '20191031', 'qfq')
+savedStdout = sys.stdout  #保存标准输出流
+sys.stdout = open('d:/mysqltest.csv','wt+')
+print(stock_k_data)
+sys.stdout = savedStdout #恢复标准输出流
+print()
+'''
+engine = MysqlProcessor.getMysqlEngine()
+sql_kdata = 'select * from s_kdata_000001 where trade_date>=20190101 and trade_date<=20191031 order by trade_date'
+sqltxt_kdata = sqlalchemy.text(sql_kdata)
+
+sql_adj = 'select * from s_adjdata_000001 where trade_date>=20190101 and trade_date<=20191031 order by trade_date'
+sqltxt_adj = sqlalchemy.text(sql_adj)   
+
+kdatadf=pandas.read_sql_query(sqltxt_kdata,engine)
+adjdf=pandas.read_sql_query(sqltxt_adj,engine)
+
+kdatadf_hfq=copy.deepcopy(kdatadf)
+kdatadf_hfq['open']=kdatadf_hfq['open']*adjdf['adj_factor']
+print()
+
+
+latest_adj_factor=float(adjdf.at[adjdf.shape[0]-1,'adj_factor'])
+kdatadf_hfq['open']=kdatadf_hfq['open']/latest_adj_factor
+
+'''
+
+
+
+
+#print()
+
+
+df1=DataFrame(numpy.arange(15).reshape(3,5),columns=['a','b','c','d','e'],index=['one','two','three'])
+
+#print(df1)
+
+
+df2=DataFrame(numpy.arange(12).reshape(4,3),columns=['1','2','3'],index=['one','three','four','five'])
+
+#print(df2)
+
+df1['a']=df1['a']*df2['1']
+
+#print(df1)
+#stock_k_data=MysqlProcessor.getStockKData('000001.SZ', '20190624', '20191031','None')
+
+#print(stock_k_data.columns)
+
+#print(stock_k_data)
+
+#adj_data = sdDataAPI.adj_factor(ts_code='000001.SZ',start_date='20190624',end_date='20191031')
+
+#adj_data.sort_index(inplace=True,ascending=False)
+#stock_k_data.reset_index(drop=True,inplace=True)
+
+#print(adj_data)
+
+
+
+
+
 
 
 def getlastquarterfirstday():

@@ -6,6 +6,7 @@ Created on 2019年11月3日
 import pandas
 from datetime import datetime as dt
 import datetime
+import copy
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,6 +14,8 @@ from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
 from abc import abstractstaticmethod
 from pandas.core.frame import DataFrame
+from unittest.mock import inplace
+
 
 #from sqlalchemy.sql import and_,or_
 
@@ -156,23 +159,61 @@ class MysqlProcessor():
         '''
 
     @staticmethod
-    def getStockKData(stockCode,startDate,endDate):
-        
+    def getStockKData(stockCode,startDate,endDate,adj):
+        '''
+        stockCode：股票代码
+        startData：开始日期
+        endDate：结束日期
+        adj:None代表不复权，qfq代表前复权，hfq代表后复权
+        '''
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
-        sqltxt = sqlalchemy.text(sql)
+        sql_kdata = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
+        sqltxt_kdata = sqlalchemy.text(sql_kdata)
+        
+        sql_adj = 'select * from s_adjdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
+        sqltxt_adj = sqlalchemy.text(sql_adj)
+        
+        
         #查询结果
         try:
-            df=pandas.read_sql_query(sqltxt,engine)
+            kdatadf=pandas.read_sql_query(sqltxt_kdata,engine)
+            adjdf=pandas.read_sql_query(sqltxt_adj,engine)
+            #adjdf.set_index('trade_date',inplace=True)
+            #kdatadf.set_index('trade_date',inplace=True)
+            #获取到的数据都是未复权数据
+            #这里需要对数据进行复权处理
+            
+            joineddf=pandas.merge(kdatadf, adjdf, on='trade_date', how='left')
+
+            if adj=='qfq':
+                #如果需要前复权数据
+                #需要根据复权因子及k线数据进行计算
+                latest_adj_factor=float(joineddf.at[joineddf.shape[0]-1,'adj_factor'])
+                joineddf['open']=joineddf['open']*joineddf['adj_factor']/latest_adj_factor
+                joineddf['high']=joineddf['high']*joineddf['adj_factor']/latest_adj_factor
+                joineddf['low']=joineddf['low']*joineddf['adj_factor']/latest_adj_factor
+                joineddf['close']=joineddf['close']*joineddf['adj_factor']/latest_adj_factor            
+                joineddf['pre_close']=joineddf['pre_close']*joineddf['adj_factor']/latest_adj_factor            
+                joineddf['change']=joineddf['change']*joineddf['adj_factor']/latest_adj_factor
+            elif adj=='hfq':
+                #如果需要后复权数据
+                #需要根据复权因子及k线数据进行计算
+                #kdatadf_hfq=copy.deepcopy(kdatadf)
+                joineddf['open']=joineddf['open']*joineddf['adj_factor']
+                joineddf['high']=joineddf['high']*joineddf['adj_factor']
+                joineddf['low']=joineddf['low']*joineddf['adj_factor']
+                joineddf['close']=joineddf['close']*joineddf['adj_factor']             
+                joineddf['pre_close']=joineddf['pre_close']*joineddf['adj_factor']
+                joineddf['change']=joineddf['change']*joineddf['adj_factor']
+            else:
+                pass
         except sqlalchemy.exc.ProgrammingError:
             #如果压根就没有这个表
             #在kdata与股票列表数据不一致的情况下会出现
-            df=DataFrame()
-        else:
-        #获取到的数据都是未复权数据
-        #这里需要对数据进行复权处理
-            return df
+            joineddf=DataFrame()
+        finally:
+            return joineddf
 
 
     @staticmethod

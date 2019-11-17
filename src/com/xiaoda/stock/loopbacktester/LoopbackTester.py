@@ -89,7 +89,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #                               start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
     #time.sleep(0.31)
     
-    stock_k_data=MysqlProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE)
+    stock_k_data=MysqlProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE,'qfq')
     
     #sprint(stock_k_data.columns)
 

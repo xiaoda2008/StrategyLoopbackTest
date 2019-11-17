@@ -53,6 +53,7 @@ tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()
 
+
 #1、获取交易日信息，并存入数据库
 STARTDATE = '19990101'
 ENDDATE = '20191231'
@@ -105,7 +106,7 @@ for idx in sdf.index:
     log.logger.info('处理完%s的财务报表数据'%(sdf.at[idx,'ts_code']))
     
 
-'''
+
 
 #不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
 
@@ -209,17 +210,18 @@ for index,stockCode in stockCodeList.items():
         stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
     
     log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
-    
+ '''   
     
  
 #5、获取复权因子数据，并存入数据库
 for index,stockCode in stockCodeList.items():
 
-    if stockCode<'600243':
-        continue
+
     time.sleep(1)
     #获取该股票的复权因子数据并写入数据库
     adj_data = sdDataAPI.adj_factor(ts_code=stockCode)
+    
+    adj_data.sort_index(inplace=True,ascending=False)
     
     #存入数据库
     adj_data.to_sql(name='s_adjdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
