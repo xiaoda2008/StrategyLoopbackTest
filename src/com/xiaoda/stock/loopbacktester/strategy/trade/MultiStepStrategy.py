@@ -54,10 +54,10 @@ class MultiStepStrategy(StrategyParent):
             #如果上涨超线，应当卖出
             if continuousRiseOrFallCnt<=0:
                 #此前为下跌或未超线
-                return -1*math.floor(holdShares/3)
+                return -1*math.ceil(holdShares/3)
             elif continuousRiseOrFallCnt==1:
                 #此前已连续下跌1次
-                return -1*math.floor(holdShares/2)
+                return -1*math.ceil(holdShares/2)
             else:
                 return -1*holdShares
         

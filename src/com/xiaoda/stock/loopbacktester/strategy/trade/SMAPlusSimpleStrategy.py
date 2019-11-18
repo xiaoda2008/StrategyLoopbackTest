@@ -4,7 +4,7 @@ Created on 2019年10月31日
 @author: picc
 '''
 import math
-from com.xiaoda.stock.strategies.tradeStrategy.StrategyParent import StrategyParent
+from com.xiaoda.stock.loopbacktester.strategy.trade.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 
 class SimplePlusSMAStrategy(StrategyParent):

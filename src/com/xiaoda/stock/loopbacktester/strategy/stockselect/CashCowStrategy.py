@@ -47,7 +47,7 @@ class CashCowStrategy(StrategyParent):
     
             cfRatioDict[stockCode]=ratio
             
-            print('CashCowStrategy:'+stockCode+','+str(ratio))
+            #print('CashCowStrategy:'+stockCode+','+str(ratio))
 
         sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
 

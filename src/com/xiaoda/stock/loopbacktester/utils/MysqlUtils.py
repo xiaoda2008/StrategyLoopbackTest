@@ -3,6 +3,7 @@ Created on 2019年11月3日
 
 @author: xiaoda
 '''
+import sys
 import pandas
 from datetime import datetime as dt
 import datetime
@@ -177,15 +178,29 @@ class MysqlProcessor():
         
         #查询结果
         try:
-            kdatadf=pandas.read_sql_query(sqltxt_kdata,engine)
+            kdatadf=pandas.read_sql_query(sqltxt_kdata,engine,coerce_float=True)
             adjdf=pandas.read_sql_query(sqltxt_adj,engine)
             #adjdf.set_index('trade_date',inplace=True)
             #kdatadf.set_index('trade_date',inplace=True)
             #获取到的数据都是未复权数据
             #这里需要对数据进行复权处理
+            #kdatadf.dtypes
             
-            joineddf=pandas.merge(kdatadf, adjdf, on='trade_date', how='left')
-
+            kdatadf[['open','high','low','close','pre_close','change','pct_chg','vol','amount']]=\
+            kdatadf[['open','high','low','close','pre_close','change','pct_chg','vol','amount']].astype(float)
+            
+            adjdf[['adj_factor']]=adjdf[['adj_factor']].astype(float)
+            
+            joineddf=pandas.merge(kdatadf, adjdf, on=['ts_code','trade_date'], how='left')
+            #显示所有列
+            #pandas.set_option('display.max_columns', None)
+            #显示所有行
+            #pandas.set_option('display.max_rows',None)
+            #savedStdout = sys.stdout  #保存标准输出流
+            #sys.stdout = open('d:/tstest.csv','wt+')
+            #print(joineddf)
+            #sys.stdout = savedStdout #恢复标准输出流
+            #joineddf.dtypes
             if adj=='qfq':
                 #如果需要前复权数据
                 #需要根据复权因子及k线数据进行计算
@@ -206,8 +221,7 @@ class MysqlProcessor():
                 joineddf['close']=joineddf['close']*joineddf['adj_factor']             
                 joineddf['pre_close']=joineddf['pre_close']*joineddf['adj_factor']
                 joineddf['change']=joineddf['change']*joineddf['adj_factor']
-            else:
-                pass
+
         except sqlalchemy.exc.ProgrammingError:
             #如果压根就没有这个表
             #在kdata与股票列表数据不一致的情况下会出现

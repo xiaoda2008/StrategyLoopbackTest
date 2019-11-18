@@ -88,9 +88,13 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
     #                               start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
     #time.sleep(0.31)
-    
+
+
+    if stockCode=='002153.SZ':
+        print()    
     stock_k_data=MysqlProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE,'qfq')
     
+
     #sprint(stock_k_data.columns)
 
     if type(stock_k_data)==NoneType or stock_k_data.empty:
@@ -282,7 +286,9 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
-                     
+
+            #if stockCode=='000002.SZ' and todayDate=='20141203':
+            #    print()
             sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
@@ -511,6 +517,7 @@ if __name__ == '__main__':
     
     for stockSelectStrategy in stockSelectStrategyList:
         
+        print('开始处理选股策略:',stockSelectStrategy.getStrategyName())
         #从参数获取股票选取策略
         stockList=stockSelectStrategy.getSelectedStockList(STARTDATE)
         
@@ -529,6 +536,7 @@ if __name__ == '__main__':
         
         #对所有策略进行循环：
         for tradeStrategy in tradeStrategyList:
+            print('开始处理交易策略:',tradeStrategy.getStrategyName())
             savedStdout = sys.stdout  #保存标准输出流
              
             strOutputDir=strOutterOutputDir+'/'+tradeStrategy.getStrategyName()
@@ -573,8 +581,8 @@ if __name__ == '__main__':
                 #    print('完成'+stockCode+'的处理')
         
         
-        
-            #读取文件列表
+            print('开始处理IRR计算')
+            #读取结果文件列表
             stockfileList = os.listdir(strOutputDir)
             
             #记录csv内容的列表
@@ -592,7 +600,7 @@ if __name__ == '__main__':
             cashFlowDict= {}
             #对已有的内容列表进行处理
             for stockfileName,stockfileDF in fileContentTupleList:
-                print(stockfileName)
+                #print(stockfileName)
             
                 #如果Summary-all.csv已经存在，则直接覆盖
               

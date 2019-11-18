@@ -5,7 +5,7 @@ Created on 2019年10月29日
 '''
 import pandas
 import math
-from com.xiaoda.stock.strategies.tradeStrategy.StrategyParent import StrategyParent
+from com.xiaoda.stock.loopbacktester.strategy.trade.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare
 
 
@@ -49,7 +49,7 @@ class SMAStrategy(StrategyParent):
             return math.floor(nShare/2)
         elif stock_k_data.at[todayDate,'pre_close']>yesterdayDayMA20 and priceNow<yesterdayDayMA20:
             #前一天收盘价格高于20日均线，且当天开盘价格低于20日均线-》下穿20日均线，可以卖出
-            return -1*math.floor(nShare/2)
+            return -1*math.ceil(nShare/2)
         else:
             return 0
         

@@ -25,7 +25,6 @@ from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 
 import datetime
 from scipy import optimize
-
 import copy
 
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
@@ -41,12 +40,11 @@ pandas.set_option('display.max_columns', None)
 pandas.set_option('display.max_rows',None)
 
 
-stock_k_data = tushare.pro_bar(ts_code='000001.SZ',start_date='20100101',end_date='20191031',adj='qfq')
+stock_k_data = tushare.pro_bar(ts_code='000002.SZ',start_date='20100101',end_date='20191031',adj='qfq')
 stock_k_data.sort_index(inplace=True,ascending=False)
 savedStdout = sys.stdout  #保存标准输出流
 sys.stdout = open('d:/tstest.csv','wt+')
 print(stock_k_data)
-
 sys.stdout = savedStdout #恢复标准输出流
 
 '''

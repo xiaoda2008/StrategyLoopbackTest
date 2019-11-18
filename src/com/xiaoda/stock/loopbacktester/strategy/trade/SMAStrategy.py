@@ -32,7 +32,7 @@ class SMAStrategy(StrategyParent):
         
         #lastMarketDay=MysqlUtils.getLastMarketDay(todayDate)
         
-        todayMA20 = stock_k_data.at[todayDate,'today_MA20']
+        #todayMA20 = stock_k_data.at[todayDate,'today_MA20']
         yesterdayDayMA20 = stock_k_data.at[todayDate,'yesterday_MA20']
         
         #如果没有MA20数据
@@ -53,7 +53,7 @@ class SMAStrategy(StrategyParent):
             #前一天收盘价格高于20日均线，且当天开盘价格低于20日均线-》下穿20日均线，可以卖出
             #当天不是以跌停状态超线
             if priceNow > float(stock_k_data.at[todayDate,'pre_close'])*0.9:
-                return -1*math.floor(nShare/2)
+                return -1*math.ceil(nShare/2)
             else:
                 return 0
         else:
