@@ -25,10 +25,10 @@ import tushare
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import LOGGINGDIR
+#from com.xiaoda.stock.loopbacktester.utils.ParamUtils import LOGGINGDIR
 from datetime import datetime as dt
 
-log = Logger(LOGGINGDIR+'/'+os.path.split(__file__)[-1].split(".")[0] + '.log',level='info')
+log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 
 def getlastquarterfirstday():
         today=dt.now()

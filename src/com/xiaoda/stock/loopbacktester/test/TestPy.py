@@ -28,6 +28,7 @@ from scipy import optimize
 import copy
 
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
+from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
@@ -54,7 +55,7 @@ stock_k_data.sort_index(inplace=True,ascending=False)
 print(stock_k_data)
 '''
 
-stock_k_data=MysqlProcessor.getStockKData('000001.SZ', '20100101', '20191031', 'qfq')
+stock_k_data=StockDataProcessor.getStockKData('000001.SZ', '20100101', '20191031', 'qfq')
 savedStdout = sys.stdout  #保存标准输出流
 sys.stdout = open('d:/mysqltest.csv','wt+')
 print(stock_k_data)
@@ -344,7 +345,7 @@ if (stock_k_data[(stock_k_data.index=='20000622')]).empty:
     print("empty")
 
 #写入数据库的引擎
-engine = sqlalchemy.create_engine('mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8')
+engine = sqlalchemy.create_engine('mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8mb4')
 
 
 k_data = DataFrame()

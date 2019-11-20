@@ -12,7 +12,11 @@ class SimplePlusSMAStrategy(StrategyParent):
     将SMA策略与基础的策略相结合
     在涨幅达到一定程度时，不论MA20时什么状况，都要进行卖出
     '''
-    
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        self.name="SimplePlusSMAStrategy"
     
     #决定买入或卖出的数量
     #正数代表买入，负数代表卖出

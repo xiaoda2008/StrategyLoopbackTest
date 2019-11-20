@@ -8,8 +8,9 @@ Created on 2019年10月18日
 import sys
 from pathlib import Path
 import os
-from com.xiaoda.stock.loopbacktester.utils.ChargeUtils import ChargeProcessor
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
+from com.xiaoda.stock.loopbacktester.utils.TradeChargeUtils import TradeChargeProcessor
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR,\
+    profitStop
 from datetime import datetime as dt
 import datetime
 #import shutil
@@ -25,7 +26,10 @@ from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrate
 
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.RawStrategy import RawStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.CashCowStrategy import CashCowStrategy
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROEStrategy import ROEStrategy
+from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
+from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
 def printStockOutputHead():
     print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当天资金净流量,当前持仓平均成本,\
@@ -41,7 +45,6 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
     print(round(totalOutput,4), end=',')
     print(round(totalInput-totalOutput,4), end=',')
     print(round(netCashFlowToday,4),end=',')
-    
     print(round(holdAvgPrice,4), end=',')
     print(round(avgPriceToday,4), end=',')
     currentProfit = round(avgPriceToday*holdShares*100+totalOutput-totalInput,4)
@@ -60,26 +63,17 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
 def printSummaryOutputHead():
     print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
 
-def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,avgPriceToday):
+def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,priceToBuyOrSell):
     print('\''+str(stockCode),end=', ')
     print(round(biggestCashOccupy,2), end=', ')
     print(round(totalInput,2), end=', ')
     print(round(totalOutput,2), end=', ')    
     print(latestProfit, end=', ')
-    print(round(holdShares*100*avgPriceToday,2), end='\n')
-
-'''
-def readText():
-    in_text = open(INPUTFILE, 'r')
-    for line in in_text.readlines():
-        stockCode = line.rstrip("\n")
-        
-    print('input OK!')
-'''
-
-#readText()
+    print(round(holdShares*100*priceToBuyOrSell,2), end='\n')
 
 
+log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
+    
 
 #具体处理股票的处理
 def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
@@ -89,17 +83,15 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #                               start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
     #time.sleep(0.31)
 
-
-    if stockCode=='002153.SZ':
-        print()    
-    stock_k_data=MysqlProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE,'qfq')
+ 
+    stock_k_data=StockDataProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE,'qfq')
     
 
     #sprint(stock_k_data.columns)
 
     if type(stock_k_data)==NoneType or stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
-        print('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,ENDDATE))
+        log.logger.info('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,ENDDATE))
         return
 
 #    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
@@ -111,9 +103,15 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #stock_k_data['close_shift']=stock_k_data['close'].shift(1)
     #直接用pre_close即可，不用计算
 
-    #计算出MA20的数据，问题在于，这个MA20是包含当前天的，有些问题，应当不包含当前天
-    stock_k_data['yesterday_MA20'] = stock_k_data['pre_close'].rolling(20).mean()
-    stock_k_data['today_MA20'] = stock_k_data['close'].rolling(20).mean()
+    #计算出MA20的数据，问题在于，这个MA20是包含当天的，有些问题，应当不包含当天
+    stock_k_data['pre_MA20'] = stock_k_data['pre_close'].rolling(20).mean()
+    
+    #获得前一天的最高值和最低值
+    stock_k_data['pre_high'] = stock_k_data['high'].shift(1)
+    stock_k_data['pre_low'] = stock_k_data['low'].shift(1)
+    
+    
+    #stock_k_data['today_MA20'] = stock_k_data['close'].rolling(20).mean()
     
     
     offset = stock_k_data.index[0]
@@ -151,23 +149,8 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #需要进行判断并剔除
     
     
-    #stock_k_data.at[0,'date']
-    #stock_hist_data = stock_hist_data.sort_index()
-    #stock_hist_data.at['2018-01-02','open']
-
-
-    '''
-    print(type(stock_his))
-    
-    df = stock_his.head()
-    
-    print(df)
-    print(df.dtypes)
-    
-    '''
-    
     if stock_k_data.empty:
-        print(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
+        log.logger.info(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
         return
     
     #print(stock_his.index)
@@ -177,35 +160,6 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     #因为如果不是从当年第一个交易日开始，标号会有一个偏移量，在后续处理时，需要进行一个处理
     offset = stock_k_data.index[0]
 
-    
-    '''
-    if stock_hist_data.shape[0] < stock_k_data.shape[0]:
-        print(stockCode, '存在借壳上市情况，进行剔除')
-        return
-    '''
-    #stock_his.shape[0]
-    #print(stock_his)
-    
-    '''
-    #print(stock_his.get_value(1, 'open', ))
-    
-    print(stock_his.at[0,'open'])
-    
-    print(stock_his.open)
-    
-    '''
-    
-    '''
-    print(stock_his.iat[0,0])#查看具体位置数据
-    
-    print(stock_his.iloc[1])#查看某一行数据
-    
-    print(stock_his['open'])#查看某一列
-    
-    print(stock_his.shape[0])#查看行数
-    
-    print(stock_his.shape[1])#查看列数
-    '''
 
     #{stock_his.at[0,'date']: 4098}
     
@@ -243,6 +197,8 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
     
     while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
+        
+        #当日平均价格，用来计算持仓金额
         avgPriceToday = (float(stock_k_data.at[i+offset,'open'])+float(stock_k_data.at[i+offset,'close']))/2
         todayDate = stock_k_data.at[i+offset,'trade_date']
 
@@ -250,23 +206,23 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
         
         if i==0:
             #第一个交易日的处理，需要各个策略根据自身情况进行确定
-            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
+            sharesToBuyOrSell,priceToBuyOrSell = strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
             if sharesToBuyOrSell>0:
                 #如果判断为应当买入
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*priceToBuyOrSell)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = ChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                dealCharge = TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
                 
                 latestDealType = 1
-                latestDealPrice = avgPriceToday
-                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
-                netCashFlowToday = -(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
+                latestDealPrice = priceToBuyOrSell
+                totalInput += sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
+                netCashFlowToday = -(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
                 
                 returnVal = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
@@ -289,7 +245,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
             #if stockCode=='000002.SZ' and todayDate=='20141203':
             #    print()
-            sharesToBuyOrSell = strategy.getShareToBuyOrSell(avgPriceToday,latestDealPrice, 
+            sharesToBuyOrSell,priceToBuyOrSell = strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
@@ -305,16 +261,16 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
                     
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*avgPriceToday)/(holdShares+sharesToBuyOrSell)
+                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*priceToBuyOrSell)/(holdShares+sharesToBuyOrSell)
                 holdShares += sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = ChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*avgPriceToday)
+                dealCharge = TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
                 
                 latestDealType = 1
-                latestDealPrice = avgPriceToday
-                totalInput += sharesToBuyOrSell*avgPriceToday*100+dealCharge
-                netCashFlowToday = -(sharesToBuyOrSell*avgPriceToday*100+dealCharge)
+                latestDealPrice = priceToBuyOrSell
+                totalInput += sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
+                netCashFlowToday = -(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
                 
                 returnVal = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
@@ -337,19 +293,19 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
 
 
                 if holdShares>abs(sharesToBuyOrSell):
-                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*avgPriceToday)/(holdShares-abs(sharesToBuyOrSell))
+                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*priceToBuyOrSell)/(holdShares-abs(sharesToBuyOrSell))
                 else:
                     holdAvgPrice=0
                 holdShares -= abs(sharesToBuyOrSell)
 
             
                 #获取卖出交易费
-                dealCharge = ChargeProcessor.getSellCharge(abs(sharesToBuyOrSell)*100*avgPriceToday)
+                dealCharge = TradeChargeProcessor.getSellCharge(abs(sharesToBuyOrSell)*100*priceToBuyOrSell)
                     
                 latestDealType = -1
-                latestDealPrice = avgPriceToday
-                totalOutput += abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
-                netCashFlowToday=abs(sharesToBuyOrSell)*avgPriceToday*100-dealCharge
+                latestDealPrice = priceToBuyOrSell
+                totalOutput += abs(sharesToBuyOrSell)*priceToBuyOrSell*100-dealCharge
+                netCashFlowToday=abs(sharesToBuyOrSell)*priceToBuyOrSell*100-dealCharge
             
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
@@ -378,7 +334,7 @@ def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBefo
             latestProfit = returnVal
             
             printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,
-                                  latestProfit,holdShares,avgPriceToday)
+                                  latestProfit,holdShares,priceToBuyOrSell)
             
             sys.stdout = savedStdout  #恢复标准输出流
 
@@ -429,36 +385,32 @@ if __name__ == '__main__':
     
     #生成选股策略
     if 'RawStrategy' in stockSelectStrategyString:
-        stockSelectStrategyList.append(RawStrategy('RawStrategy'))
+        stockSelectStrategyList.append(RawStrategy())
     if 'CashCowStrategy' in stockSelectStrategyString:
-        stockSelectStrategyList.append(CashCowStrategy('CashCowStrategy'))
-    
+        stockSelectStrategyList.append(CashCowStrategy())
+    if 'ROEStrategy' in stockSelectStrategyString:
+        stockSelectStrategyList.append(ROEStrategy())
+            
     #生成交易策略
     if 'SimpleStrategy' in tradeStrategyString:
-        tradeStrategyList.append(SimpleStrategy('SimpleStrategy'))
+        tradeStrategyList.append(SimpleStrategy())
     if 'SMAStrategy' in tradeStrategyString:
-        tradeStrategyList.append(SMAStrategy('SMAStrategy'))
+        tradeStrategyList.append(SMAStrategy())
     if 'MultiStepStrategy' in tradeStrategyString:
-        tradeStrategyList.append(MultiStepStrategy('MultiStepStrategy'))
-    
-    #使用TuShare pro版本
-    #tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
-    
-    #sdDataAPI = tushare.pro_api()
+        tradeStrategyList.append(MultiStepStrategy())
     
     
     #通过STARTDATE找到第一个交易日
     firstOpenDay = STARTDATE
     
     
-    trade_cal_data=MysqlProcessor.getTradeCal()
-    #trade_cal_data = sdDataAPI.trade_cal(start_date='1990-12-19')
+    trade_cal_data=StockDataProcessor.getTradeCal()
+
     
     trade_cal_data=trade_cal_data.set_index('cal_date')
     
     while True:
         if trade_cal_data.at[dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d'),'is_open']==0:
-            #tushare.is_holiday(dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d')):
             #当前日期为节假日，查看下一天是否是交易日
             cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
             dayOffset = datetime.timedelta(1)
@@ -487,31 +439,6 @@ if __name__ == '__main__':
     twentyDaysBeforeFirstOpenDay=cday.strftime('%Y%m%d')
     
     
-    '''
-    if myPath.exists():
-        shutil.rmtree(strOutterOutputDir)
-    
-    os.mkdir(strOutterOutputDir)
-    '''
-    
-    '''
-    df = tushare.get_stock_basics()
-    df.columns
-    for nm in df.name:
-        if 'ST' in nm:
-            print('ST')
-    '''
-    
-    '''
-    sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-    
-    
-    stockDict={}
-    
-    for idx in sdf.index:
-        stockDict[sdf.at[idx,'ts_code']]=sdf.at[idx,'name']
-        
-    '''
     
     #stockCodeList = sdf['ts_code']
     
@@ -529,10 +456,7 @@ if __name__ == '__main__':
         if not(myPath.exists()):
             os.mkdir(strOutterOutputDir)
         #从参数获取交易策略
-    #    strategyList= [SMAStrategy("SMAStrategy"),SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
-        #strList= [SimpleStrategy("SimpleStrategy"),MultiStepStrategy('MultiStepStrategy')]
-        
-        
+  
         
         #对所有策略进行循环：
         for tradeStrategy in tradeStrategyList:

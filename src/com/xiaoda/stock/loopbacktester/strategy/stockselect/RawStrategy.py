@@ -7,11 +7,18 @@ from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import 
 from datetime import datetime as dt
 import time
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
+from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
 class RawStrategy(StrategyParent):
     '''
     classdocs
     '''
+    
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        self.name="RawStrategy"
 
     
     #决定对哪些股票进行投资
@@ -38,5 +45,5 @@ class RawStrategy(StrategyParent):
                 returnStockList.append(stockCode)
         '''
         
-        return MysqlProcessor.getStockList()
+        return StockDataProcessor.getAllStockList()
     
