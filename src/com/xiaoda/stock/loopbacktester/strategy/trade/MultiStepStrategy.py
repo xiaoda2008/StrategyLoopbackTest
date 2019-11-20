@@ -74,12 +74,12 @@ class MultiStepStrategy(StrategyParent):
             #如果上涨超线，应当卖出
             if continuousRiseOrFallCnt<=0:
                 #此前为下跌或未超线
-                return -1*math.ceil(holdShares/3), min((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
+                return -1*math.ceil(holdShares/3), max((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
             elif continuousRiseOrFallCnt==1:
                 #此前已连续下跌1次
-                return -1*math.ceil(holdShares/2), min((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
+                return -1*math.ceil(holdShares/2), max((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
             else:
-                return -1*holdShares, min((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
+                return -1*holdShares, max((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
         
         else:
             #未上涨或下跌超线

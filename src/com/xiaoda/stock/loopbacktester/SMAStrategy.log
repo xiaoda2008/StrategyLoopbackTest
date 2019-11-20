@@ -312,3 +312,13 @@
 2019-11-20 14:35:23,047 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:88] - INFO: 603868.SH在20180426下跌超过9%
 2019-11-20 14:35:28,950 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 603880.SH在20181023涨幅超过9%
 2019-11-20 14:36:12,983 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 603936.SH在20180614涨幅超过9%
+2019-11-20 16:34:35,495 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300701.SZ在20180611涨幅超过9%
+2019-11-20 16:34:40,274 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300494.SZ在20181221涨幅超过9%
+2019-11-20 16:34:46,745 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300578.SZ在20180606涨幅超过9%
+2019-11-20 16:34:47,471 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:88] - INFO: 002899.SZ在20180517下跌超过9%
+2019-11-20 16:34:56,601 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300640.SZ在20180323涨幅超过9%
+2019-11-20 16:34:56,623 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300640.SZ在20180424涨幅超过9%
+2019-11-20 16:34:56,740 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300640.SZ在20180911涨幅超过9%
+2019-11-20 16:34:58,360 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300458.SZ在20180710涨幅超过9%
+2019-11-20 16:35:02,042 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:88] - INFO: 603160.SH在20180502下跌超过9%
+2019-11-20 16:35:04,749 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\strategy\trade\SMAStrategy.py[line:73] - INFO: 300668.SZ在20181015涨幅超过9%

@@ -61,7 +61,7 @@ class SimpleStrategy(StrategyParent):
             return math.floor(nShare/2), (1-DOWNRATE)*latestDealPrice
         elif highPrice > (1+UPRATE)*holdAvgPrice and highPrice > latestDealPrice*(1+UPRATE) and holdShares>0:
             #如果上涨超线，应当卖出
-            return -1*math.ceil(holdShares/2), min((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
+            return -1*math.ceil(holdShares/2), max((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
         else:
             #未上涨或下跌超线
             return 0,0
