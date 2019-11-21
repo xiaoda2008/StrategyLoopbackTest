@@ -531,14 +531,18 @@ if __name__ == '__main__':
                 i=0
                 while True:
                     if not (stockfileDF.at[i,'日期'] in cashFlowDict):
-                        cashFlowDict[stockfileDF.at[i,'日期']]=float(stockfileDF.at[i,'当天资金净流量'])
+                        cashFlowDict[stockfileDF.at[i,'日期']]=float(stockfileDF.at[i,'当天资金净流量']),\
+                        float(stockfileDF.at[i,'当天资金净占用'])
                     else:    
-                        cashFlowDict[stockfileDF.at[i,'日期']]=float(cashFlowDict[stockfileDF.at[i,'日期']])+float(stockfileDF.at[i,'当天资金净流量'])
+                        cashFlowDict[stockfileDF.at[i,'日期']]=float(cashFlowDict[stockfileDF.at[i,'日期']][0])+\
+                        float(stockfileDF.at[i,'当天资金净流量']),float(cashFlowDict[stockfileDF.at[i,'日期']][1])+\
+                        float(stockfileDF.at[i,'当天资金净占用'])
                     i=i+1
                     if i==len(stockfileDF):
                         #最后一天，要把当天的持仓增加到净现金流
                         #以便计算XIRR
-                        cashFlowDict[stockfileDF.at[i-1,'日期']]=float(cashFlowDict[stockfileDF.at[i-1,'日期']])+float(stockfileDF.at[i-1,'当天持仓账面总金额'])
+                        cashFlowDict[stockfileDF.at[i-1,'日期']]=(float(cashFlowDict[stockfileDF.at[i-1,'日期']][0])+\
+                        float(stockfileDF.at[i-1,'当天持仓账面总金额'])),cashFlowDict[stockfileDF.at[i-1,'日期']][1]
                         break
             
             #对字典进行一下排序
@@ -548,13 +552,14 @@ if __name__ == '__main__':
             sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
             
             cashFlowList=[]
-            print('日期,当日资金净流量')
+            print('日期,当日资金净流量，当日资金净占用')
             keysList=list(cashFlowDict.keys())
             keysList.sort()
             for key in keysList:
                 print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
-                print(cashFlowDict.get(key))
-                cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key))))
+                print(cashFlowDict.get(key)[0],end=',')
+                print(cashFlowDict.get(key)[1])
+                cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
             
             
             print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(STARTDATE,ENDDATE),end=',')

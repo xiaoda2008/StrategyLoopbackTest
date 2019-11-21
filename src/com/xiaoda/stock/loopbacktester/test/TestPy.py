@@ -30,6 +30,20 @@ import copy
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
+
+
+
+sdf=StockDataProcessor.getAllStockDataDF()
+
+
+
+sdf.set_index('ts_code')['list_date'].to_dict()
+
+
+
+
+
+
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
 sdDataAPI = tushare.pro_api()

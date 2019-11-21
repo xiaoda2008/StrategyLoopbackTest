@@ -4,9 +4,6 @@ Created on 2019年11月12日
 @author: picc
 '''
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
-from datetime import datetime as dt
-import time
-from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
 class RawStrategy(StrategyParent):
@@ -22,7 +19,7 @@ class RawStrategy(StrategyParent):
 
     
     #决定对哪些股票进行投资
-    def getSelectedStockList(self,dateStr):
+    def getSelectedStockList(self,startdateStr):
         
         #在MysqlProcessor获取股票列表时
         #已经剔除掉了退市股和ST、*ST等
@@ -45,5 +42,15 @@ class RawStrategy(StrategyParent):
                 returnStockList.append(stockCode)
         '''
         
-        return StockDataProcessor.getAllStockList()
+        sdict=StockDataProcessor.getAllStockDataDict()
+        
+        returnStockList=[]
+        
+        
+        for (stockCode,listdate) in sdict.items():
+            if listdate>startdateStr:
+                continue
+            returnStockList.append(stockCode)
+            
+        return returnStockList
     

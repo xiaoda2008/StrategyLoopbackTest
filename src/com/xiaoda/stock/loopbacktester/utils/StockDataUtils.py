@@ -111,7 +111,7 @@ class StockDataProcessor(object):
         return lastMarketDay
     
     @staticmethod
-    def getAllStockList():
+    def getAllStockDataDict():
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
@@ -119,8 +119,10 @@ class StockDataProcessor(object):
         sqltxt = sqlalchemy.text(sql)
         df = pandas.read_sql_query(sqltxt,engine)
         
-        return df['ts_code'].to_list()
+        #return df['ts_code'].to_list()
         
+        return df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
+    
         '''
         # 创建对象的基类:
         Base = declarative_base()

@@ -68,10 +68,10 @@ class SMAStrategy(StrategyParent):
         
         if pre_high<pre_MA20 and highPrice>pre_MA20:
             
-            #上涨超过9%，暂时先按照最高价买进行计算
+            #上涨超过9%，暂时先按照最高价再涨5%买入进行计算
             if avgPrice>pre_close*1.09:
                 self.log.logger.info(stock_k_data.at[todayDate,'ts_code']+"在"+todayDate+"涨幅超过9%")
-                return math.floor(nShare/2), highPrice
+                return math.floor(nShare/2), highPrice*1.05
             else:
                 return math.floor(nShare/2), pre_MA20
             #暂时还没有比较好的方法解决在前一日涨停、跌停，下一日买入的方法
@@ -84,9 +84,10 @@ class SMAStrategy(StrategyParent):
             #    return 0
         elif pre_low>pre_MA20 and lowPrice<pre_MA20:
             
+            #如出现跌停，按照跌停价格再跌5%进行卖出计算
             if avgPrice<pre_close*0.91:
                 self.log.logger.info(stock_k_data.at[todayDate,'ts_code']+"在"+todayDate+"下跌超过9%")
-                return -1*math.ceil(nShare/2), lowPrice
+                return -1*math.ceil(nShare/2), lowPrice*0.95
             else:
                 return -1*math.ceil(nShare/2), pre_MA20
             #前一天收盘价格高于20日均线，且当天开盘价格低于20日均线-》下穿20日均线，可以卖出

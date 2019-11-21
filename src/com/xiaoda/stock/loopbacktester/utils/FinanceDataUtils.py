@@ -27,7 +27,7 @@ class FinanceDataProcessor(object):
         
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_balancesheet_%s where total_assets is not null and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],dateStr)
+        sql = 'select * from s_balancesheet_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         sqltxt = sqlalchemy.text(sql)
         #查询结果
         try:
@@ -48,7 +48,7 @@ class FinanceDataProcessor(object):
         
         engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = 'select * from s_cashflow_%s where c_cash_equ_end_period is not null and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],dateStr)
+        sql = 'select * from s_cashflow_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         #查询结果
         sqltxt = sqlalchemy.text(sql)
         #查询结果
