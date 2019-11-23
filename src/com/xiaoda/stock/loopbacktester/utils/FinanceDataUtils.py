@@ -25,19 +25,21 @@ class FinanceDataProcessor(object):
         '''
         #startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
         
-        engine = MysqlProcessor.getMysqlEngine()
+        #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = 'select * from s_balancesheet_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         sqltxt = sqlalchemy.text(sql)
+        
+        return MysqlProcessor.querySql(sqltxt)
         #查询结果
-        try:
-            df=pandas.read_sql_query(sqltxt,engine)
-        except sqlalchemy.exc.ProgrammingError:
+        #try:
+        #    df=pandas.read_sql_query(sqltxt,engine)
+        #except sqlalchemy.exc.ProgrammingError:
             #如果压根就没有这个表
             #在kdata与股票列表数据不一致的情况下会出现
-            df=pandas.DataFrame()
-        finally:
-            return df
+        #    df=pandas.DataFrame()
+        #finally:
+        #    return df
         
     @staticmethod
     def getLatestStockCashFlow(stockCode,dateStr):
@@ -46,20 +48,22 @@ class FinanceDataProcessor(object):
         '''
         #startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
         
-        engine = MysqlProcessor.getMysqlEngine()
+        #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = 'select * from s_cashflow_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         #查询结果
         sqltxt = sqlalchemy.text(sql)
+        
+        return MysqlProcessor.querySql(sqltxt)
         #查询结果
-        try:
-            df=pandas.read_sql_query(sqltxt,engine)
-        except sqlalchemy.exc.ProgrammingError:
+        #try:
+        #    df=pandas.read_sql_query(sqltxt,engine)
+        #except sqlalchemy.exc.ProgrammingError:
             #如果压根就没有这个表
             #在kdata与股票列表数据不一致的情况下会出现
-            df=pandas.DataFrame()
-        finally:
-            return df
+        #    df=pandas.DataFrame()
+        #finally:
+        #    return df
 
 
     @staticmethod

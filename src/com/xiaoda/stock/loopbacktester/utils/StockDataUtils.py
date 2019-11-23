@@ -27,13 +27,13 @@ class StockDataProcessor(object):
     
     @staticmethod
     def getTradeCal():
-        engine = MysqlProcessor.getMysqlEngine()
+        #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = "select * from u_trade_cal"
         #查询结果
-        sqltxt = sqlalchemy.text(sql)
-        df = pandas.read_sql_query(sqltxt,engine)
-        return df
+        return MysqlProcessor.querySql(sql)
+        #df = pandas.read_sql_query(sqltxt,engine)
+        #return df
         
     
     @staticmethod
@@ -112,13 +112,14 @@ class StockDataProcessor(object):
     
     @staticmethod
     def getAllStockDataDict():
-        engine = MysqlProcessor.getMysqlEngine()
+        #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
         #查询结果
-        sqltxt = sqlalchemy.text(sql)
-        df = pandas.read_sql_query(sqltxt,engine)
+        #sqltxt = sqlalchemy.text(sql)
+        #df = pandas.read_sql_query(sqltxt,engine)
         
+        df=MysqlProcessor.querySql(sql)
         #return df['ts_code'].to_list()
         
         return df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
@@ -165,19 +166,21 @@ class StockDataProcessor(object):
         endDate：结束日期
         adj:None代表不复权，qfq代表前复权，hfq代表后复权
         '''
-        engine = MysqlProcessor.getMysqlEngine()
+        #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql_kdata = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
-        sqltxt_kdata = sqlalchemy.text(sql_kdata)
+        #sqltxt_kdata = sqlalchemy.text(sql_kdata)
         
         sql_adj = 'select * from s_adjdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
-        sqltxt_adj = sqlalchemy.text(sql_adj)
+        #sqltxt_adj = sqlalchemy.text(sql_adj)
         
         
         #查询结果
         try:
-            kdatadf=pandas.read_sql_query(sqltxt_kdata,engine,coerce_float=True)
-            adjdf=pandas.read_sql_query(sqltxt_adj,engine)
+            kdatadf=MysqlProcessor.querySql(sql_kdata)
+            #kdatadf=pandas.read_sql_query(sqltxt_kdata,engine,coerce_float=True)
+            adjdf=MysqlProcessor.querySql(sql_adj)
+            #adjdf=pandas.read_sql_query(sqltxt_adj,engine)
             #adjdf.set_index('trade_date',inplace=True)
             #kdatadf.set_index('trade_date',inplace=True)
             #获取到的数据都是未复权数据

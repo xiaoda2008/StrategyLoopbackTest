@@ -12,6 +12,8 @@ import numpy
 from pathlib import Path
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
 
+
+import traceback
 import time
 import sqlalchemy
 import os
@@ -20,7 +22,7 @@ from cmath import isnan
 from sqlalchemy.util.langhelpers import NoneType
 from pandas.core.frame import DataFrame
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
-
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 
 import datetime
@@ -31,9 +33,50 @@ from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
 
+rs=tushare.pro_bar(ts_code="000000.SZ", start_date="20191116", end_date="20191117")
+
+print(rs.empty)
+
+sql = "select table_name from information_schema.tables where table_name='s_balancesheet_000000'"
+res=MysqlProcessor.querySql(sql)
 
 
-sdf=StockDataProcessor.getAllStockDataDF()
+print(res.empty)
+
+mysqlEngine = MysqlProcessor.getMysqlEngine()
+
+#部分更新语句
+pupdatesql="update u_dataupdatelog set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+pupdatesqltxt = sqlalchemy.text(pupdatesql)
+
+#数据库回话
+DBSession= sessionmaker(bind=mysqlEngine)
+
+session= DBSession()
+
+#查询结果
+try:
+    #df=pandas.read_sql_query(sqltxt,engine)
+    session.execute(pupdatesqltxt)
+except:
+    traceback.print_exc()
+#except Exception as e:
+#    print (e)
+finally:
+    session.commit()
+
+
+
+
+print()
+
+
+
+
+
+
+sdf=StockDataProcessor.getAllStockDataDict()
 
 
 

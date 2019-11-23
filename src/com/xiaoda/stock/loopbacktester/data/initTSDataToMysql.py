@@ -2,6 +2,9 @@
 Created on 2019年11月2日
 
 @author: xiaoda
+
+一次性的获取所有需要的数据到本地数据库中
+并在过程中进行处理情况的记录，以便kettle进行错误处理
 '''
 
 import sys
@@ -9,8 +12,8 @@ import os
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 
-print(sys.path)
-sys.path.clear()
+#print(sys.path)
+#sys.path.clear()
 print(sys.path)
 sys.path.append('E:\workspace\StrategyLoopbackTest\src')
 sys.path.append('D:\Programs\Python\Python37-32\Lib\site-packages')
@@ -19,14 +22,16 @@ sys.path.append('D:\Programs\Python\Python37-32\DLLs')
 sys.path.append('D:\Programs\Python\Python37-32\lib')
 
 
-import os
 import time
 import tushare
+import sqlalchemy
+import datetime
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 #from com.xiaoda.stock.loopbacktester.utils.ParamUtils import LOGGINGDIR
 from datetime import datetime as dt
+
 
 log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 
@@ -42,8 +47,34 @@ def getlastquarterfirstday():
         else:
             return dt(today.year,7,1)
     
+
+def partialUpdate():    
+    #部分更新语句
+    pupdatesql="update u_dataupdatelog set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d'))
+    MysqlProcessor.execSql(pupdatesql)
+
+def totalUpdate():
+    #全局更新语句
+    tupdatesql="update u_dataupdatelog set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d'))
+    MysqlProcessor.execSql(tupdatesql)
+
+
+def lastDataUpdate(stockCode,dataType):
+    if dataType=='FR':
+        #更新财务报表最新股票代码
+        sql="update u_dataupdatelog set content='%s' where content_name='finance_report_update_to';"%(stockCode)
+    elif dataType=="KD":
+        #更新K线最新股票代码
+        sql="update u_dataupdatelog set content='%s' where content_name='kdata_update_to';"%(stockCode)
+    elif dataType=="ADJ":
+        #更新复权因子最新股票代码
+        sql="update u_dataupdatelog set content='%s' where content_name='adjdata_update_to';"%(stockCode)
+    else:
+        raise Exception("dataType不正确")
     
-    
+    MysqlProcessor.execSql(sql)
+        
+
 #使用TuShare pro版本
 
 #写入数据库的引擎
@@ -63,6 +94,8 @@ trade_cal_data = sdDataAPI.trade_cal(exchange='',start_date=STARTDATE,end_date=E
 #将交易日列表存入数据库表中
 trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
+#完成部分信息更新
+partialUpdate()
 
 
 #2、获取股票列表并存入数据库
@@ -72,49 +105,64 @@ sdf = sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,n
 sdf.to_sql(name='u_stock_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
 stockCodeList = sdf['ts_code']
+#完成部分信息更新
+partialUpdate()
 
-'''
+
+
 #3、获取财务报表数据，存入数据库
 #startday=getlastquarterfirstday().strftime('%Y%m%d')
 
+#找到之前处理的最后一个股票的代码
+sql="select content from u_dataupdatelog where content_name='finance_report_update_to'"
+res=MysqlProcessor.querySql(sql)
+finance_report_update_to=res.at[0,'content']
+
+
 startday='19901219'
 
-for idx in sdf.index:
+for index,stockCode in stockCodeList.items():
 
-    if sdf.at[idx,'ts_code'][:6]<'600106':
+    if stockCode<finance_report_update_to:
         continue
+    #if sdf.at[idx,'ts_code'][:6]<'000951':
+    #    continue
     #elif sdf.at[idx,'ts_code'][:6]>'600428':
     #    break;
     
+    #time.sleep(0.25)
+    
     #获取资产负债表
-    bs=sdDataAPI.balancesheet(ts_code=sdf.at[idx,'ts_code'],start_date=startday,
-                                end_date=dt.now().strftime('%Y%m%d'))
-    #bs.at[0,'total_assets']
-    #time.sleep(2)
-    bs.to_sql(name='s_balancesheet_'+sdf.at[idx,'ts_code'][:6],
+    bs=sdDataAPI.balancesheet(ts_code=stockCode,start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
+    bs.to_sql(name='s_balancesheet_'+stockCode[:6],
               con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
-
 
     #获取现金流量表
-    cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,
-                            end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
-    #cf.at[0,'c_cash_equ_end_period']
-    cf.to_sql(name='s_cashflow_'+sdf.at[idx,'ts_code'][:6],
+    cf = sdDataAPI.cashflow(ts_code=stockCode,start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
+    cf.to_sql(name='s_cashflow_'+stockCode[:6],
               con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
-    log.logger.info('处理完%s的财务报表数据'%(sdf.at[idx,'ts_code']))
+    #获取利润表
+    ic = sdDataAPI.income(ts_code=stockCode,start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
+    ic.to_sql(name='s_income_'+stockCode[:6],
+              con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
     
-
-
-
-#不能这样处理，不同区间取到的前复权数据不同，会影像处理的准确性
+    log.logger.info('处理完%s的财务报表数据'%(stockCode))
+    partialUpdate()
+    lastDataUpdate(stockCode, "FR")
+    
 
 #4、获取股票不复权日K线数据，并存入数据库
+
+#找到之前处理的最后一个股票的代码
+sql="select content from u_dataupdatelog where content_name='kdata_update_to'"
+res=MysqlProcessor.querySql(sql)
+kdata_update_to=res.at[0,'content']
+
 for index,stockCode in stockCodeList.items():
     
-    #if stockCode<'600533':
-    continue
+    if stockCode<kdata_update_to:
+        continue
     
     #用于标记该股票是否出现过数据
     flag = False
@@ -124,11 +172,12 @@ for index,stockCode in stockCodeList.items():
     ENDDATE = '19991231'
     
     #获取该股票数据并写入数据库
-    stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
+    stock_k_data=tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
     
-    time.sleep(2)
+    #time.sleep(0.5)
     
-    if type(stock_k_data)==NoneType:
+    #if type(stock_k_data)==NoneType:
+    if stock_k_data.empty:
         #如果没有任何返回值，说明该时间段内没有上市交易过该股票
         log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))
                 
@@ -153,7 +202,7 @@ for index,stockCode in stockCodeList.items():
  
     #获取该股票数据并写入数据库
     stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
-    time.sleep(2)
+    #time.sleep(0.5)
     
     if type(stock_k_data)==NoneType:
         #如果没有任何返回值，说明该时间段内没有上市交易过该股票
@@ -180,13 +229,13 @@ for index,stockCode in stockCodeList.items():
 
     log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
 
-    #将2010-01-01到2009-12-31该股票数据导入数据库
+    #将2010-01-01到2018-12-31该股票数据导入数据库
     STARTDATE = '20100101'
-    ENDDATE = '20191031'
+    ENDDATE = '20181231'
 
     #获取该股票数据并写入数据库
     stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
-    time.sleep(2)    
+    #time.sleep(0.5)    
     if type(stock_k_data)==NoneType:
         #如果没有任何返回值，说明该时间段内没有上市交易过该股票
         log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))
@@ -210,14 +259,54 @@ for index,stockCode in stockCodeList.items():
         stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
     
     log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
- '''   
+    
+    #将2019-01-01到当前日期该股票数据导入数据库
+    STARTDATE='20190101'
+    ENDDATE=dt.now().strftime('%Y%m%d')
+
+    #获取该股票数据并写入数据库
+    stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
+    #time.sleep(0.5)    
+    if type(stock_k_data)==NoneType:
+        #如果没有任何返回值，说明该时间段内没有上市交易过该股票
+        log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))
+                
+        #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
+        #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
+        #time.sleep(0.31)
+    elif flag == False:
+        #该股票出现交易数据，且在上一区间未出现交易
+        #则需要重建表
+        flag = True
+        stock_k_data.sort_index(inplace=True,ascending=False)
+        #存入数据库
+        stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
+    else:
+        #该股票出现交易数据
+        #且在上一区间已经有过交易，直接增加数据即可
+        flag = True
+        stock_k_data.sort_index(inplace=True,ascending=False)
+        #存入数据库
+        stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
+    
+    log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
+    partialUpdate()
+    lastDataUpdate(stockCode[:6], "KD")    
     
  
 #5、获取复权因子数据，并存入数据库
+
+#找到之前处理的最后一个股票的代码
+sql="select content from u_dataupdatelog where content_name='adjdata_update_to'"
+res=MysqlProcessor.querySql(sql)
+adjdata_update_to=res.at[0,'content']
+
 for index,stockCode in stockCodeList.items():
 
-
-    time.sleep(1)
+    if stockCode<adjdata_update_to:
+        continue
+    
+    #time.sleep(0.5)
     #获取该股票的复权因子数据并写入数据库
     adj_data = sdDataAPI.adj_factor(ts_code=stockCode)
     
@@ -227,3 +316,16 @@ for index,stockCode in stockCodeList.items():
     adj_data.to_sql(name='s_adjdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
 
     log.logger.info('处理完股票%s的复权因子'%(stockCode))
+
+    partialUpdate()
+    lastDataUpdate(stockCode[:6], "ADJ")  
+
+   
+#完成所有数据的更新
+totalUpdate()
+
+
+#完成所有数据更新，把数据库表重置，以便下一次处理使用
+lastDataUpdate("", "FR")
+lastDataUpdate("", "KD")
+lastDataUpdate("", "ADJ")
