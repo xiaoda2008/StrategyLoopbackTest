@@ -1,2 +1,0 @@
-2019-11-23 20:33:28,678 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\UpdateTSDataToMysql.py[line:111] - INFO: 处理完交易日数据的更新
-2019-11-23 20:33:47,726 - E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\UpdateTSDataToMysql.py[line:126] - INFO: 处理完股票列表数据的更新
