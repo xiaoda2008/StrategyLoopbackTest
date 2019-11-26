@@ -19,13 +19,11 @@ class FinanceDataProcessor(object):
         '''   
 
     @staticmethod
-    def getLatestStockBalanceSheet(stockCode,dateStr):
+    def getLatestStockBalanceSheetReport(stockCode,dateStr):
         '''
         获取指定日期前最近一次的资产负债表
         '''
-        #startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
-        
-        #engine = MysqlProcessor.getMysqlEngine()
+
         #查询语句
         sql = 'select * from s_balancesheet_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         sqltxt = sqlalchemy.text(sql)
@@ -42,13 +40,11 @@ class FinanceDataProcessor(object):
         #    return df
         
     @staticmethod
-    def getLatestStockCashFlow(stockCode,dateStr):
+    def getLatestStockCashFlowReport(stockCode,dateStr):
         '''
         获取指定日期前最近一次的现金流量表
         '''
-        #startday=MysqlProcessor.getlastquarterfirstday().strftime('%Y%m%d')
-        
-        #engine = MysqlProcessor.getMysqlEngine()
+
         #查询语句
         sql = 'select * from s_cashflow_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         #查询结果
@@ -65,29 +61,21 @@ class FinanceDataProcessor(object):
         #finally:
         #    return df
 
-
     @staticmethod
-    def getLatestIncome(stockCode,dateStr):
+    def getLatestIncomeReport(stockCode,dateStr):
         '''
         获取指定日期前最近一次的利润表
         '''
-        pass
-        '''
-        engine = MysqlProcessor.getMysqlEngine()
+
         #查询语句
-        sql = 'select * from s_cashflow_%s where c_cash_equ_end_period is not null and ann_date<=%s order by ann_date desc limit 1;'%(stockCode[:6],dateStr)
+        sql = 'select * from s_income_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
         #查询结果
         sqltxt = sqlalchemy.text(sql)
-        #查询结果
-        try:
-            df=pandas.read_sql_query(sqltxt,engine)
-        except sqlalchemy.exc.ProgrammingError:
-            #如果压根就没有这个表
-            #在kdata与股票列表数据不一致的情况下会出现
-            df=pandas.DataFrame()
-        finally:
-            return df
-        '''
+        
+        return MysqlProcessor.querySql(sqltxt)
+
+
+ 
         '''
         # 创建对象的基类:
         Base = declarative_base()

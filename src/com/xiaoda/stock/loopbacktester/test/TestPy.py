@@ -6,7 +6,7 @@ Created on 2019年10月18日
 import tushare
 import math
 from datetime import datetime as dt
-import pandas
+import pandas as pd
 import datetime
 import numpy
 from pathlib import Path
@@ -24,13 +24,87 @@ from pandas.core.frame import DataFrame
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-
+import numpy as np
 import datetime
 from scipy import optimize
 import copy
 
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
+
+#显示所有列
+pd.set_option('display.max_columns', None)
+#显示所有行
+pd.set_option('display.max_rows',None)
+
+np.set_printoptions(threshold = np.inf)
+#若想不以科学计数显示:
+np.set_printoptions(suppress = True)
+
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+sdDataAPI = tushare.pro_api()
+
+
+#获取半年报、月报
+
+#获取利润表
+ic = sdDataAPI.income(ts_code='000003.SZ',start_date='20190101',
+                      end_date=dt.now().strftime('%Y%m%d'))
+print(ic)
+for idx in ic.index:
+    if not(pd.isnull(ic.at[idx,'ebit']) or pd.isnull(ic.at[idx,'ebitda'])\
+    or pd.isnull(ic.at[idx,'n_income']) or pd.isnull(ic.at[idx,'n_income_attr_p'])\
+    or pd.isnull(ic.at[idx,'income_tax']) or pd.isnull(ic.at[idx,'int_income'])\
+    or pd.isnull(ic.at[idx,'int_exp']) or pd.isnull(ic.at[idx,'biz_tax_surchg'])):
+        print('ebit: ',ic.at[idx,'ebit'])
+        print('ebitda: ',ic.at[idx,'ebitda'])
+        print('n_income: ',ic.at[idx,'n_income'])
+        print('n_income_attr_p: ',ic.at[idx,'n_income_attr_p'])
+        print('income_tax: ',ic.at[idx,'income_tax'])
+        print('int_income: ',ic.at[idx,'int_income'])
+        print('int_exp: ',ic.at[idx,'int_exp'])
+        print('biz_tax_surchg: ',ic.at[idx,'biz_tax_surchg'])
+    
+    
+#取最近一期的半年报？
+
+
+#（营业总收入-营业税金及附加）-（营业成本+利息支出+手续费及佣金支出+销售费用+管理费用+研发费用+坏账损失+存货跌价损失）+其他收益
+
+#营业总收入
+
+#营业税金及附加
+
+#营业成本
+
+#利息支出
+
+#手续费及佣金支出
+
+#销售费用
+
+#管理费用
+
+#研发费用
+
+#坏账损失
+
+#存货跌价损失
+
+#其他收益（投资收益)
+    
+    
+print('ebit: ',ic[ic['ebit'].notnull() and ic['ebitda'].notnull()].reset_index(drop=True).at[0,'ebit'])
+print('ebitda: ',ic[ic['ebitda'].notnull()].reset_index(drop=True).at[0,'ebitda'])
+print('n_income: ',ic[ic['n_income'].notnull() and ic['ebitda'].notnull()].reset_index(drop=True).at[0,'n_income'])
+print('n_income_attr_p: ',ic[ic['n_income_attr_p'].notnull()].reset_index(drop=True).at[0,'n_income_attr_p'])
+print('income_tax: ',ic[ic['income_tax'].notnull()].reset_index(drop=True).at[0,'income_tax'])
+print('int_income: ',ic[ic['int_income'].notnull()].reset_index(drop=True).at[0,'int_income'])
+print('int_exp: ',ic[ic['int_exp'].notnull()].reset_index(drop=True).at[0,'int_exp'])
+print('biz_tax_surchg: ',ic[ic['biz_tax_surchg'].notnull()].reset_index(drop=True).at[0,'biz_tax_surchg'])
+
+
+
 
 
 rs=tushare.pro_bar(ts_code="000000.SZ", start_date="20191116", end_date="20191117")
