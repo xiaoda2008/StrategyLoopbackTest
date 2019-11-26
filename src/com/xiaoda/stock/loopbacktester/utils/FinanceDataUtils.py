@@ -11,8 +11,21 @@ class FinanceDataProcessor(object):
     '''
     classdocs
     '''
-
-
+    
+    '''
+    def getlasthalffirstday():
+        today=dt.now()
+        quarter = (today.month-1)/3+1
+        if quarter == 1:
+            return dt(today.year-1,10,1)
+        elif quarter == 2:
+            return dt(today.year,1,1)
+        elif quarter == 3:
+            return dt(today.year,4,1)
+        else:
+            return dt(today.year,7,1)
+    '''
+    
     def __init__(self, params):
         '''
         Constructor
@@ -23,12 +36,9 @@ class FinanceDataProcessor(object):
         '''
         获取指定日期前最近一次的资产负债表
         '''
-
         #查询语句
         sql = 'select * from s_balancesheet_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
-        sqltxt = sqlalchemy.text(sql)
-        
-        return MysqlProcessor.querySql(sqltxt)
+        return MysqlProcessor.querySql(sql)
         #查询结果
         #try:
         #    df=pandas.read_sql_query(sqltxt,engine)
@@ -44,13 +54,9 @@ class FinanceDataProcessor(object):
         '''
         获取指定日期前最近一次的现金流量表
         '''
-
         #查询语句
         sql = 'select * from s_cashflow_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
-        #查询结果
-        sqltxt = sqlalchemy.text(sql)
-        
-        return MysqlProcessor.querySql(sqltxt)
+        return MysqlProcessor.querySql(sql)
         #查询结果
         #try:
         #    df=pandas.read_sql_query(sqltxt,engine)
@@ -66,15 +72,57 @@ class FinanceDataProcessor(object):
         '''
         获取指定日期前最近一次的利润表
         '''
-
         #查询语句
-        sql = 'select * from s_income_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
-        #查询结果
-        sqltxt = sqlalchemy.text(sql)
-        
-        return MysqlProcessor.querySql(sqltxt)
+        sql='select * from s_income_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
+        return MysqlProcessor.querySql(sql)
 
 
+    @staticmethod
+    def getLatestAnnualOrSemiReportEBIT():
+        '''
+        获取最近一次的半年度或年度报表的EBIT
+        '''
+        #查询语句
+        sql="select * from s_income_000001 where end_date like '%0630' or end_date like '%1231' order by end_date desc;"
+        aosr=MysqlProcessor.querySql(sql)
+#（营业总收入-营业税金及附加）-（营业成本+利息支出+手续费及佣金支出+销售费用+管理费用+研发费用+坏账损失+存货跌价损失）+其他收益
+
+#营业总收入
+
+#营业税金及附加
+
+#营业成本
+
+#利息支出
+
+#手续费及佣金支出
+
+#销售费用
+
+#管理费用
+
+#研发费用
+
+#坏账损失
+
+#存货跌价损失
+
+#其他收益（投资收益)
+
+    
+
+        '''
+                today=dt.now()
+                quarter = (today.month-1)/3+1
+                if quarter == 1:
+                    return dt(today.year-1,10,1)
+                elif quarter == 2:
+                    return dt(today.year,1,1)
+                elif quarter == 3:
+                    return dt(today.year,4,1)
+                else:
+                    return dt(today.year,7,1)
+        '''
  
         '''
         # 创建对象的基类:

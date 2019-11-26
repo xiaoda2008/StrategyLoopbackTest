@@ -13,7 +13,6 @@ class ROEStrategy(StrategyParent):
     根据股票ROE进行选股，选择ROE排在前5%的股票进行交易
     '''
 
-
     def __init__(self):
         '''
         Constructor
@@ -25,11 +24,9 @@ class ROEStrategy(StrategyParent):
     def getSelectedStockList(self,startdateStr):
         
         sdict=StockDataProcessor.getAllStockDataDict()
-        
         ROEDict={}
-
+        
         for (stockCode,listdate) in sdict.items():
-
             if listdate>startdateStr:
                 continue
 
@@ -49,13 +46,13 @@ class ROEStrategy(StrategyParent):
             ic=FinanceDataProcessor.getLatestIncomeReport(stockCode,startdateStr)
             #cf为之前发布的所有利润表数据
             #需要到里面找到最后一个不是空的现金等价物数据
-            ebit=ic[ic['ebit'].notnull()].reset_index(drop=True).at[0,'ebit']
+            nincome=ic[ic['n_income'].notnull()].reset_index(drop=True).at[0,'n_income']
 
         
             if bs.empty or ic.empty:
                 ROE=0
             else:
-                ROE=ebit/netAssets
+                ROE=nincome/netAssets
     
             ROEDict[stockCode]=ROE
             

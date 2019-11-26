@@ -41,6 +41,7 @@ class MysqlProcessor():
     def execSql(sqlStr):
         session = MysqlProcessor.getMysqlSession()
         sqlStrTxt = sqlalchemy.text(sqlStr)
+        
         #执行sql语句
         try:
             session.execute(sqlStrTxt)
@@ -54,7 +55,6 @@ class MysqlProcessor():
     def querySql(sqlStr):
         #session = MysqlProcessor.getMysqlSession()
         mysqlEngine = MysqlProcessor.getMysqlEngine()
-        
         sqlStrTxt = sqlalchemy.text(sqlStr)
         
         #执行sql语句

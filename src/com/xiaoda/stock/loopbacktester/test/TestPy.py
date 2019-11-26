@@ -44,7 +44,7 @@ np.set_printoptions(suppress = True)
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 sdDataAPI = tushare.pro_api()
 
-
+'''
 #获取半年报、月报
 
 #获取利润表
@@ -64,35 +64,42 @@ for idx in ic.index:
         print('int_income: ',ic.at[idx,'int_income'])
         print('int_exp: ',ic.at[idx,'int_exp'])
         print('biz_tax_surchg: ',ic.at[idx,'biz_tax_surchg'])
-    
-    
+'''    
+#查询语句
+sql="select * from s_income_000001 where end_date like '%0630' or end_date like '%1231' order by end_date desc;"
+aosr=MysqlProcessor.querySql(sql)
+
+
 #取最近一期的半年报？
 
 
 #（营业总收入-营业税金及附加）-（营业成本+利息支出+手续费及佣金支出+销售费用+管理费用+研发费用+坏账损失+存货跌价损失）+其他收益
 
 #营业总收入
-
+total_revenue
 #营业税金及附加
-
+biz_tax_surchg
 #营业成本
-
+oper_cost
 #利息支出
-
+int_exp
 #手续费及佣金支出
-
+comm_exp
 #销售费用
-
+sell_exp
 #管理费用
-
+admin_exp
 #研发费用
-
+df = pro.fina_indicator(ts_code='600000.SH')
+rd_exp
 #坏账损失
 
 #存货跌价损失
 
 #其他收益（投资收益)
-    
+？？？
+
+
     
 print('ebit: ',ic[ic['ebit'].notnull() and ic['ebitda'].notnull()].reset_index(drop=True).at[0,'ebit'])
 print('ebitda: ',ic[ic['ebitda'].notnull()].reset_index(drop=True).at[0,'ebitda'])
