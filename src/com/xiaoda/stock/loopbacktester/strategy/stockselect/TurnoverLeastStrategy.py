@@ -1,5 +1,5 @@
 '''
-Created on 2019年11月18日
+Created on 2019年11月26日
 
 @author: xiaoda
 '''
@@ -8,23 +8,24 @@ from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 
-class ROEStrategy(StrategyParent):
+class TurenoverLeastStrategy(StrategyParent):
     '''
-    根据股票ROE进行选股，选择ROE排在前5%的股票进行交易
+    classdocs
     '''
+
 
     def __init__(self):
         '''
         Constructor
         '''
-        self.name="ROEStrategy"
+        self.name="TurnoverLeastStrategy"
 
 
     #决定对哪些股票进行投资
     def getSelectedStockList(self,startdateStr):
         
         sdict=StockDataProcessor.getAllStockDataDict()
-        ROEDict={}
+        TurnoverDict={}
         
         for (stockCode,listdate) in sdict.items():
             if listdate>startdateStr:
@@ -50,19 +51,19 @@ class ROEStrategy(StrategyParent):
 
         
             if bs.empty or ic.empty:
-                ROE=0
+                Turnover=0
             else:
-                ROE=nincome/netAssets
+                Turnover=
     
-            ROEDict[stockCode]=ROE
+            TurnoverDict[stockCode]=Turnover
             
-            self.log.logger.info('ROEStrategy:'+stockCode+','+str(ROE))
+            self.log.logger.info('TurnoverStrategy:'+stockCode+','+str(Turnover))
 
-        sortedROEList=sorted(ROEDict.items(),key=lambda x:x[1],reverse=True)
+        sortedROEList=sorted(TurnoverDict.items(),key=lambda x:x[1],reverse=True)
 
         returnStockList=[]
 
-        for tscode, ROE in sortedROEList[:30]:
+        for tscode, Turnover in sortedROEList[:30]:
             returnStockList.append(tscode)
         
         return returnStockList

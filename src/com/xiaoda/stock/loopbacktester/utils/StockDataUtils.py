@@ -3,6 +3,7 @@ Created on 2019年11月18日
 
 @author: xiaoda
 '''
+import tushare
 import pandas
 import sqlalchemy
 import datetime
@@ -124,6 +125,11 @@ class StockDataProcessor(object):
         
         return df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
     
+    @staticmethod
+    def getHS300DataDict():
+        tushare.get_hs300s()
+        
+        
         '''
         # 创建对象的基类:
         Base = declarative_base()
