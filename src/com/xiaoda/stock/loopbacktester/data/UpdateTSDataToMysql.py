@@ -95,6 +95,10 @@ sdDataAPI = tushare.pro_api()
 
 
 
+#如果当天已经更新过，直接退出
+if last_total_update_time>=dt.now().strftime('%Y%m%d'):
+    sys.exit(0)
+
 #1、获取交易日信息，并存入数据库
 #交易日历数据相对简单，可以每次都全量获取
 
@@ -128,11 +132,11 @@ log.logger.info('处理完股票列表数据的更新')
 partialUpdate()
 
 
+
 #3、获取财务报表数据，存入数据库
 
 #查询语句
 #查询上次完整获取数据的日期
-
 sql = "select content from u_dataupdatelog where content_name='last_total_update_time'"
 res=MysqlProcessor.querySql(sql)
 
@@ -147,12 +151,6 @@ else:
 
 for index,stockCode in stockCodeList.items():
 
-    #if sdf.at[idx,'ts_code'][:6]<'600106':
-    #    continue
-    #elif sdf.at[idx,'ts_code'][:6]>'600428':
-    #    break;
-    
-    time.sleep(0.75)
     #获取资产负债表
     bs=sdDataAPI.balancesheet(ts_code=stockCode,start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
     #获取现金流量表
@@ -163,14 +161,13 @@ for index,stockCode in stockCodeList.items():
     if bs.empty or cf.empty or ic.empty:
         continue
     
-    
     #由于是更新数据，绝大多数的表在此前都已经存在
     #因此，不能直接用dataframe的to_sql写入，否则会删除原有数据，或者可能重复插入
     #因此，需要生成sql代码进行插入
     
     #但对于确实没有数据的股票：刚刚上市，或者之前还没有发不过去财务报表等的，应当还是先用to_sql建立表格
     
-    sql = "select table_name from information_schema.tables where table_name='s_balancesheet_%s'"%(stockCode[:6])
+    sql="select table_name from information_schema.tables where table_name='s_balancesheet_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
     if res.empty:
@@ -192,8 +189,6 @@ for index,stockCode in stockCodeList.items():
             sql='insert into s_balancesheet_%s values (%s)'%(stockCode[:6],paramStr)
             MysqlProcessor.execSql(sql)
 
-
-
     sql = "select table_name from information_schema.tables where table_name='s_cashflow_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
@@ -214,9 +209,7 @@ for index,stockCode in stockCodeList.items():
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
             sql='insert into s_cashflow_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(sql)
-    
-    
+            MysqlProcessor.execSql(sql)  
     
     sql = "select table_name from information_schema.tables where table_name='s_income_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
@@ -248,19 +241,13 @@ for index,stockCode in stockCodeList.items():
 
 
 
-
-
 STARTDATE=startday
 ENDDATE=dt.now().strftime('%Y%m%d')
 #4、获取股票不复权日K线数据，并存入数据库
 for index,stockCode in stockCodeList.items():
-    
-    #if stockCode<'600533':
-    #continue
-    
-    #将startday1到当前日期该股票数据导入数据库
 
-    
+    #将startday到当前日期该股票数据导入数据库
+
     #获取该股票数据并写入数据库
     sk = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
     
@@ -306,12 +293,10 @@ for index,stockCode in stockCodeList.items():
     #获取该股票的复权因子数据并写入数据库
     ad = sdDataAPI.adj_factor(ts_code=stockCode,start_date=STARTDATE,end_date=ENDDATE)
     
-    
     if ad.empty:
         continue
     
     ad.sort_index(inplace=True,ascending=False)
-    
     
     sql = "select table_name from information_schema.tables where table_name='s_adjdata_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
@@ -336,7 +321,6 @@ for index,stockCode in stockCodeList.items():
     
     partialUpdate()
     lastDataUpdate(stockCode, "ADJ")  
-
 
 #完成所有数据的更新
 totalUpdate()

@@ -125,12 +125,6 @@ for index,stockCode in stockCodeList.items():
 
     if stockCode<finance_report_update_to:
         continue
-    #if sdf.at[idx,'ts_code'][:6]<'000951':
-    #    continue
-    #elif sdf.at[idx,'ts_code'][:6]>'600428':
-    #    break;
-    
-    #time.sleep(0.25)
     
     #获取资产负债表
     bs=sdDataAPI.balancesheet(ts_code=stockCode,start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
