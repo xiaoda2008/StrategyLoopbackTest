@@ -12,7 +12,8 @@ class ROEStrategy(StrategyParent):
     '''
     根据股票ROE进行选股，选择ROE排在前5%的股票进行交易
     '''
-
+    log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
+    
     def __init__(self):
         '''
         Constructor
