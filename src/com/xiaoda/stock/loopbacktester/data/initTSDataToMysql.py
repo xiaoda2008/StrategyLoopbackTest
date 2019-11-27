@@ -291,7 +291,7 @@ for index,stockCode in stockCodeList.items():
     
     log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
     partialUpdate()
-    lastDataUpdate(stockCode[:6], "KD")    
+    lastDataUpdate(stockCode, "KD")    
     
  
 #5、获取复权因子数据，并存入数据库
@@ -318,7 +318,7 @@ for index,stockCode in stockCodeList.items():
     log.logger.info('处理完股票%s的复权因子'%(stockCode))
 
     partialUpdate()
-    lastDataUpdate(stockCode[:6], "ADJ")  
+    lastDataUpdate(stockCode, "ADJ")  
 
    
 #完成所有数据的更新
