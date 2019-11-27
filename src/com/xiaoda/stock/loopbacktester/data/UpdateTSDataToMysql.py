@@ -93,7 +93,9 @@ tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 sdDataAPI = tushare.pro_api()
 
 
-
+sql = "select content from u_dataupdatelog where content_name='last_total_update_time'"
+res=MysqlProcessor.querySql(sql)
+last_total_update_time=dt.strptime(res.at[0,'content'], "%Y%m%d")
 
 #如果当天已经更新过，直接退出
 if last_total_update_time>=dt.now().strftime('%Y%m%d'):
