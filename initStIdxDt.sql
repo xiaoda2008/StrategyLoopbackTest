@@ -1,13 +1,17 @@
-#对股票清单表，进行扩充，标记沪深300、上证50、深证100、中证500等指数标记
+-- 对股票清单表，进行扩充，标记沪深300、上证50、深证100、中证500等指数标记
 
-use tsdata
+use tsdata;
 
-alter table u_stock_list add column HS300 boolean not null default 0; --添加表列：沪深300
-alter table u_stock_list add column SH50 boolean not null default 0; --添加表列：上证50
-alter table u_stock_list add column SZ100 boolean not null default 0; --添加表列：深证100
-alter table u_stock_list add column ZZ500 boolean not null default 0; --添加表列：中证500
+-- 添加表列：沪深300
+alter table u_stock_list add column HS300 boolean not null default 0;
+-- 添加表列：上证50
+alter table u_stock_list add column SH50 boolean not null default 0;
+-- 添加表列：深证100
+alter table u_stock_list add column SZ100 boolean not null default 0;
+-- 添加表列：中证500
+alter table u_stock_list add column ZZ500 boolean not null default 0;
 
-#上证50
+-- 上证50
 update u_stock_list set SH50=1 where ts_code='600000.SH';
 update u_stock_list set SH50=1 where ts_code='600028.SH';
 update u_stock_list set SH50=1 where ts_code='600031.SH';
@@ -60,7 +64,7 @@ update u_stock_list set SH50=1 where ts_code='601888.SH';
 update u_stock_list set SH50=1 where ts_code='601989.SH';
 
 
-#深证100
+-- 深证100
 update u_stock_list set SZ100=1 where ts_code='003816.SZ';
 update u_stock_list set SZ100=1 where ts_code='001965.SZ';
 update u_stock_list set SZ100=1 where ts_code='002939.SZ';
@@ -163,7 +167,7 @@ update u_stock_list set SZ100=1 where ts_code='000858.SZ';
 update u_stock_list set SZ100=1 where ts_code='000895.SZ';
 
 
-#沪深300
+-- 沪深300
 update u_stock_list set HS300=1 where ts_code='000001.SZ';
 update u_stock_list set HS300=1 where ts_code='000002.SZ';
 update u_stock_list set HS300=1 where ts_code='000008.SZ';
@@ -466,7 +470,7 @@ update u_stock_list set HS300=1 where ts_code='603858.SH';
 update u_stock_list set HS300=1 where ts_code='603993.SH';
 
 
-#中证500
+-- 中证500
 update u_stock_list set ZZ500=1 where ts_code='000006.SZ';
 update u_stock_list set ZZ500=1 where ts_code='000009.SZ';
 update u_stock_list set ZZ500=1 where ts_code='000012.SZ';
