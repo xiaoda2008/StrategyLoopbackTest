@@ -26,6 +26,10 @@
     <index_tablespace/>
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.characterEncoding</code>
+        <attribute>utf8</attribute>
+      </attribute>
+      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -343,12 +347,12 @@
   <shared_objects_file/>
   <entries>
     <entry>
-      <name>initTSData1</name>
+      <name>initTSDt1.py</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDataToMysql.py</filename>
-      <work_directory>D:\Program Files\Python38</work_directory>
+      <filename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
+      <work_directory>C:\Users\picc\AppData\Local\Programs\Python\Python36-32\</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
@@ -360,6 +364,8 @@
       <insertScript>N</insertScript>
       <script/>
       <loglevel>Basic</loglevel>
+      <argument0>-sd=20190101</argument0>
+      <argument1>-ed=20191031</argument1>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
@@ -402,12 +408,12 @@
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initTSData3</name>
+      <name>initTSDt2.py</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDataToMysql.py</filename>
-      <work_directory>D:\Program Files\Python38</work_directory>
+      <filename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
+      <work_directory>C:\Users\picc\AppData\Local\Programs\Python\Python36-32\</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
@@ -419,6 +425,8 @@
       <insertScript>N</insertScript>
       <script/>
       <loglevel>Basic</loglevel>
+      <argument0>-sd=20190101</argument0>
+      <argument1>-ed=20191031</argument1>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>1</nr>
@@ -427,12 +435,12 @@
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initTSData2</name>
+      <name>initTSDt3.py</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDataToMysql.py</filename>
-      <work_directory>D:\Program Files\Python38</work_directory>
+      <filename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
+      <work_directory>C:\Users\picc\AppData\Local\Programs\Python\Python36-32\</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
@@ -444,6 +452,8 @@
       <insertScript>N</insertScript>
       <script/>
       <loglevel>Basic</loglevel>
+      <argument0>-sd=20190101</argument0>
+      <argument1>-ed=20191031</argument1>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>2</nr>
@@ -459,7 +469,7 @@
       <sql/>
       <useVariableSubstitution>F</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>E:\workspace\StrategyLoopbackTest\initDBTables.sql</sqlfilename>
+      <sqlfilename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\initDBTables.sql</sqlfilename>
       <sendOneStatement>F</sendOneStatement>
       <connection>localhost</connection>
       <parallel>N</parallel>
@@ -477,7 +487,7 @@
       <sql/>
       <useVariableSubstitution>F</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>E:\workspace\StrategyLoopbackTest\initIdxDataInDB.sql</sqlfilename>
+      <sqlfilename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\initStIdxDt.sql</sqlfilename>
       <sendOneStatement>F</sendOneStatement>
       <connection>localhost</connection>
       <parallel>N</parallel>
@@ -508,8 +518,8 @@
   </entries>
   <hops>
     <hop>
-      <from>initTSData1</from>
-      <to>initTSData3</to>
+      <from>initTSDt1.py</from>
+      <to>initTSDt2.py</to>
       <from_nr>0</from_nr>
       <to_nr>1</to_nr>
       <enabled>Y</enabled>
@@ -517,8 +527,8 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData3</from>
-      <to>initTSData2</to>
+      <from>initTSDt2.py</from>
+      <to>initTSDt3.py</to>
       <from_nr>1</from_nr>
       <to_nr>2</to_nr>
       <enabled>Y</enabled>
@@ -526,8 +536,8 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData2</from>
-      <to>initTSData1</to>
+      <from>initTSDt3.py</from>
+      <to>initTSDt1.py</to>
       <from_nr>2</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -536,12 +546,12 @@
     </hop>
     <hop>
       <from>initDBTables</from>
-      <to>initTSData1</to>
+      <to>initTSDt1.py</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
+      <evaluation>N</evaluation>
+      <unconditional>Y</unconditional>
     </hop>
     <hop>
       <from>initIdxDataInDB</from>
@@ -553,7 +563,7 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData2</from>
+      <from>initTSDt3.py</from>
       <to>initIdxDataInDB</to>
       <from_nr>2</from_nr>
       <to_nr>0</to_nr>
@@ -562,7 +572,7 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData1</from>
+      <from>initTSDt1.py</from>
       <to>initIdxDataInDB</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
@@ -571,7 +581,7 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData3</from>
+      <from>initTSDt2.py</from>
       <to>initIdxDataInDB</to>
       <from_nr>1</from_nr>
       <to_nr>0</to_nr>
