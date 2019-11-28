@@ -15,11 +15,15 @@ rootPath = os.path.split(curPath)[0]
 #print(sys.path)
 #sys.path.clear()
 print(sys.path)
-sys.path.append('E:\workspace\StrategyLoopbackTest\src')
-sys.path.append('D:\Programs\Python\Python37-32\Lib\site-packages')
-sys.path.append('D:\Programs\Python\Python37-32')
-sys.path.append('D:\Programs\Python\Python37-32\DLLs')
-sys.path.append('D:\Programs\Python\Python37-32\lib')
+sys.path.append(r'E:\workspace\StrategyLoopbackTest\src')
+sys.path.append(r'D:\Programs\Python\Python37-32\Lib\site-packages')
+sys.path.append(r'D:\Programs\Python\Python37-32')
+sys.path.append(r'D:\Programs\Python\Python37-32\DLLs')
+sys.path.append(r'D:\Programs\Python\Python37-32\lib')
+sys.path.append(r'C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src')
+sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32\Lib\site-packages')
+sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32')
+
 
 
 import time
@@ -84,7 +88,7 @@ parser = argparse.ArgumentParser(description="test the argparse package")
 # 定义可选参数module
 parser.add_argument("--startdate","-sd",type=str, default='19900101',help="Enter the start date")
 # 定义可选参数module1
-parser.add_argument("--enddate", "-ed",type=str, default=dt.now().strftime('%Y%m%d'),help="Enter the end date")
+parser.add_argument("--enddate","-ed",type=str, default=dt.now().strftime('%Y%m%d'),help="Enter the end date")
 # 指定参数类型（默认是 str）
 # parser.add_argument('x', type=int, help='test the type')
 # 设置参数的可选范围
