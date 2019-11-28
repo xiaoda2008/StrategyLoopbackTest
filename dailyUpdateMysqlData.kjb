@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
-  <name>initDate</name>
+  <name>updateDate</name>
   <description/>
   <extended_description/>
   <job_version/>
@@ -72,7 +72,7 @@
   <job-log-table>
     <connection>localhost</connection>
     <schema/>
-    <table>u_kettle_init_log</table>
+    <table>u_kettle_update_log</table>
     <size_limit_lines/>
     <interval/>
     <timeout_days/>
@@ -343,11 +343,11 @@
   <shared_objects_file/>
   <entries>
     <entry>
-      <name>initTSData1</name>
+      <name>UpdateTSData1</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDataToMysql.py</filename>
+      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\UpdateTSDataToMysql.py</filename>
       <work_directory>D:\Program Files\Python38</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
@@ -363,7 +363,7 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>496</xloc>
+      <xloc>432</xloc>
       <yloc>240</yloc>
       <attributes_kjc/>
     </entry>
@@ -385,7 +385,7 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>64</xloc>
+      <xloc>176</xloc>
       <yloc>240</yloc>
       <attributes_kjc/>
     </entry>
@@ -397,16 +397,16 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>768</xloc>
+      <xloc>592</xloc>
       <yloc>240</yloc>
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initTSData3</name>
+      <name>UpdateTSData3</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDataToMysql.py</filename>
+      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\UpdateTSDataToMysql.py</filename>
       <work_directory>D:\Program Files\Python38</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
@@ -422,16 +422,16 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>1</nr>
-      <xloc>400</xloc>
-      <yloc>352</yloc>
+      <xloc>320</xloc>
+      <yloc>368</yloc>
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initTSData2</name>
+      <name>UpdateTSData2</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDataToMysql.py</filename>
+      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\UpdateTSDataToMysql.py</filename>
       <work_directory>D:\Program Files\Python38</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
@@ -447,69 +447,15 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>2</nr>
-      <xloc>400</xloc>
+      <xloc>320</xloc>
       <yloc>96</yloc>
-      <attributes_kjc/>
-    </entry>
-    <entry>
-      <name>initDBTables</name>
-      <description/>
-      <type>SQL</type>
-      <attributes/>
-      <sql/>
-      <useVariableSubstitution>F</useVariableSubstitution>
-      <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>E:\workspace\StrategyLoopbackTest\initDBTables.sql</sqlfilename>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>localhost</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>304</xloc>
-      <yloc>240</yloc>
-      <attributes_kjc/>
-    </entry>
-    <entry>
-      <name>initIdxDataInDB</name>
-      <description/>
-      <type>SQL</type>
-      <attributes/>
-      <sql/>
-      <useVariableSubstitution>F</useVariableSubstitution>
-      <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>E:\workspace\StrategyLoopbackTest\initIdxDataInDB.sql</sqlfilename>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>localhost</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>640</xloc>
-      <yloc>240</yloc>
-      <attributes_kjc/>
-    </entry>
-    <entry>
-      <name>drop db</name>
-      <description/>
-      <type>SQL</type>
-      <attributes/>
-      <sql>drop database tsdata;</sql>
-      <useVariableSubstitution>F</useVariableSubstitution>
-      <sqlfromfile>F</sqlfromfile>
-      <sqlfilename/>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>localhost</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>192</xloc>
-      <yloc>240</yloc>
       <attributes_kjc/>
     </entry>
   </entries>
   <hops>
     <hop>
-      <from>initTSData1</from>
-      <to>initTSData3</to>
+      <from>UpdateTSData1</from>
+      <to>UpdateTSData3</to>
       <from_nr>0</from_nr>
       <to_nr>1</to_nr>
       <enabled>Y</enabled>
@@ -517,8 +463,8 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData3</from>
-      <to>initTSData2</to>
+      <from>UpdateTSData3</from>
+      <to>UpdateTSData2</to>
       <from_nr>1</from_nr>
       <to_nr>2</to_nr>
       <enabled>Y</enabled>
@@ -526,25 +472,34 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData2</from>
-      <to>initTSData1</to>
+      <from>UpdateTSData2</from>
+      <to>UpdateTSData1</to>
       <from_nr>2</from_nr>
       <to_nr>0</to_nr>
-      <enabled>Y</enabled>
+      <enabled>N</enabled>
       <evaluation>N</evaluation>
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initDBTables</from>
-      <to>initTSData1</to>
+      <from>Start</from>
+      <to>UpdateTSData1</to>
       <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>Y</unconditional>
+    </hop>
+    <hop>
+      <from>UpdateTSData2</from>
+      <to>成功</to>
+      <from_nr>2</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
       <evaluation>Y</evaluation>
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initIdxDataInDB</from>
+      <from>UpdateTSData1</from>
       <to>成功</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
@@ -553,45 +508,9 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSData2</from>
-      <to>initIdxDataInDB</to>
-      <from_nr>2</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
-    </hop>
-    <hop>
-      <from>initTSData1</from>
-      <to>initIdxDataInDB</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
-    </hop>
-    <hop>
-      <from>initTSData3</from>
-      <to>initIdxDataInDB</to>
+      <from>UpdateTSData3</from>
+      <to>成功</to>
       <from_nr>1</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
-    </hop>
-    <hop>
-      <from>Start</from>
-      <to>drop db</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>Y</unconditional>
-    </hop>
-    <hop>
-      <from>drop db</from>
-      <to>initDBTables</to>
-      <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
       <evaluation>Y</evaluation>
