@@ -17,7 +17,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>tsdata</database>
+    <database>kettledb</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f29ca218a174dfc2ff8b</password>
@@ -26,9 +26,60 @@
     <index_tablespace/>
     <attributes>
       <attribute>
-        <code>EXTRA_OPTION_MYSQL.characterEncoding</code>
-        <attribute>utf8</attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
       </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>PORT_NUMBER</code>
+        <attribute>3306</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>STREAM_RESULTS</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>N</attribute>
+      </attribute>
+    </attributes>
+  </connection>
+  <connection>
+    <name>localhostkettle</name>
+    <server>localhost</server>
+    <type>MYSQL</type>
+    <access>Native</access>
+    <database>kettledb</database>
+    <port>3306</port>
+    <username>root</username>
+    <password>Encrypted 2be98afc86aa7f29ca218a174dfc2ff8b</password>
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
+    <attributes>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -74,9 +125,9 @@
   <slaveservers>
     </slaveservers>
   <job-log-table>
-    <connection>localhost</connection>
+    <connection>localhostkettle</connection>
     <schema/>
-    <table>u_kettle_init_log</table>
+    <table>kettle_job_log</table>
     <size_limit_lines/>
     <interval/>
     <timeout_days/>
@@ -351,8 +402,8 @@
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
-      <work_directory>C:\Users\picc\AppData\Local\Programs\Python\Python36-32\</work_directory>
+      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
+      <work_directory>D:\Program Files\Python38</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
@@ -364,8 +415,6 @@
       <insertScript>N</insertScript>
       <script/>
       <loglevel>Basic</loglevel>
-      <argument0>-sd=20190101</argument0>
-      <argument1>-ed=20191031</argument1>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
@@ -408,12 +457,12 @@
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initTSDt2.py</name>
+      <name>initTSDt3.py</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
-      <work_directory>C:\Users\picc\AppData\Local\Programs\Python\Python36-32\</work_directory>
+      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
+      <work_directory>D:\Program Files\Python38</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
@@ -425,8 +474,6 @@
       <insertScript>N</insertScript>
       <script/>
       <loglevel>Basic</loglevel>
-      <argument0>-sd=20190101</argument0>
-      <argument1>-ed=20191031</argument1>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>1</nr>
@@ -435,12 +482,12 @@
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initTSDt3.py</name>
+      <name>initTSDt2.py</name>
       <description/>
       <type>SHELL</type>
       <attributes/>
-      <filename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
-      <work_directory>C:\Users\picc\AppData\Local\Programs\Python\Python36-32\</work_directory>
+      <filename>E:\workspace\StrategyLoopbackTest\src\com\xiaoda\stock\loopbacktester\data\initTSDt.py</filename>
+      <work_directory>D:\Program Files\Python38</work_directory>
       <arg_from_previous>N</arg_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
@@ -452,8 +499,6 @@
       <insertScript>N</insertScript>
       <script/>
       <loglevel>Basic</loglevel>
-      <argument0>-sd=20190101</argument0>
-      <argument1>-ed=20191031</argument1>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>2</nr>
@@ -462,14 +507,14 @@
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initDBTables</name>
+      <name>initDBTables.sql</name>
       <description/>
       <type>SQL</type>
       <attributes/>
       <sql/>
       <useVariableSubstitution>F</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\initDBTables.sql</sqlfilename>
+      <sqlfilename>E:\workspace\StrategyLoopbackTest\initDBTables.sql</sqlfilename>
       <sendOneStatement>F</sendOneStatement>
       <connection>localhost</connection>
       <parallel>N</parallel>
@@ -480,14 +525,14 @@
       <attributes_kjc/>
     </entry>
     <entry>
-      <name>initIdxDataInDB</name>
+      <name>initStIdxDt.sql</name>
       <description/>
       <type>SQL</type>
       <attributes/>
       <sql/>
       <useVariableSubstitution>F</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\initStIdxDt.sql</sqlfilename>
+      <sqlfilename>E:\workspace\StrategyLoopbackTest\initStIdxDt.sql</sqlfilename>
       <sendOneStatement>F</sendOneStatement>
       <connection>localhost</connection>
       <parallel>N</parallel>
@@ -519,7 +564,7 @@
   <hops>
     <hop>
       <from>initTSDt1.py</from>
-      <to>initTSDt2.py</to>
+      <to>initTSDt3.py</to>
       <from_nr>0</from_nr>
       <to_nr>1</to_nr>
       <enabled>Y</enabled>
@@ -527,8 +572,8 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSDt2.py</from>
-      <to>initTSDt3.py</to>
+      <from>initTSDt3.py</from>
+      <to>initTSDt2.py</to>
       <from_nr>1</from_nr>
       <to_nr>2</to_nr>
       <enabled>Y</enabled>
@@ -536,7 +581,7 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSDt3.py</from>
+      <from>initTSDt2.py</from>
       <to>initTSDt1.py</to>
       <from_nr>2</from_nr>
       <to_nr>0</to_nr>
@@ -545,16 +590,16 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initDBTables</from>
+      <from>initDBTables.sql</from>
       <to>initTSDt1.py</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
-      <evaluation>N</evaluation>
-      <unconditional>Y</unconditional>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initIdxDataInDB</from>
+      <from>initStIdxDt.sql</from>
       <to>成功</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
@@ -563,8 +608,8 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSDt3.py</from>
-      <to>initIdxDataInDB</to>
+      <from>initTSDt2.py</from>
+      <to>initStIdxDt.sql</to>
       <from_nr>2</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -573,7 +618,7 @@
     </hop>
     <hop>
       <from>initTSDt1.py</from>
-      <to>initIdxDataInDB</to>
+      <to>initStIdxDt.sql</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -581,8 +626,8 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>initTSDt2.py</from>
-      <to>initIdxDataInDB</to>
+      <from>initTSDt3.py</from>
+      <to>initStIdxDt.sql</to>
       <from_nr>1</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -600,12 +645,12 @@
     </hop>
     <hop>
       <from>drop db</from>
-      <to>initDBTables</to>
+      <to>initDBTables.sql</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
+      <evaluation>N</evaluation>
+      <unconditional>Y</unconditional>
     </hop>
   </hops>
   <notepads>
