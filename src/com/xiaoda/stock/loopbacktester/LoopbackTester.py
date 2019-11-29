@@ -9,8 +9,7 @@ import sys
 from pathlib import Path
 import os
 from com.xiaoda.stock.loopbacktester.utils.TradeChargeUtils import TradeChargeProcessor
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR,\
-    profitStop
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import OUTPUTDIR
 from datetime import datetime as dt
 import datetime
 #import shutil
@@ -76,22 +75,18 @@ log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
     
 
 #具体处理股票的处理
-def processStock(stockCode, strategy, strOutputDir, firstOpenDay, twentyDaysBeforeFirstDay):
-    
+def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstDay,enddate):
     
     #stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
     #                               start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
-    #time.sleep(0.31)
 
- 
-    stock_k_data=StockDataProcessor.getStockKData(stockCode, twentyDaysBeforeFirstDay, ENDDATE,'qfq')
-    
+    stock_k_data=StockDataProcessor.getStockKData(stockCode,twentyDaysBeforeFirstDay,enddate,'qfq')
 
     #sprint(stock_k_data.columns)
 
     if type(stock_k_data)==NoneType or stock_k_data.empty:
         #如果没有任何返回值，说明该日期后没有上市交易过该股票
-        log.logger.info('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,ENDDATE))
+        log.logger.info('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,enddate))
         return
 
 #    stock_k_data = tushare.get_k_data(code=stockCode,start=twentyDaysBeforeFirstDay,end=ENDDATE)
@@ -346,13 +341,14 @@ import argparse
 if __name__ == '__main__':
     
     # 创建命令行解析器句柄，并自定义描述信息
-    parser = argparse.ArgumentParser(description="test the argparse package")
+    parser = argparse.ArgumentParser(description="input all parameters")
     # 定义必选参数 positionArg
    # parser.add_argument("project_name")
     # 定义可选参数module
-    parser.add_argument("--stockstrategy","-ss",type=str, default=1,help="Select the stock select strategy")
-    # 定义可选参数module1
-    parser.add_argument("--tradestrategy", "-ts",type=str, default=1,help="Select the trade strategy")
+    parser.add_argument("--stockstrategy","-ss",type=str, default="RawStrategy",help="Enter the stock select strategy")
+    parser.add_argument("--tradestrategy", "-ts",type=str, default="SimpleStrategy",help="Enter the trade strategy")
+    parser.add_argument("--startdate", "-sd",type=str, default="20190701",help="Enter the start date")
+    parser.add_argument("--enddate", "-ed",type=str, default="20191031",help="Enter the end date")
     # 指定参数类型（默认是 str）
     # parser.add_argument('x', type=int, help='test the type')
     # 设置参数的可选范围
@@ -366,18 +362,18 @@ if __name__ == '__main__':
 
     stockSelectStrategyString=''
     tradeStrategyString=''
+    startdate=''
+    enddate=''
     
     for k, v in params.items():
         if k=='stockstrategy':
             stockSelectStrategyString=v
         elif k=='tradestrategy':
             tradeStrategyString=v
-        #v1.append(v)
-        # print(v)
-
-    #print(stockSelectStrategyString)
-    #print(tradeStrategyString)
-    
+        elif k=='startdate':
+            startdate=v
+        elif k=='enddate':
+            enddate=v    
     
     
     stockSelectStrategyList=[]#stockSelectStrategyString.split(',')
@@ -401,7 +397,7 @@ if __name__ == '__main__':
     
     
     #通过STARTDATE找到第一个交易日
-    firstOpenDay = STARTDATE
+    firstOpenDay = startdate
     
     
     trade_cal_data=StockDataProcessor.getTradeCal()
@@ -446,9 +442,9 @@ if __name__ == '__main__':
         
         print('开始处理选股策略:',stockSelectStrategy.getStrategyName())
         #从参数获取股票选取策略
-        stockList=stockSelectStrategy.getSelectedStockList(STARTDATE)
+        stockList=stockSelectStrategy.getSelectedStockList(startdate)
         
-        strOutterOutputDir=OUTPUTDIR+'/'+STARTDATE+'-'+ENDDATE+'-'+stockSelectStrategy.getStrategyName()
+        strOutterOutputDir=OUTPUTDIR+'/'+startdate+'-'+enddate+'-'+stockSelectStrategy.getStrategyName()
         
         myPath = Path(strOutterOutputDir)
         
@@ -501,7 +497,7 @@ if __name__ == '__main__':
                     print(stockCode,'已处理过')
                     continue
                 else:
-                    processStock(stockCode,tradeStrategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay)
+                    processStock(stockCode,tradeStrategy,strOutputDir,firstOpenDay,twentyDaysBeforeFirstOpenDay,enddate)
                 #    print('完成'+stockCode+'的处理')
         
         
@@ -568,7 +564,7 @@ if __name__ == '__main__':
                 cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
             
             
-            print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(STARTDATE,ENDDATE),end=',')
+            print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(startdate,enddate),end=',')
             print(IRRProcessor.xirr2(cashFlowList))
             
             sys.stdout = savedStdout #恢复标准输出流
