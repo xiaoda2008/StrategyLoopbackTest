@@ -201,18 +201,22 @@ for index,stockCode in stockCodeList.items():
         pass
     else:
         if STARTDATE<'19900101':
-            STARTDATE='19900101'
+            tmpSTARTDATE='19900101'
+        else:
+            tmpSTARTDATE=STARTDATE
         if ENDDATE>'19991231':
-            ENDDATE='19991231'
+            tmpENDDATE='19991231'
+        else:
+            tmpENDDATE=ENDDATE
         #STARTDATE='19900101'
         #ENDDATE='19991231'
         
         #获取该股票数据并写入数据库
-        stock_k_data=tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
+        stock_k_data=tushare.pro_bar(ts_code=stockCode, start_date=tmpSTARTDATE, end_date=tmpENDDATE)
         
         if stock_k_data.empty:
             #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))   
+            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))   
             #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
             #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
         else:
@@ -222,28 +226,32 @@ for index,stockCode in stockCodeList.items():
             #存入数据库
             stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
     
-        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
+        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
         
     
     if STARTDATE>'20091231' or ENDDATE<'19990101':
         pass
     else:
         if STARTDATE<'19990101':
-            STARTDATE='19990101'
+            tmpSTARTDATE='19990101'
+        else:
+            tmpSTARTDATE=STARTDATE
         if ENDDATE>'20091231':
-            ENDDATE='20091231'
+            tmpENDDATE='20091231'
+        else:
+            tmpENDDATE=ENDDATE
         
         #将1999-01-01到2009-12-31该股票数据导入数据库
         #STARTDATE = '19990101'
         #ENDDATE = '20091231'
      
         #获取该股票数据并写入数据库
-        stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
+        stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=tmpSTARTDATE, end_date=tmpENDDATE)
         #time.sleep(0.5)
         
         if type(stock_k_data)==NoneType:
             #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))
+            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
                     
             #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
             #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
@@ -261,26 +269,30 @@ for index,stockCode in stockCodeList.items():
             #存入数据库
             stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
     
-        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
+        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
 
 
     if STARTDATE>'20181231' or ENDDATE<'20100101':
         pass
     else:
         if STARTDATE<'20100101':
-            STARTDATE='20100101'
+            tmpSTARTDATE='20100101'
+        else:
+            tmpSTARTDATE=STARTDATE
         if ENDDATE>'20181231':
-            ENDDATE='20181231'
+            tmpENDDATE='20181231'
+        else:
+            tmpENDDATE=ENDDATE
             
         #将2010-01-01到2018-12-31该股票数据导入数据库
         #STARTDATE = '20100101'
         #ENDDATE = '20181231'
     
         #获取该股票数据并写入数据库
-        stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)   
+        stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=tmpSTARTDATE, end_date=tmpENDDATE)   
         if type(stock_k_data)==NoneType:
             #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE))
+            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
             #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
             #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
         elif flag == False:
@@ -297,27 +309,31 @@ for index,stockCode in stockCodeList.items():
             #存入数据库
             stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
         
-        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
+        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
     
     
     if STARTDATE>dt.now().strftime('%Y%m%d') or ENDDATE<'20190101':
         pass
     else:
         if STARTDATE<'20190101':
-            STARTDATE='20190101'
+            tmpSTARTDATE='20190101'
+        else:
+            tmpSTARTDATE=STARTDATE
         if ENDDATE>dt.now().strftime('%Y%m%d'):
-            ENDDATE=dt.now().strftime('%Y%m%d')
+            tmpENDDATE=dt.now().strftime('%Y%m%d')
+        else:
+            tmpENDDATE=ENDDATE
         
         #将2019-01-01到当前日期该股票数据导入数据库
         #STARTDATE='20190101'
         #ENDDATE=dt.now().strftime('%Y%m%d')
     
         #获取该股票数据并写入数据库
-        stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=STARTDATE, end_date=ENDDATE)
+        stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=tmpSTARTDATE, end_date=tmpENDDATE)
         #time.sleep(0.5)    
         if type(stock_k_data)==NoneType:
             #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,STARTDATE,ENDDATE)) 
+            log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE)) 
             #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
             #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
             #time.sleep(0.31)
@@ -335,10 +351,11 @@ for index,stockCode in stockCodeList.items():
             #存入数据库
             stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
         
-        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,STARTDATE,ENDDATE))
-        
-        partialUpdate()
-        lastDataUpdate(stockCode, "KD")    
+        log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+    
+    
+    partialUpdate()
+    lastDataUpdate(stockCode, "KD")    
     
  
 #5、获取复权因子数据，并存入数据库

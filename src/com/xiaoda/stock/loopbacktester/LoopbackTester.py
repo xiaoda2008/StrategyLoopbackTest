@@ -62,13 +62,13 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
 def printSummaryOutputHead():
     print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
 
-def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,priceToBuyOrSell):
+def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,avgPriceToday):
     print('\''+str(stockCode),end=', ')
     print(round(biggestCashOccupy,2), end=', ')
     print(round(totalInput,2), end=', ')
     print(round(totalOutput,2), end=', ')    
     print(latestProfit, end=', ')
-    print(round(holdShares*100*priceToBuyOrSell,2), end='\n')
+    print(round(holdShares*100*avgPriceToday,2), end='\n')
 
 
 log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
@@ -329,7 +329,7 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
             latestProfit = returnVal
             
             printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,
-                                  latestProfit,holdShares,priceToBuyOrSell)
+                                  latestProfit,holdShares,avgPriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
 
