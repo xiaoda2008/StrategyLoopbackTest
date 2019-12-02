@@ -335,7 +335,6 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
 
 
 
-import getopt
 import argparse
 
 if __name__ == '__main__':
@@ -343,7 +342,7 @@ if __name__ == '__main__':
     # 创建命令行解析器句柄，并自定义描述信息
     parser = argparse.ArgumentParser(description="input all parameters")
     # 定义必选参数 positionArg
-   # parser.add_argument("project_name")
+    # parser.add_argument("project_name")
     # 定义可选参数module
     parser.add_argument("--stockstrategy","-ss",type=str, default="RawStrategy",help="Enter the stock select strategy")
     parser.add_argument("--tradestrategy", "-ts",type=str, default="SimpleStrategy",help="Enter the trade strategy")
@@ -397,46 +396,14 @@ if __name__ == '__main__':
     
     
     #通过STARTDATE找到第一个交易日
-    firstOpenDay = startdate
-    
-    
-    trade_cal_data=StockDataProcessor.getTradeCal()
-
-    
-    trade_cal_data=trade_cal_data.set_index('cal_date')
-    
-    while True:
-        if trade_cal_data.at[dt.strptime(firstOpenDay, "%Y%m%d").date().strftime('%Y%m%d'),'is_open']==0:
-            #当前日期为节假日，查看下一天是否是交易日
-            cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
-            dayOffset = datetime.timedelta(1)
-            # 获取想要的日期的时间
-            firstOpenDay = (cday + dayOffset).strftime('%Y%m%d')
-        else:
-            #找到第一个交易日，跳出
-            break
+    firstOpenDay = StockDataProcessor.getNextDealDay(startdate,True)
     
         
     #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
     #可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
     #向前找30个交易日
-    
-    
-    cday = dt.strptime(firstOpenDay, "%Y%m%d").date()
-    dayOffset = datetime.timedelta(1)
-    cnt=0
-    # 获取想要的日期的时间
-    while True:
-        cday = (cday - dayOffset)
-        if trade_cal_data.at[cday.strftime('%Y%m%d'),'is_open']==1:
-            cnt+=1
-            if cnt==30:
-                break
-    twentyDaysBeforeFirstOpenDay=cday.strftime('%Y%m%d')
-    
-    
-    
-    #stockCodeList = sdf['ts_code']
+
+    twentyDaysBeforeFirstOpenDay=StockDataProcessor.getDealDayByOffset(firstOpenDay, 30)
     
     for stockSelectStrategy in stockSelectStrategyList:
         

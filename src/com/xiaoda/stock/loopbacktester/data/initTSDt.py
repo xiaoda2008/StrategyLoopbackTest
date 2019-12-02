@@ -9,6 +9,7 @@ Created on 2019年11月2日
 
 import sys
 import os
+from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 
@@ -56,14 +57,24 @@ def getlastquarterfirstday():
 
 def partialUpdate():    
     #部分更新语句
-    pupdatesql="update u_dataupdatelog set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d'))
+    pupdatesql="update u_dataupdatelog set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
     MysqlProcessor.execSql(pupdatesql)
 
 def totalUpdate():
     #全局更新语句
-    tupdatesql="update u_dataupdatelog set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d'))
+    tupdatesql="update u_dataupdatelog set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
     MysqlProcessor.execSql(tupdatesql)
-
+    #从sd往后找到第一个交易日，含sd
+    tupdatesql="update u_dataupdatelog set content='%s' where content_name='data_start_dealday';"%(StockDataProcessor.getNextDealDay(sd, True))
+    MysqlProcessor.execSql(tupdatesql)
+    #从ed往前找到最后一个交易日，是否含ed需要根据当前时间是否已经完成该日交易
+    
+    
+    #最好是每天取前一个交易日的数据，这样就不会存在当天日期是否已经可用的问题
+    
+    tupdatesql="update u_dataupdatelog set content='%s' where content_name='data_end_dealday';"%(StockDataProcessor.getLastDealDay(ed,True))
+    MysqlProcessor.execSql(tupdatesql)
+    
 
 def lastDataUpdate(stockCode,dataType):
     if dataType=='FR':
@@ -86,9 +97,11 @@ parser = argparse.ArgumentParser(description="test the argparse package")
 # 定义必选参数 positionArg
 # parser.add_argument("project_name")
 # 定义可选参数module
+#开始日期为19900101，即取全量数据
 parser.add_argument("--startdate","-sd",type=str, default='19900101',help="Enter the start date")
 # 定义可选参数module1
-parser.add_argument("--enddate","-ed",type=str, default=dt.now().strftime('%Y%m%d'),help="Enter the end date")
+#结束日期默认为当前日期的前一个交易日（不含当天，以便解决当天可能还未完成交易的问题）
+parser.add_argument("--enddate","-ed",type=str, default=StockDataProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False),help="Enter the end date")
 # 指定参数类型（默认是 str）
 # parser.add_argument('x', type=int, help='test the type')
 # 设置参数的可选范围
@@ -107,7 +120,12 @@ for k, v in params.items():
     if k=='startdate':
         sd=v
     elif k=='enddate':
+        if v>=dt.now().strftime('%Y%m%d'):
+            #调整一下日期，如果输入的结束日期等于或晚于当天
+            #则取当天之前的一个交易日
+            v=StockDataProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False)
         ed=v
+
 
 
 #使用TuShare pro版本

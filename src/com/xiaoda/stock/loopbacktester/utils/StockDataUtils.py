@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
+from abc import abstractstaticmethod
 
 class StockDataProcessor(object):
     '''
@@ -35,10 +36,10 @@ class StockDataProcessor(object):
         return MysqlProcessor.querySql(sql)
         #df = pandas.read_sql_query(sqltxt,engine)
         #return df
-        
+    
     
     @staticmethod
-    def isMarketDay(dtStr):
+    def isDealDay(dtStr):
         mysqlEngine = MysqlProcessor.getMysqlEngine()
         
         # 创建对象的基类:
@@ -74,29 +75,59 @@ class StockDataProcessor(object):
         
     
     @staticmethod
-    def getNextMarketDay(todayDate):
+    def getNextDealDay(todayDate,include):
         '''
-        找到下一个交易日，不含当天
+        找到下一个交易日
+        todayDate:起始计算的日期
+        include:说明是否包含起始日期，
         '''
-        nextMarketDay=todayDate
+        
+        if include==True and StockDataProcessor.isDealDay(todayDate):
+            return todayDate
+            
+        nextDealDay=todayDate
+        
         while True:
             #当前日期为节假日，查看下一天是否是交易日
-            cday = dt.strptime(nextMarketDay, "%Y%m%d").date()
+            cday = dt.strptime(nextDealDay, "%Y%m%d").date()
             dayOffset = datetime.timedelta(1)
             # 获取想要的日期的时间
-            nextMarketDay = (cday+dayOffset).strftime('%Y%m%d')
+            nextDealDay = (cday+dayOffset).strftime('%Y%m%d')
             
-            if StockDataProcessor.isMarketDay(dt.strptime(nextMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+            if StockDataProcessor.isDealDay(nextDealDay):
                 #找到第一个交易日，跳出
                 break
         
-        return nextMarketDay
+        return nextDealDay
 
     @staticmethod
-    def getLastMarketDay(todayDate):
+    def getDealDayByOffset(todayDate,offset):
+        trade_cal_data=StockDataProcessor.getTradeCal()
+        trade_cal_data=trade_cal_data.set_index('cal_date')
+        
+        cday = dt.strptime(todayDate, "%Y%m%d").date()
+        dayOffset = datetime.timedelta(1)
+        cnt=0
+        # 获取想要的日期的时间
+        while True:
+            cday = (cday - dayOffset)
+            if trade_cal_data.at[cday.strftime('%Y%m%d'),'is_open']==1:
+                cnt+=1
+                if cnt==offset:
+                    break
+        return cday.strftime('%Y%m%d')
+    
+        
+    @staticmethod
+    def getLastDealDay(todayDate,include):
         '''
-        找到上一个交易日，不含当天
+        找到上一个交易日
+        todayDate:起始计算的日期
+        include:说明是否包含起始日期，
         '''
+        if include==True and StockDataProcessor.isDealDay(todayDate):
+            return todayDate
+        
         lastMarketDay=todayDate
         while True:
             #当前日期为节假日，查看下一天是否是交易日
@@ -105,7 +136,7 @@ class StockDataProcessor(object):
             # 获取想要的日期的时间
             lastMarketDay = (cday-dayOffset).strftime('%Y%m%d')
             
-            if StockDataProcessor.isMarketDay(dt.strptime(lastMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+            if StockDataProcessor.isDealDay(dt.strptime(lastMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
                 #找到第一个交易日，跳出
                 break
         

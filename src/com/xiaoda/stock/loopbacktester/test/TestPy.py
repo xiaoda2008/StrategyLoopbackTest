@@ -10,8 +10,8 @@ import pandas as pd
 import datetime
 import numpy
 from pathlib import Path
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import STARTDATE,ENDDATE,OUTPUTDIR
-
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import OUTPUTDIR
+import pandas
 
 import traceback
 import time
@@ -41,6 +41,10 @@ np.set_printoptions(threshold = np.inf)
 #若想不以科学计数显示:
 np.set_printoptions(suppress = True)
 
+
+
+
+StockDataProcessor.getNextDealDay('20180101',False)
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 sdDataAPI = tushare.pro_api()
 
@@ -69,7 +73,7 @@ for idx in ic.index:
 sql="select * from s_income_000001 where end_date like '%0630' or end_date like '%1231' order by end_date desc;"
 aosr=MysqlProcessor.querySql(sql)
 
-
+'''
 #取最近一期的半年报？
 
 
@@ -112,7 +116,7 @@ print('biz_tax_surchg: ',ic[ic['biz_tax_surchg'].notnull()].reset_index(drop=Tru
 
 
 
-
+'''
 
 rs=tushare.pro_bar(ts_code="000000.SZ", start_date="20191116", end_date="20191117")
 
