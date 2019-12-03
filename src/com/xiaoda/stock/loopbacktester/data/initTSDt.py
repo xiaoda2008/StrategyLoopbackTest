@@ -57,35 +57,35 @@ def getlastquarterfirstday():
 
 def partialUpdate():    
     #部分更新语句
-    pupdatesql="update u_dataupdatelog set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
+    pupdatesql="update u_data_desc set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
     MysqlProcessor.execSql(pupdatesql)
 
 def totalUpdate():
     #全局更新语句
-    tupdatesql="update u_dataupdatelog set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
+    tupdatesql="update u_data_desc set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
     MysqlProcessor.execSql(tupdatesql)
     #从sd往后找到第一个交易日，含sd
-    tupdatesql="update u_dataupdatelog set content='%s' where content_name='data_start_dealday';"%(StockDataProcessor.getNextDealDay(sd, True))
+    tupdatesql="update u_data_desc set content='%s' where content_name='data_start_dealday';"%(StockDataProcessor.getNextDealDay(sd, True))
     MysqlProcessor.execSql(tupdatesql)
     #从ed往前找到最后一个交易日，是否含ed需要根据当前时间是否已经完成该日交易
     
     
     #最好是每天取前一个交易日的数据，这样就不会存在当天日期是否已经可用的问题
     
-    tupdatesql="update u_dataupdatelog set content='%s' where content_name='data_end_dealday';"%(StockDataProcessor.getLastDealDay(ed,True))
+    tupdatesql="update u_data_desc set content='%s' where content_name='data_end_dealday';"%(StockDataProcessor.getLastDealDay(ed,True))
     MysqlProcessor.execSql(tupdatesql)
     
 
 def lastDataUpdate(stockCode,dataType):
     if dataType=='FR':
         #更新财务报表最新股票代码
-        sql="update u_dataupdatelog set content='%s' where content_name='finance_report_update_to';"%(stockCode)
+        sql="update u_data_desc set content='%s' where content_name='finance_report_update_to';"%(stockCode)
     elif dataType=="KD":
         #更新K线最新股票代码
-        sql="update u_dataupdatelog set content='%s' where content_name='kdata_update_to';"%(stockCode)
+        sql="update u_data_desc set content='%s' where content_name='kdata_update_to';"%(stockCode)
     elif dataType=="ADJ":
         #更新复权因子最新股票代码
-        sql="update u_dataupdatelog set content='%s' where content_name='adjdata_update_to';"%(stockCode)
+        sql="update u_data_desc set content='%s' where content_name='adjdata_update_to';"%(stockCode)
     else:
         raise Exception("dataType不正确")
     
@@ -167,16 +167,13 @@ partialUpdate()
 #startday=getlastquarterfirstday().strftime('%Y%m%d')
 
 #找到之前处理的最后一个股票的代码
-sql="select content from u_dataupdatelog where content_name='finance_report_update_to'"
+sql="select content from u_data_desc where content_name='finance_report_update_to'"
 res=MysqlProcessor.querySql(sql)
 finance_report_update_to=res.at[0,'content']
 
-
-#startday=sd
-
 for index,stockCode in stockCodeList.items():
 
-    if stockCode<finance_report_update_to:
+    if stockCode<=finance_report_update_to:
         continue
     
     #获取资产负债表
@@ -202,13 +199,13 @@ for index,stockCode in stockCodeList.items():
 #4、获取股票不复权日K线数据，并存入数据库
 
 #找到之前处理的最后一个股票的代码
-sql="select content from u_dataupdatelog where content_name='kdata_update_to'"
+sql="select content from u_data_desc where content_name='kdata_update_to'"
 res=MysqlProcessor.querySql(sql)
 kdata_update_to=res.at[0,'content']
 
 for index,stockCode in stockCodeList.items():
     
-    if stockCode<kdata_update_to:
+    if stockCode<=kdata_update_to:
         continue
     
     #用于标记该股票是否出现过数据
@@ -379,13 +376,13 @@ for index,stockCode in stockCodeList.items():
 #5、获取复权因子数据，并存入数据库
 
 #找到之前处理的最后一个股票的代码
-sql="select content from u_dataupdatelog where content_name='adjdata_update_to'"
+sql="select content from u_data_desc where content_name='adjdata_update_to'"
 res=MysqlProcessor.querySql(sql)
 adjdata_update_to=res.at[0,'content']
 
 for index,stockCode in stockCodeList.items():
 
-    if stockCode<adjdata_update_to:
+    if stockCode<=adjdata_update_to:
         continue
     
     #time.sleep(0.5)

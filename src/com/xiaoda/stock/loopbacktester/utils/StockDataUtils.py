@@ -136,7 +136,7 @@ class StockDataProcessor(object):
             # 获取想要的日期的时间
             lastMarketDay = (cday-dayOffset).strftime('%Y%m%d')
             
-            if StockDataProcessor.isDealDay(dt.strptime(lastMarketDay,"%Y%m%d").date().strftime('%Y%m%d')):
+            if StockDataProcessor.isDealDay(lastMarketDay):
                 #找到第一个交易日，跳出
                 break
         

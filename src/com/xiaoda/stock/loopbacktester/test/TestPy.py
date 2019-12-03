@@ -131,7 +131,7 @@ print(res.empty)
 mysqlEngine = MysqlProcessor.getMysqlEngine()
 
 #部分更新语句
-pupdatesql="update u_dataupdatelog set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y-%m-%d %H:%M:%S'))
+pupdatesql="update u_data_desc set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 pupdatesqltxt = sqlalchemy.text(pupdatesql)
 
