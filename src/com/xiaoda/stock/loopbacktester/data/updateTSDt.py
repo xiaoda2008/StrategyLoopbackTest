@@ -53,24 +53,25 @@ def getlastquarterfirstday():
 
 
 
-def partialUpdate():    
+def partialUpdate(mysqlSession):    
     #部分更新语句
     pupdatesql="update u_data_desc set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
-    MysqlProcessor.execSql(pupdatesql)
+    MysqlProcessor.execSql(mysqlSession,pupdatesql,True)
 
-def totalUpdate():
+def totalUpdate(mysqlSession):
     #全局更新语句
     tupdatesql="update u_data_desc set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
-    MysqlProcessor.execSql(tupdatesql)
+    MysqlProcessor.execSql(mysqlSession,tupdatesql,False)
     #不更新起始日期
     #tupdatesql="update u_data_desc set content='%s' where content_name='data_start_date';"%(sd)
-    #MysqlProcessor.execSql(tupdatesql)
+    #MysqlProcessor.execSql(mysqlSession,tupdatesql,True)
     #只更新结束日期为当天的前一个交易日
     tupdatesql="update u_data_desc set content='%s' where content_name='data_end_dealday';"%(endday)
-    MysqlProcessor.execSql(tupdatesql)
+    MysqlProcessor.execSql(mysqlSession,tupdatesql,False)
+    mysqlSession.commit()
 
 
-def lastDataUpdate(stockCode,dataType):
+def lastDataUpdate(mysqlSession,stockCode,dataType):
     if dataType=='FR':
         #更新财务报表最新股票代码
         sql="update u_data_desc set content='%s' where content_name='finance_report_update_to';"%(stockCode)
@@ -83,7 +84,7 @@ def lastDataUpdate(stockCode,dataType):
     else:
         raise Exception("dataType不正确")
     
-    MysqlProcessor.execSql(sql)
+    MysqlProcessor.execSql(mysqlSession,sql,True)
         
 
 #使用TuShare pro版本
@@ -93,6 +94,7 @@ sdDataAPI=tushare.pro_api()
 
 #写入数据库的引擎
 mysqlEngine=MysqlProcessor.getMysqlEngine()
+mysqlSession=MysqlProcessor.getMysqlSession()
 
 sql = "select content from u_data_desc where content_name='data_end_dealday'"
 res=MysqlProcessor.querySql(sql)
@@ -112,7 +114,7 @@ trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exist
 
 log.logger.info('处理完交易日数据的更新')
 #完成部分信息更新
-partialUpdate()
+partialUpdate(mysqlSession)
 
 
 
@@ -136,7 +138,7 @@ stockCodeList=sdf['ts_code']
 
 log.logger.info('处理完股票列表数据的更新')
 #完成部分信息更新
-partialUpdate()
+partialUpdate(mysqlSession)
 
 
 
@@ -182,8 +184,8 @@ for index,stockCode in stockCodeList.items():
         #虽然没有发布新的财务报表
         #但对于本程序来说，已完成处理任务
         #该股票数据处理完毕
-        partialUpdate()
-        lastDataUpdate(stockCode, "FR")
+        partialUpdate(mysqlSession)
+        lastDataUpdate(mysqlSession,stockCode,"FR")
         time.sleep(0.75)
         continue
     
@@ -213,7 +215,7 @@ for index,stockCode in stockCodeList.items():
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
             sql='insert into s_balancesheet_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(sql)
+            MysqlProcessor.execSql(mysqlSession,sql,False)
 
     sql="select table_name from information_schema.tables where table_name='s_cashflow_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
@@ -235,7 +237,7 @@ for index,stockCode in stockCodeList.items():
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
             sql='insert into s_cashflow_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(sql)  
+            MysqlProcessor.execSql(mysqlSession,sql,False)  
     
     sql="select table_name from information_schema.tables where table_name='s_income_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
@@ -257,13 +259,13 @@ for index,stockCode in stockCodeList.items():
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
             sql='insert into s_income_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(sql)
+            MysqlProcessor.execSql(mysqlSession,sql,False)
     
 
     log.logger.info('处理完%s的财务报表数据'%(stockCode))
     
-    partialUpdate()
-    lastDataUpdate(stockCode, "FR")
+    partialUpdate(mysqlSession)
+    lastDataUpdate(mysqlSession,stockCode,"FR")
 
 
 
@@ -290,6 +292,7 @@ for index,stockCode in stockCodeList.items():
         continue
 
     sk.sort_index(inplace=True,ascending=False)
+    sk.reset_index(inplace=True,drop=True)
     
     sql="select table_name from information_schema.tables where table_name='s_kdata_%s'"%(stockCode[:6])
     res=MysqlProcessor.querySql(sql)
@@ -311,12 +314,13 @@ for index,stockCode in stockCodeList.items():
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
             sql='insert into s_kdata_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(sql)
+            MysqlProcessor.execSql(mysqlSession,sql,False)
     
-    log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,startday,endday))
+    log.logger.info('处理完股票%s在%s到%s区间内的kdata数据'%(stockCode,startday,endday))
+    mysqlSession.commit()
     
-    partialUpdate()
-    lastDataUpdate(stockCode, "KD")  
+    partialUpdate(mysqlSession)
+    lastDataUpdate(mysqlSession,stockCode, "KD")  
 
 
 #5、获取复权因子数据，并存入数据库
@@ -358,16 +362,17 @@ for index,stockCode in stockCodeList.items():
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
             sql='insert into s_adjdata_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(sql)            
+            MysqlProcessor.execSql(mysqlSession,sql,False)
+    mysqlSession.commit()
     log.logger.info('处理完股票%s的复权因子'%(stockCode))
     
-    partialUpdate()
-    lastDataUpdate(stockCode, "ADJ")  
+    partialUpdate(mysqlSession)
+    lastDataUpdate(mysqlSession,stockCode,"ADJ")  
 
 #完成所有数据的更新
-totalUpdate()
+totalUpdate(mysqlSession)
 
 #完成所有数据更新，把数据库表重置，以便下一次处理使用
-lastDataUpdate("", "FR")
-lastDataUpdate("", "KD")
-lastDataUpdate("", "ADJ")
+lastDataUpdate(mysqlSession,"","FR")
+lastDataUpdate(mysqlSession,"","KD")
+lastDataUpdate(mysqlSession,"","ADJ")

@@ -38,8 +38,16 @@ class MysqlProcessor():
         return session
 
     @staticmethod
-    def execSql(sqlStr):
-        session = MysqlProcessor.getMysqlSession()
+    def execSql(session,sqlStr,cmtFlg=True):
+        '''
+        这里要注意一个问题，就是有可能执行了，但需要统一commit
+        可以考虑并不commit
+        而是将session返回，由调用者决定是否commit
+        或者增加一个参数，决定是否commit
+        如果参数为True，则直接commit
+        如果参数为FALSE，则返回session，由调用者自主commit
+        '''
+        #session = MysqlProcessor.getMysqlSession()
         sqlStrTxt = sqlalchemy.text(sqlStr)
         
         #执行sql语句
@@ -48,7 +56,10 @@ class MysqlProcessor():
         except:
             traceback.print_exc()
         finally:
-            session.commit()
+            
+            if cmtFlg:
+                session.commit()
+                
     
     
     @staticmethod
