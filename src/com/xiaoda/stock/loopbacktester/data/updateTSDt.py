@@ -15,11 +15,11 @@ rootPath = os.path.split(curPath)[0]
 #print(sys.path)
 #sys.path.clear()
 print(sys.path)
-sys.path.append(r'E:\workspace\StrategyLoopbackTest\src')
-sys.path.append(r'D:\Programs\Python\Python37-32\Lib\site-packages')
-sys.path.append(r'D:\Programs\Python\Python37-32')
-sys.path.append(r'D:\Programs\Python\Python37-32\DLLs')
-sys.path.append(r'D:\Programs\Python\Python37-32\lib')
+sys.path.append(r'E:\eclipse-workspace\StrategyLoopbackTest\src')
+sys.path.append(r'D:\Program Files\Python38\Lib\site-packages')
+sys.path.append(r'D:\Program Files\Python38')
+sys.path.append(r'D:\Program Files\Python38\DLLs')
+sys.path.append(r'D:\Program Files\Python38\libs')
 sys.path.append(r'C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src')
 sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32\Lib\site-packages')
 sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32')
@@ -266,6 +266,8 @@ for index,stockCode in stockCodeList.items():
     
     partialUpdate(mysqlSession)
     lastDataUpdate(mysqlSession,stockCode,"FR")
+    
+    time.sleep(0.25)
 
 
 
@@ -321,7 +323,8 @@ for index,stockCode in stockCodeList.items():
     
     partialUpdate(mysqlSession)
     lastDataUpdate(mysqlSession,stockCode, "KD")  
-
+    
+    time.sleep(0.9)
 
 #5、获取复权因子数据，并存入数据库
 
@@ -368,6 +371,8 @@ for index,stockCode in stockCodeList.items():
     
     partialUpdate(mysqlSession)
     lastDataUpdate(mysqlSession,stockCode,"ADJ")  
+    
+    time.sleep(0.3)
 
 #完成所有数据的更新
 totalUpdate(mysqlSession)

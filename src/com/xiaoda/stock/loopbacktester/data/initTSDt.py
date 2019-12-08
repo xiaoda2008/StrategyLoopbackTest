@@ -15,11 +15,11 @@ rootPath = os.path.split(curPath)[0]
 #print(sys.path)
 #sys.path.clear()
 print(sys.path)
-sys.path.append(r'E:\workspace\StrategyLoopbackTest\src')
-sys.path.append(r'D:\Programs\Python\Python37-32\Lib\site-packages')
-sys.path.append(r'D:\Programs\Python\Python37-32')
-sys.path.append(r'D:\Programs\Python\Python37-32\DLLs')
-sys.path.append(r'D:\Programs\Python\Python37-32\lib')
+sys.path.append(r'E:\eclipse-workspace\StrategyLoopbackTest\src')
+sys.path.append(r'D:\Program Files\Python38\Lib\site-packages')
+sys.path.append(r'D:\Program Files\Python38')
+sys.path.append(r'D:\Program Files\Python38\DLLs')
+sys.path.append(r'D:\Program Files\Python38\libs')
 sys.path.append(r'C:\Users\picc\eclipse-workspace\StrategyLoopbackTester\src')
 sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32\Lib\site-packages')
 sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32')
@@ -195,6 +195,8 @@ for index,stockCode in stockCodeList.items():
     partialUpdate(mysqlSession)
     lastDataUpdate(mysqlSession,stockCode, "FR")
     
+    time.sleep(0.25)
+    
 
 #4、获取股票不复权日K线数据，并存入数据库
 
@@ -262,8 +264,7 @@ for index,stockCode in stockCodeList.items():
      
         #获取该股票数据并写入数据库
         stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=tmpSTARTDATE, end_date=tmpENDDATE)
-        #time.sleep(0.5)
-        
+
         if type(stock_k_data)==NoneType:
             #如果没有任何返回值，说明该时间段内没有上市交易过该股票
             log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
@@ -285,7 +286,7 @@ for index,stockCode in stockCodeList.items():
             stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
     
         log.logger.info('处理完股票%s在%s到%s区间内的数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
-
+    
 
     if startday>'20181231' or endday<'20100101':
         pass
@@ -345,13 +346,13 @@ for index,stockCode in stockCodeList.items():
     
         #获取该股票数据并写入数据库
         stock_k_data = tushare.pro_bar(ts_code=stockCode, start_date=tmpSTARTDATE, end_date=tmpENDDATE)
-        #time.sleep(0.5)    
+   
         if type(stock_k_data)==NoneType:
             #如果没有任何返回值，说明该时间段内没有上市交易过该股票
             log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE)) 
             #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
             #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
-            #time.sleep(0.31)
+
         elif flag == False:
             #该股票出现交易数据，且在上一区间未出现交易
             #则需要重建表
@@ -371,7 +372,8 @@ for index,stockCode in stockCodeList.items():
     
     partialUpdate(mysqlSession)
     lastDataUpdate(mysqlSession,stockCode,"KD")    
-    
+        
+    time.sleep(0.9)
  
 #5、获取复权因子数据，并存入数据库
 
@@ -385,7 +387,6 @@ for index,stockCode in stockCodeList.items():
     if stockCode<=adjdata_update_to:
         continue
     
-    #time.sleep(0.5)
     #获取该股票的复权因子数据并写入数据库
     adj_data = sdDataAPI.adj_factor(ts_code=stockCode,start_date=startday,end_date=endday)
     
@@ -397,7 +398,9 @@ for index,stockCode in stockCodeList.items():
     log.logger.info('处理完股票%s的复权因子'%(stockCode))
 
     partialUpdate(mysqlSession)
-    lastDataUpdate(mysqlSession,stockCode, "ADJ")  
+    lastDataUpdate(mysqlSession,stockCode, "ADJ")
+    
+    time.sleep(0.3)
 
    
 #完成所有数据的更新
