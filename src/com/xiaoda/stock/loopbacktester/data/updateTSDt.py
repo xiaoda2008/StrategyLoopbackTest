@@ -34,7 +34,7 @@ from datetime import datetime as dt
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
 
-DAYONE='19900101'
+DAYONE='19911219'
 
 log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 

@@ -120,7 +120,7 @@ parser = argparse.ArgumentParser(description="test the argparse package")
 # parser.add_argument("project_name")
 # 定义可选参数module
 #开始日期为19900101，即取全量数据
-parser.add_argument("--startdate","-sd",type=str, default='19900101',help="Enter the start date")
+parser.add_argument("--startdate","-sd",type=str, default='19911219',help="Enter the start date")
 # 定义可选参数module1
 #结束日期默认为当前日期的前一个交易日（不含当天，以便解决当天可能还未完成交易的问题）
 parser.add_argument("--enddate","-ed",type=str, default=StockDataProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False),help="Enter the end date")
@@ -195,7 +195,7 @@ for index,stockCode in stockCodeList.items():
     partialUpdate(mysqlSession)
     lastDataUpdate(mysqlSession,stockCode, "FR")
     
-    time.sleep(0.25)
+    time.sleep(0.9)
     
 
 #4、获取股票不复权日K线数据，并存入数据库
