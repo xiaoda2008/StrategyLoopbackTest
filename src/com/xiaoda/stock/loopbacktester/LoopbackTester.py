@@ -19,7 +19,7 @@ from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 
 
-from com.xiaoda.stock.loopbacktester.strategy.trade.SimpleStrategy import SimpleStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.BuylowSellhighStrategy import BuylowSellhighStrategy
 from com.xiaoda.stock.loopbacktester.strategy.trade.MultiStepStrategy import MultiStepStrategy
 from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrategy
 
@@ -31,30 +31,45 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
 def printStockOutputHead():
-    print('日期,交易类型,当天持仓账面总金额,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当天资金净流量,当前持仓平均成本,\
-    当天平均价格,当前持仓盈亏,最近一次交易类型,最近一次交易价格,当前全部投入回报率,本次交易手续费')
+    print('日期,交易类型,当天收盘持仓市值,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当天资金净流量,当前持仓平均成本,\
+    当天收盘价格,当前持仓盈亏,最近一次交易类型,最近一次交易价格,当前全部投入回报率,本次交易手续费')
     
-def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCashFlowToday,
+def printTradeInfo(date,dealType,closePriceToday,holdShares,holdAvgPrice,netCashFlowToday,
                    totalInput,totalOutput,latestDealType,latestDealPrice,dealCharge):
-    print(date, end=',')
-    print(dealType, end=',')
-    print(round(avgPriceToday*holdShares*100,4), end=',')
-    print(holdShares, end=',')
-    print(round(totalInput,4), end=',')
-    print(round(totalOutput,4), end=',')
-    print(round(totalInput-totalOutput,4), end=',')
+    #日期
+    print(date,end=',')
+    #交易类型
+    print(dealType,end=',')
+    #当天收盘持仓账面总金额
+    print(round(closePriceToday*holdShares*100,4),end=',')
+    #当天持仓总手数
+    print(holdShares,end=',')
+    #累计投入
+    print(round(totalInput,4),end=',')
+    #累计赎回
+    print(round(totalOutput,4),end=',')
+    #当天资金净占用
+    print(round(totalInput-totalOutput,4),end=',')
+    #当天资金净流量
     print(round(netCashFlowToday,4),end=',')
-    print(round(holdAvgPrice,4), end=',')
-    print(round(avgPriceToday,4), end=',')
-    currentProfit = round(avgPriceToday*holdShares*100+totalOutput-totalInput,4)
-    print(currentProfit, end=',')
-    print(latestDealType, end=',')
-    print(round(latestDealPrice,4), end=',')
+    #当天持仓平均成本
+    print(round(holdAvgPrice,4),end=',')
+    #当天收盘价格
+    print(round(closePriceToday,4),end=',')
+    #当天持仓盈亏,按收盘价计算
+    currentProfit=round(closePriceToday*holdShares*100+totalOutput-totalInput,4)
+    print(currentProfit,end=',')
+    #最近一次交易类型
+    print(latestDealType,end=',')
+    #最近一次交易价格
+    print(round(latestDealPrice,4),end=',')
     if totalInput>0:
-        totalProfitRate=currentProfit/totalInput * 100
+        totalProfitRate=currentProfit/totalInput*100
     else:
         totalProfitRate=0
-    print(round(totalProfitRate,2), end='%,')
+    #当前全部投入回报率
+    print(round(totalProfitRate,2),end='%,')
+    #本次交易手续费
     print(round(dealCharge,2),end='\n')
     #return [currentProfit,totalInput,totalOutput]
     return currentProfit
@@ -62,13 +77,13 @@ def printTradeInfo(date, dealType, avgPriceToday,holdShares,holdAvgPrice,netCash
 def printSummaryOutputHead():
     print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
 
-def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,avgPriceToday):
+def printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,closePriceToday):
     print('\''+str(stockCode),end=', ')
     print(round(biggestCashOccupy,2), end=', ')
     print(round(totalInput,2), end=', ')
     print(round(totalOutput,2), end=', ')    
     print(latestProfit, end=', ')
-    print(round(holdShares*100*avgPriceToday,2), end='\n')
+    print(round(holdShares*100*closePriceToday,2), end='\n')
 
 
 log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
@@ -193,9 +208,11 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
     while i<stock_k_data.shape[0]:
         #print(stock_his.iloc[i])
         
-        #当日平均价格，用来计算持仓金额
-        avgPriceToday = (float(stock_k_data.at[i+offset,'open'])+float(stock_k_data.at[i+offset,'close']))/2
-        todayDate = stock_k_data.at[i+offset,'trade_date']
+        #当日平均价格，用来计算交易金额
+        avgPriceToday=(float(stock_k_data.at[i+offset,'open'])+float(stock_k_data.at[i+offset,'close']))/2
+        closePriceToday=float(stock_k_data.at[i+offset,'close'])
+        
+        todayDate=stock_k_data.at[i+offset,'trade_date']
 
 
         
@@ -214,23 +231,23 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
                 #获取买入交易费
                 dealCharge = TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
                 
-                latestDealType = 1
-                latestDealPrice = priceToBuyOrSell
-                totalInput += sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
-                netCashFlowToday = -(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
+                latestDealType=1
+                latestDealPrice=priceToBuyOrSell
+                totalInput+=sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
+                netCashFlowToday=-(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
                 
-                returnVal = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+                returnVal=printTradeInfo(todayDate,1,closePriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
-                biggestCashOccupy = totalInput
+                biggestCashOccupy=totalInput
             else:
                 #第一天判断为卖出没有意义，没有份额可以卖出
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
 
                 netCashFlowToday=0
-                returnVal = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
+                returnVal=printTradeInfo(todayDate,0,closePriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
 
@@ -240,7 +257,7 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
 
             #if stockCode=='000002.SZ' and todayDate=='20141203':
             #    print()
-            sharesToBuyOrSell,priceToBuyOrSell = strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
+            sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
                      continuousRiseOrFallCnt,stock_k_data,todayDate)
             
@@ -256,22 +273,22 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
 
                     
                 #更新持仓平均成本
-                holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*priceToBuyOrSell)/(holdShares+sharesToBuyOrSell)
-                holdShares += sharesToBuyOrSell
+                holdAvgPrice=(holdShares*holdAvgPrice+sharesToBuyOrSell*priceToBuyOrSell)/(holdShares+sharesToBuyOrSell)
+                holdShares+=sharesToBuyOrSell
                 
                 #获取买入交易费
-                dealCharge = TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
+                dealCharge=TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
                 
-                latestDealType = 1
-                latestDealPrice = priceToBuyOrSell
-                totalInput += sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
-                netCashFlowToday = -(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
+                latestDealType=1
+                latestDealPrice=priceToBuyOrSell
+                totalInput+=sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
+                netCashFlowToday=-(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
                 
-                returnVal = printTradeInfo(todayDate, 1, avgPriceToday,holdShares,
+                returnVal=printTradeInfo(todayDate,1,closePriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
                 
-                if totalInput - totalOutput > biggestCashOccupy:
+                if totalInput-totalOutput>biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                 
             elif sharesToBuyOrSell<0 and holdShares>=abs(sharesToBuyOrSell):
@@ -305,7 +322,7 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
                 if totalInput - totalOutput > biggestCashOccupy:
                     biggestCashOccupy = totalInput - totalOutput
                         
-                returnVal = printTradeInfo(todayDate, -1, avgPriceToday,holdShares,
+                returnVal=printTradeInfo(todayDate,-1,closePriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,dealCharge)
             
@@ -313,7 +330,7 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
                 #既不需要买入，又不需要卖出
                 #没有任何交易，打印对账信息:
                 netCashFlowToday=0
-                returnVal = printTradeInfo(todayDate, 0, avgPriceToday,holdShares,
+                returnVal=printTradeInfo(todayDate,0,closePriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
                
@@ -329,7 +346,7 @@ def processStock(stockCode,strategy,strOutputDir,firstOpenDay,twentyDaysBeforeFi
             latestProfit = returnVal
             
             printSummaryTradeInfo(stockCode, biggestCashOccupy, totalInput,totalOutput,
-                                  latestProfit,holdShares,avgPriceToday)
+                                  latestProfit,holdShares,closePriceToday)
             
             sys.stdout = savedStdout  #恢复标准输出流
 
@@ -387,8 +404,8 @@ if __name__ == '__main__':
         stockSelectStrategyList.append(ROEStrategy())
             
     #生成交易策略
-    if 'SimpleStrategy' in tradeStrategyString:
-        tradeStrategyList.append(SimpleStrategy())
+    if 'BuylowSellhighStrategy' in tradeStrategyString:
+        tradeStrategyList.append(BuylowSellhighStrategy())
     if 'SMAStrategy' in tradeStrategyString:
         tradeStrategyList.append(SMAStrategy())
     if 'MultiStepStrategy' in tradeStrategyString:
@@ -497,20 +514,23 @@ if __name__ == '__main__':
                         cashFlowDict[stockfileDF.at[i,'日期']]=\
                         float(stockfileDF.at[i,'当天资金净流量']),\
                         float(stockfileDF.at[i,'当天资金净占用']),\
-                        float(stockfileDF.at[i,'当前持仓盈亏'])
+                        float(stockfileDF.at[i,'当前持仓盈亏']),\
+                        float(stockfileDF.at[i,'当天收盘持仓市值'])
                     else:    
                         cashFlowDict[stockfileDF.at[i,'日期']]=\
                         float(cashFlowDict[stockfileDF.at[i,'日期']][0])+float(stockfileDF.at[i,'当天资金净流量']),\
                         float(cashFlowDict[stockfileDF.at[i,'日期']][1])+float(stockfileDF.at[i,'当天资金净占用']),\
-                        float(cashFlowDict[stockfileDF.at[i,'日期']][2])+float(stockfileDF.at[i,'当前持仓盈亏'])
+                        float(cashFlowDict[stockfileDF.at[i,'日期']][2])+float(stockfileDF.at[i,'当前持仓盈亏']),\
+                        float(cashFlowDict[stockfileDF.at[i,'日期']][3])+float(stockfileDF.at[i,'当天收盘持仓市值'])
                     i=i+1
                     if i==len(stockfileDF):
                         #最后一天，要把当天的持仓增加到净现金流
                         #以便计算XIRR
                         cashFlowDict[stockfileDF.at[i-1,'日期']]=\
-                        (float(cashFlowDict[stockfileDF.at[i-1,'日期']][0])+float(stockfileDF.at[i-1,'当天持仓账面总金额'])),\
+                        (float(cashFlowDict[stockfileDF.at[i-1,'日期']][0])+float(stockfileDF.at[i-1,'当天收盘持仓市值'])),\
                         cashFlowDict[stockfileDF.at[i-1,'日期']][1],\
-                        cashFlowDict[stockfileDF.at[i-1,'日期']][2]
+                        cashFlowDict[stockfileDF.at[i-1,'日期']][2],\
+                        cashFlowDict[stockfileDF.at[i-1,'日期']][3]
                         break
             
             #对字典进行一下排序
@@ -520,14 +540,31 @@ if __name__ == '__main__':
             sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
             
             cashFlowList=[]
-            print('日期,当日资金净流量,当日资金净占用,当日持仓盈亏')
+            print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率')
             keysList=list(cashFlowDict.keys())
             keysList.sort()
+            yesterdayTotalProfit=0
+
             for key in keysList:
+                #日期
                 print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
+                #当日发生资金净流量
                 print(cashFlowDict.get(key)[0],end=',')
+                #截至当日资金净占用
                 print(cashFlowDict.get(key)[1],end=',')
-                print(cashFlowDict.get(key)[2])
+                #当前持仓总盈亏
+                print(cashFlowDict.get(key)[2],end=',')
+                todayTotalProfit=cashFlowDict.get(key)[2]
+                #当天收盘持仓总市值
+                print(cashFlowDict.get(key)[3],end=',')
+                #持仓当日产生盈亏
+                todayProfit=todayTotalProfit-yesterdayTotalProfit
+                print(todayProfit,end=',')
+                yesterdayTotalProfit=todayTotalProfit
+                
+                #持仓当日盈亏率
+                print(round(todayProfit/float(cashFlowDict.get(key)[3]),4),end=',')
+                
                 cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
             
             
