@@ -10,7 +10,7 @@ from com.xiaoda.stock.loopbacktester.utils.ParamUtils import *
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
 
-class SimpleStrategy(StrategyParent):
+class BuylowSellhighStrategy(StrategyParent):
     '''规则：
     #1、以第一天中间价买入n手
     2、价格跌破最近一次交易价格的(1-DOWNRATE)时，再次买入n/2手
@@ -23,7 +23,7 @@ class SimpleStrategy(StrategyParent):
         '''
         Constructor
         '''
-        self.name="SimpleStrategy"
+        self.name="BuylowSellhighStrategy"
         
    #决定买入或卖出的数量
     #正数代表买入，负数代表卖出
@@ -43,7 +43,7 @@ class SimpleStrategy(StrategyParent):
         lowPrice=float(stock_k_data.at[todayDate,'low'])
         avgPrice=(highPrice+lowPrice)/2
  
-        #Simple策略第一天，直接进行买入
+        #Simple策略第一天，直接以当日平均价格进行买入
         if latestDealPrice==0 and latestDealType==0:
             return nShare,avgPrice
         
@@ -59,7 +59,7 @@ class SimpleStrategy(StrategyParent):
         if lowPrice < (1-DOWNRATE)*latestDealPrice:
             #如果下跌超线，应当买入
             return math.floor(nShare/2), (1-DOWNRATE)*latestDealPrice
-        elif highPrice > (1+UPRATE)*holdAvgPrice and highPrice > latestDealPrice*(1+UPRATE) and holdShares>0:
+        elif highPrice>(1+UPRATE)*holdAvgPrice and highPrice>latestDealPrice*(1+UPRATE) and holdShares>0:
             #如果上涨超线，应当卖出
             return -1*math.ceil(holdShares/2), max((1+UPRATE)*holdAvgPrice,latestDealPrice*(1+UPRATE))
         else:

@@ -7,7 +7,7 @@ Created on 2019年10月28日
 
 #股票代码库
 #INPUTFILE = 'D:/stockList.txt'
-OUTPUTDIR = 'D:/outputDir'
+OUTPUTDIR = 'E:/outputDir'
 
 
 #换成tushare pro之后，不能间隔超过4000个交易日（约18年）
@@ -26,7 +26,7 @@ OUTPUTDIR = 'D:/outputDir'
 #LOGGINGDIR = 'D:/outputDir'
 
 #mysql连接地址
-mysqlURL = 'mysql+pymysql://root:xiaoda001@localhost/tsdata?charset=utf8mb4'
+mysqlURL = 'mysql+pymysql://ts:ts@localhost/tsdb?charset=utf8mb4'
 
 #上涨与下跌幅度的参数
 UPRATE = 0.1
