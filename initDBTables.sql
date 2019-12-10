@@ -1,10 +1,10 @@
 -- 创建数据库及相关表格，并初始化
 
 -- 创建数据库
-create database tsdata;
+CREATE DATABASE tsdb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 
 -- 选择数据库
-use tsdata;
+use tsdb;
 
 
 -- 建立用于记录数据库更新进度、数据范围等信息的表
