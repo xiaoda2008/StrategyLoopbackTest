@@ -7,7 +7,7 @@ Created on 2019年10月28日
 
 #股票代码库
 #INPUTFILE = 'D:/stockList.txt'
-OUTPUTDIR = 'E:/outputDir'
+OUTPUTDIR = 'D:/outputDir'
 
 
 #换成tushare pro之后，不能间隔超过4000个交易日（约18年）

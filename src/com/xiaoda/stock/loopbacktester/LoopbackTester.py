@@ -522,6 +522,8 @@ if __name__ == '__main__':
                         float(cashFlowDict[stockfileDF.at[i,'日期']][1])+float(stockfileDF.at[i,'当天资金净占用']),\
                         float(cashFlowDict[stockfileDF.at[i,'日期']][2])+float(stockfileDF.at[i,'当前持仓盈亏']),\
                         float(cashFlowDict[stockfileDF.at[i,'日期']][3])+float(stockfileDF.at[i,'当天收盘持仓市值'])
+                        #if float(stockfileDF.at[i,'当天收盘持仓市值'])%1>0:
+                        #    print()
                     i=i+1
                     if i==len(stockfileDF):
                         #最后一天，要把当天的持仓增加到净现金流
@@ -531,6 +533,13 @@ if __name__ == '__main__':
                         cashFlowDict[stockfileDF.at[i-1,'日期']][1],\
                         cashFlowDict[stockfileDF.at[i-1,'日期']][2],\
                         cashFlowDict[stockfileDF.at[i-1,'日期']][3]
+                        #由于存在股票到实际endday之前就已经停牌的情况，在股票的数据里面没有数据，所以按天进行处理会导致无数据的情况
+                        #导致了summary-irr和summary的持仓数据不同的情况
+                        #summary-irr按照日期进行统计，导致了已经停牌的股票，在停牌后到endday，都没有当日持仓金额
+                        #要彻底解决这个问题，不是在这里处理，而应当到处理股票数据的逻辑中进行处理
+                        #不论股票在某个交易日是否停牌，只要是交易日，都需要在输出时有一行输出
+                        if (float(stockfileDF.at[i-1,'当天收盘持仓市值']))>0:
+                            print("%s:%s:%s:%s"%(stockfileName,float(stockfileDF.at[i-1,'当天收盘持仓市值']),cashFlowDict[stockfileDF.at[i-1,'日期']][3],cashFlowDict[stockfileDF.at[i-1,'日期']][3]))
                         break
             
             #对字典进行一下排序
@@ -563,7 +572,7 @@ if __name__ == '__main__':
                 yesterdayTotalProfit=todayTotalProfit
                 
                 #持仓当日盈亏率
-                print(round(todayProfit/float(cashFlowDict.get(key)[3]),4),end=',')
+                print(round(todayProfit/float(cashFlowDict.get(key)[3]),4))
                 
                 cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
             
