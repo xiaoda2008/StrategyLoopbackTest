@@ -148,7 +148,7 @@ log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 #@fn_timer
 def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDealDay,twentyDaysBeforeFirstDay,enddate):
     
-    tic1=timer()
+    #tic1=timer()
     #stock_k_data = tushare.pro_bar(ts_code=stockCode,adj='qfq',
     #                               start_date=twentyDaysBeforeFirstDay,end_date=ENDDATE)
 
@@ -186,11 +186,11 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     #剔除掉向前找的20个交易日数据
     #不要这样剔除，而是一直剔除到firstOpenDay
     
-    toc1=timer()
-    #print("第一部分代码耗时:%s"%(toc1-tic1)) # 输出的时间，秒为单位
+    #toc1=timer()
+    #print("第1部分代码耗时:%s"%(toc1-tic1)) # 输出的时间，秒为单位
 
 
-    tic2=timer()
+    #tic2=timer()
     a=0
     while True:
         
@@ -272,8 +272,8 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     stock_k_data.set_index('trade_date',drop=True, inplace=True)
     
     
-    toc2=timer()
-    #print("第二部分代码耗时:%s"%(toc2-tic2)) # 输出的时间，秒为单位
+    #toc2=timer()
+    #print("第2部分代码耗时:%s"%(toc2-tic2)) # 输出的时间，秒为单位
     
     
     #按照交易日进行循环
@@ -283,8 +283,13 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     tic3=timer()
     currday=firstDealDay
     
+    
+    
+    
     while currday<=enddate:
     
+        tic30=timer()
+        print("tic30-tic3:%s"%(tic30-tic3))
         if (not sdProcessor.isDealDay(currday)):
             #当前日期非交易日(肯定不是第一天)，需要输出一个空行到文件中
             #该空行内容与上一个交易日的内容相同
@@ -302,10 +307,16 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
             dupLastLineinFile(currday,outputFile)
             currday=StockDataProcessor.getNextCalDay(currday)
             continue
+        toc30=timer()
+        print("第3.0部分代码耗时:%s"%(toc30-tic30)) # 输出的时间，秒为单位
         
+        
+        #第一天是不是可以单独拿到循环外面去处理
+        #以免每次都要进行一次判断
         if currday==firstDealDay:
             
-            tic31=timer()
+            #tic31=timer()
+            #print("tic31-toc30:%s"%(tic31-toc30))
             #第一个交易日的处理，需要各个策略根据自身情况进行确定
             sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
                      latestDealType,holdShares,holdAvgPrice,
@@ -339,13 +350,14 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
                 returnVal=printTradeInfo(outputFile,currday,0,closePriceToday,holdShares,
                                             holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
                                             latestDealType,latestDealPrice,0)
-            toc31=timer()
+            #toc31=timer()
             #print("第3.1部分代码耗时:%s"%(toc31-tic31)) # 输出的时间，秒为单位
         else:
             #不是第一个交易日
             #需要根据当前价格确定如何操作
     
             tic32=timer()
+            #print("tic32-toc31:%s"%(tic32-toc31))
             #if stockCode=='000002.SZ' and todayDate=='20141203':
             #    print()
             sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
@@ -425,9 +437,14 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
                                             latestDealType,latestDealPrice,0)
             
             toc32=timer()
-            #print("第3.2部分代码耗时:%s"%(toc32-tic32)) # 输出的时间，秒为单位
+            print("第3.2部分代码耗时:%s"%(toc32-tic32)) # 输出的时间，秒为单位
         
+
         tic33=timer()
+        try:
+            print("tic33-toc32:%s"%(tic33-toc32))
+        except UnboundLocalError:
+            pass
         #tic331=timer()
         
         #lastDealDay=StockDataProcessor.getLastDealDay(enddate,True)
@@ -453,11 +470,11 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
         #currday=StockDataProcessor.getNextDealDay(currday, False)
         currday=StockDataProcessor.getNextCalDay(currday)
         toc33=timer()
-        #print("第3.3部分代码耗时:%s"%(toc33-tic33)) # 输出的时间，秒为单位
+        print("第3.3部分代码耗时:%s"%(toc33-tic33)) # 输出的时间，秒为单位
         
       
     toc3=timer()
-    #print("第3部分代码耗时:%s"%(toc3-tic3)) # 输出的时间，秒为单位  
+    print("第3部分代码耗时:%s"%(toc3-tic3)) # 输出的时间，秒为单位  
 
 
 import argparse
@@ -685,7 +702,10 @@ if __name__ == '__main__':
                 yesterdayTotalProfit=todayTotalProfit
                 
                 #持仓当日盈亏率
-                print(round(todayProfit/float(cashFlowDict.get(key)[3]),4))
+                if float(cashFlowDict.get(key)[3])==0:
+                    print(0)
+                else:
+                    print(round(todayProfit/float(cashFlowDict.get(key)[3]),4))
                 
                 cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
             

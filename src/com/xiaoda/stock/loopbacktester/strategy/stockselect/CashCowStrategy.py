@@ -23,6 +23,7 @@ class CashCowStrategy(StrategyParent):
         Constructor
         '''
         self.name="CashCowStrategy"
+        self.finProcessor=FinanceDataProcessor()
     
     #决定对哪些股票进行投资
     def getSelectedStockList(self,sdProcessor,startdateStr):
@@ -41,7 +42,7 @@ class CashCowStrategy(StrategyParent):
             #if stockCode=='300796.SZ':
             #   print()
 
-            bs=FinanceDataProcessor.getLatestStockBalanceSheetReport(stockCode,startdateStr)
+            bs=self.finProcessor.getLatestStockBalanceSheetReport(stockCode,startdateStr)
             #bs为所有之前发布的所有资产负债表数据
             #需要到里面找到最后一个不是空的总资产
             #if stockCode>'000768.SZ':
@@ -51,7 +52,7 @@ class CashCowStrategy(StrategyParent):
             
     
             #获取现金流量表中，现金等价物总数
-            cf=FinanceDataProcessor.getLatestStockCashFlowReport(stockCode,startdateStr)
+            cf=self.finProcessor.getLatestStockCashFlowReport(stockCode,startdateStr)
             #cf为之前发布的所有利润表数据
             #需要到里面找到最后一个不是空的现金等价物数据
             cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']

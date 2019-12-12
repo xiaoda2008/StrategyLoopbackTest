@@ -26,7 +26,7 @@ class FinanceDataProcessor(object):
             return dt(today.year,7,1)
     '''
     
-    def __init__(self, params):
+    def __init__(self):
         '''
         Constructor
         ''' 

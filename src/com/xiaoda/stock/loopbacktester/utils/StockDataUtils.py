@@ -78,7 +78,7 @@ class StockDataProcessor(object):
         
         while True:
             #当前日期为节假日，查看下一天是否是交易日
-            nextDealDay=StockDataProcessor.getNextCalDay(todayDate)
+            nextDealDay=StockDataProcessor.getNextCalDay(nextDealDay)
             
             if self.isDealDay(nextDealDay):
                 #找到第一个交易日，跳出

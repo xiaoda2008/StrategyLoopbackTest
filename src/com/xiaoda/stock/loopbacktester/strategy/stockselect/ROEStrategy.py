@@ -22,7 +22,7 @@ class ROEStrategy(StrategyParent):
         Constructor
         '''
         self.name="ROEStrategy"
-
+        self.finProcessor=FinanceDataProcessor()
 
     #决定对哪些股票进行投资
     def getSelectedStockList(self,sdProcessor,startdateStr):
@@ -37,7 +37,7 @@ class ROEStrategy(StrategyParent):
             #ROE=净利润/净资产
             #从资产负债表获取净资产数据
             
-            bs=FinanceDataProcessor.getLatestStockBalanceSheetReport(stockCode,startdateStr)
+            bs=self.finProcessor.getLatestStockBalanceSheetReport(stockCode,startdateStr)
             #bs为所有之前发布的所有资产负债表数据
             #需要到里面找到最后一个不是空的总资产
 
@@ -47,7 +47,7 @@ class ROEStrategy(StrategyParent):
             
     
             #获取现金流量表中，现金等价物总数
-            ic=FinanceDataProcessor.getLatestIncomeReport(stockCode,startdateStr)
+            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr)
             #cf为之前发布的所有利润表数据
             #需要到里面找到最后一个不是空的现金等价物数据
             nincome=ic[ic['n_income'].notnull()].reset_index(drop=True).at[0,'n_income']
