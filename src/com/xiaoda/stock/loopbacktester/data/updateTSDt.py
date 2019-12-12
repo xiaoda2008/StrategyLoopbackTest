@@ -33,6 +33,8 @@ from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from datetime import datetime as dt
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
+mysqlProcessor=MysqlProcessor()
+sdProcessor=StockDataProcessor()
 
 DAYONE='19911219'
 
@@ -95,8 +97,8 @@ tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 sdDataAPI=tushare.pro_api()
 
 #写入数据库的引擎
-mysqlEngine=MysqlProcessor.getMysqlEngine()
-mysqlSession=MysqlProcessor.getMysqlSession()
+mysqlEngine=mysqlProcessor.getMysqlEngine()
+mysqlSession=mysqlProcessor.getMysqlSession()
 
 sql = "select content from u_data_desc where content_name='data_end_dealday'"
 res=mysqlProcessor.querySql(sql)
@@ -121,7 +123,7 @@ partialUpdate(mysqlSession)
 
 
 #日期是最新的，在日历表中没有数据，需要先获取日历数据后再进行判断
-endday=StockDataProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False)
+endday=sdProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False)
 
 #如果前一个交易日已经更新过，直接退出
 if last_endday>=endday:

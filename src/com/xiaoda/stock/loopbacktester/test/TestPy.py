@@ -36,6 +36,10 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 from timeit import default_timer as timer
 
 
+
+lastDealDayData=pandas.DataFrame([['20190101','0',3.45]])
+
+
 processor=StockDataProcessor()
 
 processor.isDealDay('20190103')

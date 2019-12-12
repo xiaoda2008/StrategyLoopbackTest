@@ -64,16 +64,16 @@ def partialUpdate(mysqlSession):
     pupdatesql="update u_data_desc set content='%s' where content_name='last_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
     MysqlProcessor.execSql(mysqlSession,pupdatesql,True)
 
-def totalUpdate(mysqlSession):
+def totalUpdate(mysqlSession,sdProcessor):
     #全局更新语句
     tupdatesql="update u_data_desc set content='%s' where content_name='last_total_update_time';"%(dt.now().strftime('%Y%m%d %H:%M:%S'))
     MysqlProcessor.execSql(mysqlSession,tupdatesql,False)
     #从sd往后找到第一个交易日，含sd
-    tupdatesql="update u_data_desc set content='%s' where content_name='data_start_dealday';"%(StockDataProcessor.getNextDealDay(sd, True))
+    tupdatesql="update u_data_desc set content='%s' where content_name='data_start_dealday';"%(sdProcessor.getNextDealDay(sd, True))
     MysqlProcessor.execSql(mysqlSession,tupdatesql,False)
     #从ed往前找到最后一个交易日，是否含ed需要根据当前时间是否已经完成该日交易
     #最好是每天取前一个交易日的数据，这样就不会存在当天日期是否已经可用的问题
-    tupdatesql="update u_data_desc set content='%s' where content_name='data_end_dealday';"%(StockDataProcessor.getLastDealDay(ed,True))
+    tupdatesql="update u_data_desc set content='%s' where content_name='data_end_dealday';"%(sdProcessor.getLastDealDay(ed,True))
     MysqlProcessor.execSql(mysqlSession,tupdatesql,False)
     mysqlSession.commit()
     
@@ -97,9 +97,11 @@ def lastDataUpdate(mysqlSession,stockCode,dataType):
 
 #使用TuShare pro版本
 
+mysqlProcessor=MysqlProcessor()
+sdProcessor=StockDataProcessor()
 #写入数据库的引擎
-mysqlEngine = MysqlProcessor.getMysqlEngine()
-mysqlSession=MysqlProcessor.getMysqlSession()
+mysqlEngine = mysqlProcessor.getMysqlEngine()
+mysqlSession=mysqlProcessor.getMysqlSession()
 
 tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
 
@@ -126,7 +128,7 @@ parser = argparse.ArgumentParser(description="test the argparse package")
 parser.add_argument("--startdate","-sd",type=str, default='19911219',help="Enter the start date")
 # 定义可选参数module1
 #结束日期默认为当前日期的前一个交易日（不含当天，以便解决当天可能还未完成交易的问题）
-parser.add_argument("--enddate","-ed",type=str, default=StockDataProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False),help="Enter the end date")
+parser.add_argument("--enddate","-ed",type=str, default=sdProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False),help="Enter the end date")
 # 指定参数类型（默认是 str）
 # parser.add_argument('x', type=int, help='test the type')
 # 设置参数的可选范围
@@ -407,7 +409,7 @@ for index,stockCode in stockCodeList.items():
 
    
 #完成所有数据的更新
-totalUpdate(mysqlSession)
+totalUpdate(mysqlSession,sdProcessor)
 
 
 #完成所有数据更新，把数据库表重置，以便下一次处理使用
