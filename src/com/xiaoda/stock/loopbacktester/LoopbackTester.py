@@ -95,7 +95,7 @@ def printTradeInfo(outputFile,currday,dealType,closePriceToday,holdShares,holdAv
 #对于非交易日，需要将上一交易日数据重新输出一行
 def dupLastLineinFile(currday,outputFile,lastDealDayDF):
     
-    ticdup=timer()
+    #ticdup=timer()
     
     #origStdout=sys.stdout  #保存标准输出流
     #sys.stdout=open(outputFile,'at+')
@@ -114,7 +114,7 @@ def dupLastLineinFile(currday,outputFile,lastDealDayDF):
     valStr=valStr.strip()
     print(valStr)
     #sys.stdout=origStdout  #恢复标准输出流
-    tocdup=timer()
+    #tocdup=timer()
     #log.logger.info("dup部分代码耗时:%s"%(tocdup-ticdup))
     
 
@@ -310,7 +310,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     
     
     
-    tic3=timer()
+    #tic3=timer()
     #log.logger.info("tic3:%s"%(tic3))
     
     #用于传递最近一个交易日的数据
@@ -320,7 +320,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     while currday<=enddate:
         
         
-        tic32=timer()
+        #tic32=timer()
         #log.logger.info("tic32:%s"%(tic32))
         
         if (not sdProcessor.isDealDay(currday)):
@@ -337,7 +337,18 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
             #该交易日股票停牌
             #需要输出一个空行到文件中
             #该空行内容与上一个交易日的内容相同
+
             dupLastLineinFile(currday,outputFile,lastDealDayDF)
+                        
+            #如果直接停牌到endday
+            #这样处理会导致无法输出数据到Summary文件中
+            if currday==lastDealDay:
+                #最后一个交易日的盈利情况
+                latestProfit=lastDealDayDF.iat[0,10]
+                printSummaryTradeInfo(summaryOutFile,stockCode,biggestCashOccupy,totalInput,totalOutput,
+                                latestProfit,holdShares,closePriceToday)
+            
+            
             currday=StockDataProcessor.getNextCalDay(currday)
             continue
         
@@ -422,7 +433,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
         
         lastDealDayDF=returnValDF
     
-        toc32=timer()
+        #toc32=timer()
         #log.logger.info("toc32:%s"%(toc32))
         #log.logger.info("第3.2部分代码耗时:%s"%(toc32-tic32)) # 输出的时间，秒为单位
         
@@ -432,7 +443,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
         #except UnboundLocalError:
         #    pass
         
-        tic33=timer()
+        #tic33=timer()
         #log.logger.info("tic33:%s"%(tic33))
         
         if currday==lastDealDay:
@@ -447,13 +458,15 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
             printSummaryTradeInfo(summaryOutFile,stockCode,biggestCashOccupy,totalInput,totalOutput,
                                   latestProfit,holdShares,closePriceToday)
             
+            #log.logger.info("%s:持仓金额:%f"%(stockCode,round(holdShares*100*closePriceToday,2)))
+        
             #sys.stdout=savedStdout  #恢复标准输出流
     
          
         #currday=StockDataProcessor.getNextDealDay(currday, False)
         currday=StockDataProcessor.getNextCalDay(currday)
         
-        toc33=timer()
+        #toc33=timer()
         #log.logger.info("toc33:%s"%(toc33))
         #log.logger.info("第3.3部分代码耗时:%s"%(toc33-tic33)) # 输出的时间，秒为单位
         
@@ -462,9 +475,9 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     
     sys.stdout=origStdout  #恢复标准输出流
     
-    toc3=timer()
+    #toc3=timer()
     #log.logger.info("toc3:%s"%(toc3))
-    log.logger.info("第3部分代码耗时:%s"%(toc3-tic3)) # 输出的时间，秒为单位  
+    #log.logger.info("第3部分代码耗时:%s"%(toc3-tic3)) # 输出的时间，秒为单位  
 
 
 import argparse
@@ -653,6 +666,8 @@ if __name__ == '__main__':
                         cashFlowDict[stockfileDF.at[idx-1,'日期']][1],\
                         cashFlowDict[stockfileDF.at[idx-1,'日期']][2],\
                         cashFlowDict[stockfileDF.at[idx-1,'日期']][3]
+                        
+                        #log.logger.info("IRR Summary:%s股票的最后一天持仓市值:%f"%(stockfileName,float(stockfileDF.at[idx-1,'当天收盘持仓市值'])))
                         #由于存在股票到实际endday之前就已经停牌的情况，在股票的数据里面没有数据，所以按天进行处理会导致无数据的情况
                         #导致了summary-irr和summary的持仓数据不同的情况
                         #summary-irr按照日期进行统计，导致了已经停牌的股票，在停牌后到endday，都没有当日持仓金额
