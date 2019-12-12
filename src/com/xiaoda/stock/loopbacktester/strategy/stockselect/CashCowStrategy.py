@@ -25,12 +25,12 @@ class CashCowStrategy(StrategyParent):
         self.name="CashCowStrategy"
     
     #决定对哪些股票进行投资
-    def getSelectedStockList(self,startdateStr):
+    def getSelectedStockList(self,sdProcessor,startdateStr):
         #startday=CashCowStrategy.getlastquarterfirstday().strftime('%Y%m%d')
 
 
         #sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-        sdict=StockDataProcessor.getAllStockDataDict()
+        sdict=sdProcessor.getAllStockDataDict()
         
         cfRatioDict={}
 

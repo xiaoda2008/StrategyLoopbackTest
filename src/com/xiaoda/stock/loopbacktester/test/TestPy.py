@@ -32,6 +32,39 @@ import copy
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
+
+from timeit import default_timer as timer
+
+
+processor=StockDataProcessor()
+
+processor.isDealDay('20190103')
+
+tic = timer()
+
+outputFile=r"D:\outputdir\20190103-20190304-RawStrategy\BuylowSellhighStrategy\000001.SZ.csv"
+
+i=0
+while i<30:
+   print(i)
+   i=i+1 
+
+origStdout=sys.stdout  #保存标准输出流
+sys.stdout=open(outputFile,'at+')
+
+
+sys.stdout=origStdout  #恢复标准输出
+i=0
+while i<30:
+    fileDF=FileProcessor.readFile(outputFile)
+    i=i+1
+    
+# 待测试的代码
+toc = timer()
+
+print(toc - tic) # 输出的时间，秒为单位
+
+    
 #显示所有列
 pd.set_option('display.max_columns', None)
 #显示所有行

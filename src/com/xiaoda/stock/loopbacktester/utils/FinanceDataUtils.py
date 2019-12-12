@@ -29,16 +29,17 @@ class FinanceDataProcessor(object):
     def __init__(self, params):
         '''
         Constructor
-        '''   
+        ''' 
+        self.mysqlProcessor=MysqlProcessor()  
 
-    @staticmethod
-    def getLatestStockBalanceSheetReport(stockCode,dateStr):
+
+    def getLatestStockBalanceSheetReport(self,stockCode,dateStr):
         '''
         获取指定日期前最近一次的资产负债表
         '''
         #查询语句
         sql = 'select * from s_balancesheet_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
-        return MysqlProcessor.querySql(sql)
+        return self.mysqlProcessor.querySql(sql)
         #查询结果
         #try:
         #    df=pandas.read_sql_query(sqltxt,engine)
@@ -49,14 +50,13 @@ class FinanceDataProcessor(object):
         #finally:
         #    return df
         
-    @staticmethod
-    def getLatestStockCashFlowReport(stockCode,dateStr):
+    def getLatestStockCashFlowReport(self,stockCode,dateStr):
         '''
         获取指定日期前最近一次的现金流量表
         '''
         #查询语句
         sql = 'select * from s_cashflow_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
-        return MysqlProcessor.querySql(sql)
+        return self.mysqlProcessor.querySql(sql)
         #查询结果
         #try:
         #    df=pandas.read_sql_query(sqltxt,engine)
@@ -67,24 +67,22 @@ class FinanceDataProcessor(object):
         #finally:
         #    return df
 
-    @staticmethod
-    def getLatestIncomeReport(stockCode,dateStr):
+    def getLatestIncomeReport(self,stockCode,dateStr):
         '''
         获取指定日期前最近一次的利润表
         '''
         #查询语句
         sql='select * from s_income_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
-        return MysqlProcessor.querySql(sql)
+        return self.mysqlProcessor.querySql(sql)
 
 
-    @staticmethod
-    def getLatestAnnualOrSemiReportEBIT():
+    def getLatestAnnualOrSemiReportEBIT(self):
         '''
         获取最近一次的半年度或年度报表的EBIT
         '''
         #查询语句
         sql="select * from s_income_000001 where end_date like '%0630' or end_date like '%1231' order by end_date desc;"
-        aosr=MysqlProcessor.querySql(sql)
+        aosr=self.mysqlProcessor.querySql(sql)
 #（营业总收入-营业税金及附加）-（营业成本+利息支出+手续费及佣金支出+销售费用+管理费用+研发费用+坏账损失+存货跌价损失）+其他收益
 
 #营业总收入

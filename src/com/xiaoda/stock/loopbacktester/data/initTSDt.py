@@ -37,6 +37,9 @@ from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 #from com.xiaoda.stock.loopbacktester.utils.ParamUtils import LOGGINGDIR
 from datetime import datetime as dt
 
+
+mysqlProcessor=MysqlProcessor()
+
 import getopt
 import argparse
 
@@ -168,7 +171,7 @@ partialUpdate(mysqlSession)
 
 #找到之前处理的最后一个股票的代码
 sql="select content from u_data_desc where content_name='finance_report_update_to'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 finance_report_update_to=res.at[0,'content']
 
 for index,stockCode in stockCodeList.items():
@@ -202,7 +205,7 @@ for index,stockCode in stockCodeList.items():
 
 #找到之前处理的最后一个股票的代码
 sql="select content from u_data_desc where content_name='kdata_update_to'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 kdata_update_to=res.at[0,'content']
 
 for index,stockCode in stockCodeList.items():
@@ -379,7 +382,7 @@ for index,stockCode in stockCodeList.items():
 
 #找到之前处理的最后一个股票的代码
 sql="select content from u_data_desc where content_name='adjdata_update_to'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 adjdata_update_to=res.at[0,'content']
 
 for index,stockCode in stockCodeList.items():
@@ -411,3 +414,5 @@ totalUpdate(mysqlSession)
 lastDataUpdate(mysqlSession,"","FR")
 lastDataUpdate(mysqlSession,"","KD")
 lastDataUpdate(mysqlSession,"","ADJ")
+
+mysqlSession.close()

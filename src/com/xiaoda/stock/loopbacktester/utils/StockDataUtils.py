@@ -12,120 +12,104 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
-from abc import abstractstaticmethod
 
 class StockDataProcessor(object):
     '''
-    classdocs
+    实际运行中发现
+    凡是从数据库取数，速度都会很慢
+    当需要循环进行处理，每次都从数据库取数，效率非常低
+    所以可以考虑对于日历、股票列表等，采用在初始化时候直接取到本地
+    函数调用时候，只是从本地内存中取数进行处理，避免每次都到数据库取数的低效
+    
+    为解决这个问题
     '''
 
 
-    def __init__(self, params):
+    def __init__(self):
         '''
         Constructor
         '''
-
-
-    
-    @staticmethod
-    def getTradeCal():
+        self.mysqlProcessor=MysqlProcessor()
         #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = "select * from u_trade_cal"
         #查询结果
-        return MysqlProcessor.querySql(sql)
-        #df = pandas.read_sql_query(sqltxt,engine)
-        #return df
-    
-    
-    @staticmethod
-    def isDealDay(dtStr):
-        mysqlEngine = MysqlProcessor.getMysqlEngine()
-        
-        # 创建对象的基类:
-        Base = declarative_base()
+        self.tradeCalDF=self.mysqlProcessor.querySql(sql)
+        self.tradeCalDF.set_index('cal_date',drop=True,inplace=True)
 
-        # 定义TradeCal对象:
-        class TradeCal(Base):
-            # 表的名字:
-            __tablename__ = 'u_trade_cal'
-            # 表的结构:
-            exchange = Column(String(20))
-            cal_date = Column(String(20), primary_key=True)
-            is_open = Column(Integer)
-        
-            def __repr__(self):
-                return self.cal_date
-        
-        # 创建DBSession类型:
-        DBSession = sessionmaker(bind=mysqlEngine)
-        
-        # 创建session对象:
-        session = DBSession()
-        
-        tradeCal = session.query(TradeCal).filter(TradeCal.cal_date==dtStr).one()
 
-        # 关闭Session:
-        session.close()
+        #engine = MysqlProcessor.getMysqlEngine()
+        #查询语句
+        sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
         
-        if tradeCal.is_open==1:
+        df=self.mysqlProcessor.querySql(sql)
+        self.allStockDict=df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
+
+    
+    def isDealDay(self,dtStr):
+        if self.tradeCalDF.at[dtStr,'is_open']==1:
             return True
         else:
             return False
         
-    
     @staticmethod
-    def getNextDealDay(todayDate,include):
+    def getNextCalDay(todayDate):
         '''
-        找到下一个交易日
+                找到下一个自然日
+        '''
+        cday = dt.strptime(todayDate, "%Y%m%d").date()
+        dayOffset = datetime.timedelta(1)
+        # 获取想要的日期的时间
+        nextCalDay = (cday+dayOffset).strftime('%Y%m%d')
+        return nextCalDay
+    
+
+    def getNextDealDay(self,todayDate,include):
+        '''
+                找到下一个交易日
         todayDate:起始计算的日期
         include:说明是否包含起始日期，
         '''
         
-        if include==True and StockDataProcessor.isDealDay(todayDate):
+        if include==True and self.isDealDay(todayDate):
             return todayDate
             
         nextDealDay=todayDate
         
         while True:
             #当前日期为节假日，查看下一天是否是交易日
-            cday = dt.strptime(nextDealDay, "%Y%m%d").date()
-            dayOffset = datetime.timedelta(1)
-            # 获取想要的日期的时间
-            nextDealDay = (cday+dayOffset).strftime('%Y%m%d')
+            nextDealDay=StockDataProcessor.getNextCalDay(todayDate)
             
-            if StockDataProcessor.isDealDay(nextDealDay):
+            if self.isDealDay(nextDealDay):
                 #找到第一个交易日，跳出
                 break
         
         return nextDealDay
 
-    @staticmethod
-    def getDealDayByOffset(todayDate,offset):
-        trade_cal_data=StockDataProcessor.getTradeCal()
-        trade_cal_data=trade_cal_data.set_index('cal_date')
-        
+    def getDealDayByOffset(self,todayDate,offset):
+        '''
+                找到距离当前日期向前offset的交易日
+        '''
         cday = dt.strptime(todayDate, "%Y%m%d").date()
         dayOffset = datetime.timedelta(1)
         cnt=0
         # 获取想要的日期的时间
         while True:
-            cday = (cday - dayOffset)
-            if trade_cal_data.at[cday.strftime('%Y%m%d'),'is_open']==1:
+            cday=(cday-dayOffset)
+            if self.tradeCalDF.at[cday.strftime('%Y%m%d'),'is_open']==1:
                 cnt+=1
                 if cnt==offset:
                     break
         return cday.strftime('%Y%m%d')
     
-        
-    @staticmethod
-    def getLastDealDay(todayDate,include):
+    
+    def getLastDealDay(self,todayDate,include):
         '''
         找到上一个交易日
         todayDate:起始计算的日期
         include:说明是否包含起始日期，
         '''
-        if include==True and StockDataProcessor.isDealDay(todayDate):
+        if include==True and self.isDealDay(todayDate):
             return todayDate
         
         lastMarketDay=todayDate
@@ -136,62 +120,18 @@ class StockDataProcessor(object):
             # 获取想要的日期的时间
             lastMarketDay = (cday-dayOffset).strftime('%Y%m%d')
             
-            if StockDataProcessor.isDealDay(lastMarketDay):
+            if self.isDealDay(lastMarketDay):
                 #找到第一个交易日，跳出
                 break
         
         return lastMarketDay
     
-    @staticmethod
-    def getAllStockDataDict():
-        #engine = MysqlProcessor.getMysqlEngine()
-        #查询语句
-        sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
-        #查询结果
-        #sqltxt = sqlalchemy.text(sql)
-        #df = pandas.read_sql_query(sqltxt,engine)
-        
-        df=MysqlProcessor.querySql(sql)
-        #return df['ts_code'].to_list()
-        
-        return df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
     
-        '''
-        # 创建对象的基类:
-        Base = declarative_base()
+    def getAllStockDataDict(self):    
+        return self.allStockDict
+    
 
-        # 定义StockList对象:
-        class StockList(Base):
-            # 表的名字:
-            __tablename__ = 'u_stock_list'
-
-            # 表的结构:
-            ts_code=Column(String(20),primary_key=True)
-            symbol=Column(String(20))
-            name=Column(String(20))
-            area=Column(String(20))
-            industry=Column(String(20))
-            list_date=Column(String(20))
-        
-            def __repr__(self):
-                return self.ts_code
-        
-        # 创建DBSession类型:
-        DBSession = sessionmaker(bind=engine)
-        
-        # 创建session对象:
-        session = DBSession()
-        
-        stockList = session.query(StockList).all()
-
-        # 关闭Session:
-        session.close()
-        
-        return stockList
-        '''
-
-    @staticmethod
-    def getStockKData(stockCode,startDate,endDate,adj):
+    def getStockKData(self,stockCode,startDate,endDate,adj):
         '''
         stockCode：股票代码
         startData：开始日期
@@ -209,9 +149,9 @@ class StockDataProcessor(object):
         
         #查询结果
         try:
-            kdatadf=MysqlProcessor.querySql(sql_kdata)
+            kdatadf=self.mysqlProcessor.querySql(sql_kdata)
             #kdatadf=pandas.read_sql_query(sqltxt_kdata,engine,coerce_float=True)
-            adjdf=MysqlProcessor.querySql(sql_adj)
+            adjdf=self.mysqlProcessor.querySql(sql_adj)
             #adjdf=pandas.read_sql_query(sqltxt_adj,engine)
             #adjdf.set_index('trade_date',inplace=True)
             #kdatadf.set_index('trade_date',inplace=True)
@@ -261,4 +201,3 @@ class StockDataProcessor(object):
             joineddf=pandas.DataFrame()
         finally:
             return joineddf
-        

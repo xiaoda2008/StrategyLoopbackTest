@@ -23,19 +23,19 @@ import traceback
 
 class MysqlProcessor():
     
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        self.engine=create_engine(mysqlURL)
+        DBSession=sessionmaker(bind=self.engine)
+        self.session=DBSession()
     
-    @staticmethod
-    def getMysqlEngine():
-        engine = create_engine(mysqlURL)
-        return engine
+    def getMysqlEngine(self):
+        return self.engine
    
-    @staticmethod
-    def getMysqlSession():
-        mysqlEngine = create_engine(mysqlURL)
-        #数据库回话
-        DBSession= sessionmaker(bind=mysqlEngine)
-        session= DBSession()
-        return session
+    def getMysqlSession(self):
+        return self.session
 
     @staticmethod
     def execSql(session,sqlStr,cmtFlg=True):
@@ -47,7 +47,6 @@ class MysqlProcessor():
         如果参数为True，则直接commit
         如果参数为FALSE，则返回session，由调用者自主commit
         '''
-        #session = MysqlProcessor.getMysqlSession()
         sqlStrTxt = sqlalchemy.text(sqlStr)
         
         #执行sql语句
@@ -61,19 +60,18 @@ class MysqlProcessor():
                 session.commit()
                 
     
-    
-    @staticmethod
-    def querySql(sqlStr):
+
+    def querySql(self,sqlStr):
         #session = MysqlProcessor.getMysqlSession()
-        mysqlEngine = MysqlProcessor.getMysqlEngine()
-        sqlStrTxt = sqlalchemy.text(sqlStr)
+        #mysqlEngine=MysqlProcessor.getMysqlEngine()
+        sqlStrTxt=sqlalchemy.text(sqlStr)
         
         #执行sql语句
         try:
             #cursor=session.execute(sqlStrTxt)
             #result=cursor.fetchall()
             #df=pandas.DataFrame(list(result))
-            df = pandas.read_sql_query(sqlStrTxt,mysqlEngine)
+            df=pandas.read_sql_query(sqlStrTxt,self.engine)
         except:
             traceback.print_exc()
         finally:

@@ -17,5 +17,5 @@ class StrategyParent:
     
     
     #决定对哪些股票进行投资
-    def getSelectedStockList(self,dateStr):
+    def getSelectedStockList(self,sdProcessor,dateStr):
         return 0

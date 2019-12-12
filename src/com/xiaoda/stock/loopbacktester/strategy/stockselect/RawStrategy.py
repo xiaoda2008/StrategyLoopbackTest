@@ -19,7 +19,7 @@ class RawStrategy(StrategyParent):
 
     
     #决定对哪些股票进行投资
-    def getSelectedStockList(self,startdateStr):
+    def getSelectedStockList(self,sdProcessor,startdateStr):
         
         #在MysqlProcessor获取股票列表时
         #已经剔除掉了退市股和ST、*ST等
@@ -42,7 +42,7 @@ class RawStrategy(StrategyParent):
                 returnStockList.append(stockCode)
         '''
         
-        sdict=StockDataProcessor.getAllStockDataDict()
+        sdict=sdProcessor.getAllStockDataDict()
         
         returnStockList=[]
         

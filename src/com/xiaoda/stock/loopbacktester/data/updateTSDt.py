@@ -38,6 +38,8 @@ DAYONE='19911219'
 
 log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 
+mysqlProcessor=MysqlProcessor()
+
 def getlastquarterfirstday():
         today=dt.now()
         quarter=(today.month-1)/3+1
@@ -97,7 +99,7 @@ mysqlEngine=MysqlProcessor.getMysqlEngine()
 mysqlSession=MysqlProcessor.getMysqlSession()
 
 sql = "select content from u_data_desc where content_name='data_end_dealday'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 last_endday=res.at[0,'content']
 
 
@@ -147,7 +149,7 @@ partialUpdate(mysqlSession)
 #查询语句
 #查询当前数据截止的日期
 sql="select content from u_data_desc where content_name='data_end_dealday'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 
 
 #如果已经有数据了，那么设置本次数据更新起始时间
@@ -159,7 +161,7 @@ if not res.empty:
 
 #找到之前处理的最后一个股票的代码
 sql="select content from u_data_desc where content_name='finance_report_update_to'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 finance_report_update_to=res.at[0,'content']
 
 
@@ -196,7 +198,7 @@ for index,stockCode in stockCodeList.items():
     #但对于确实没有数据的股票：刚刚上市，或者之前还没有发不过去财务报表等的，应当还是先用to_sql建立表格
     
     sql="select table_name from information_schema.tables where table_name='s_balancesheet_%s'"%(stockCode[:6])
-    res=MysqlProcessor.querySql(sql)
+    res=mysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
     if res.empty:
         bs.to_sql(name='s_balancesheet_'+stockCode[:6],
@@ -218,7 +220,7 @@ for index,stockCode in stockCodeList.items():
             MysqlProcessor.execSql(mysqlSession,sql,False)
 
     sql="select table_name from information_schema.tables where table_name='s_cashflow_%s'"%(stockCode[:6])
-    res=MysqlProcessor.querySql(sql)
+    res=mysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
     if res.empty:    
         cf.to_sql(name='s_cashflow_'+stockCode[:6],
@@ -240,7 +242,7 @@ for index,stockCode in stockCodeList.items():
             MysqlProcessor.execSql(mysqlSession,sql,False)  
     
     sql="select table_name from information_schema.tables where table_name='s_income_%s'"%(stockCode[:6])
-    res=MysqlProcessor.querySql(sql)
+    res=mysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
     if res.empty:     
         ic.to_sql(name='s_income_'+stockCode[:6],
@@ -276,7 +278,7 @@ for index,stockCode in stockCodeList.items():
 
 #找到之前处理的最后一个股票的代码
 sql="select content from u_data_desc where content_name='kdata_update_to'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 kdata_update_to=res.at[0,'content']
 
 for index,stockCode in stockCodeList.items():
@@ -297,7 +299,7 @@ for index,stockCode in stockCodeList.items():
     sk.reset_index(inplace=True,drop=True)
     
     sql="select table_name from information_schema.tables where table_name='s_kdata_%s'"%(stockCode[:6])
-    res=MysqlProcessor.querySql(sql)
+    res=mysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
     if res.empty:   
         #存入数据库
@@ -330,7 +332,7 @@ for index,stockCode in stockCodeList.items():
 
 #找到之前处理的最后一个股票的代码
 sql="select content from u_data_desc where content_name='adjdata_update_to'"
-res=MysqlProcessor.querySql(sql)
+res=mysqlProcessor.querySql(sql)
 adjdata_update_to=res.at[0,'content']
 
 
@@ -348,7 +350,7 @@ for index,stockCode in stockCodeList.items():
     ad.sort_index(inplace=True,ascending=False)
     
     sql="select table_name from information_schema.tables where table_name='s_adjdata_%s'"%(stockCode[:6])
-    res=MysqlProcessor.querySql(sql)
+    res=mysqlProcessor.querySql(sql)
     #如果数据库中还没有这个表，需要建立表格
     if res.empty:
         #存入数据库
@@ -381,3 +383,5 @@ totalUpdate(mysqlSession)
 lastDataUpdate(mysqlSession,"","FR")
 lastDataUpdate(mysqlSession,"","KD")
 lastDataUpdate(mysqlSession,"","ADJ")
+
+mysqlSession.close()
