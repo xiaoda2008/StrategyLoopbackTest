@@ -44,16 +44,22 @@ class CashCowStrategy(StrategyParent):
 
             bs=self.finProcessor.getLatestStockBalanceSheetReport(stockCode,startdateStr)
             #bs为所有之前发布的所有资产负债表数据
+                
+            #获取现金流量表中，现金等价物总数
+            cf=self.finProcessor.getLatestStockCashFlowReport(stockCode,startdateStr)
+            #cf为之前发布的所有现金流量表数据
+            
+            #有可能数据不全，直接跳过
+            if bs.empty or cf.empty:
+                continue
+            
             #需要到里面找到最后一个不是空的总资产
             #if stockCode>'000768.SZ':
             #    print()
             totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
             #totalAsset=bs.at[0,'total_assets']
             
-    
-            #获取现金流量表中，现金等价物总数
-            cf=self.finProcessor.getLatestStockCashFlowReport(stockCode,startdateStr)
-            #cf为之前发布的所有利润表数据
+
             #需要到里面找到最后一个不是空的现金等价物数据
             cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
             #cashequ=cf.at[0,'c_cash_equ_end_period']

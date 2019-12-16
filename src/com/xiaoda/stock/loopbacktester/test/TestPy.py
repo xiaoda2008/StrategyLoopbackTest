@@ -35,6 +35,26 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 
 from timeit import default_timer as timer
 
+   
+dis=StockDataProcessor.getDateDistance('20190101', '20191201')
+   
+print(dis)
+   
+   
+#显示所有列
+pd.set_option('display.max_columns', None)
+#显示所有行
+pd.set_option('display.max_rows',None)
+np.set_printoptions(threshold = np.inf)
+#若想不以科学计数显示:
+np.set_printoptions(suppress = True)
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+sdDataAPI = tushare.pro_api()
+ic = sdDataAPI.income(ts_code='000001.SZ',start_date='19911219',end_date='20191212')
+print(ic)
+
+
+
 
 
 lastDealDayData=pandas.DataFrame([['20190101','0',3.45]])

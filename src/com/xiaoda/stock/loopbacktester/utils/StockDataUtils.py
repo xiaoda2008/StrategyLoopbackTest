@@ -57,12 +57,26 @@ class StockDataProcessor(object):
         '''
                 找到下一个自然日
         '''
-        cday = dt.strptime(todayDate, "%Y%m%d").date()
-        dayOffset = datetime.timedelta(1)
+        cday=dt.strptime(todayDate, "%Y%m%d").date()
+        dayOffset=datetime.timedelta(1)
         # 获取想要的日期的时间
-        nextCalDay = (cday+dayOffset).strftime('%Y%m%d')
+        nextCalDay=(cday+dayOffset).strftime('%Y%m%d')
         return nextCalDay
     
+    @staticmethod
+    def getDateDistance(day1,day2):
+        '''
+        计算两个日期之间的时间间隔
+        返回day2-day1
+        如果为正值，说明day2晚于day1
+        否则为负值
+        '''
+        cday1=dt.strptime(day1, "%Y%m%d").date()
+        cday2=dt.strptime(day2, "%Y%m%d").date()
+        interval=cday2-cday1
+        
+        return interval.days
+        
 
     def getNextDealDay(self,todayDate,include):
         '''

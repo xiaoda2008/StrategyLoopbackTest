@@ -38,7 +38,7 @@ class FinanceDataProcessor(object):
         获取指定日期前最近一次的资产负债表
         '''
         #查询语句
-        sql = 'select * from s_balancesheet_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
+        sql = 'select * from s_balancesheet_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
         return self.mysqlProcessor.querySql(sql)
         #查询结果
         #try:
@@ -55,7 +55,7 @@ class FinanceDataProcessor(object):
         获取指定日期前最近一次的现金流量表
         '''
         #查询语句
-        sql = 'select * from s_cashflow_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
+        sql = 'select * from s_cashflow_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
         return self.mysqlProcessor.querySql(sql)
         #查询结果
         #try:
@@ -72,7 +72,7 @@ class FinanceDataProcessor(object):
         获取指定日期前最近一次的利润表
         '''
         #查询语句
-        sql='select * from s_income_%s where ann_date<=%s order by ann_date desc;'%(stockCode[:6],dateStr)
+        sql='select * from s_income_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
         return self.mysqlProcessor.querySql(sql)
 
 

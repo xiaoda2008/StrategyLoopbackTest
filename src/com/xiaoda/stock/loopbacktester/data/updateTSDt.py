@@ -76,9 +76,11 @@ def totalUpdate(mysqlSession):
 
 
 def lastDataUpdate(mysqlSession,stockCode,dataType):
-    if dataType=='FR':
+    if dataType=='FR_StockCode':
         #更新财务报表最新股票代码
-        sql="update u_data_desc set content='%s' where content_name='finance_report_update_to';"%(stockCode)
+        sql="update u_data_desc set content='%s' where content_name='finance_report_stockcode_update_to';"%(stockCode)
+    elif dataType=='FR_Date':
+        sql="update u_data_desc set content='%s' where content_name='finance_report_date_update_to';"%(endday)
     elif dataType=="KD":
         #更新K线最新股票代码
         sql="update u_data_desc set content='%s' where content_name='kdata_update_to';"%(stockCode)
@@ -162,118 +164,127 @@ if not res.empty:
 
 
 #找到之前处理的最后一个股票的代码
-sql="select content from u_data_desc where content_name='finance_report_update_to'"
+sql="select content from u_data_desc where content_name='finance_report_stockcode_update_to'"
 res=mysqlProcessor.querySql(sql)
-finance_report_update_to=res.at[0,'content']
+finance_report_stockcode_update_to=res.at[0,'content']
+
+#找到之前处理的最后一个股票的代码
+sql="select content from u_data_desc where content_name='finance_report_date_update_to'"
+res=mysqlProcessor.querySql(sql)
+finance_report_date_update_to=res.at[0,'content']
+
+dis=StockDataProcessor.getDateDistance(finance_report_date_update_to,dt.now().strftime('%Y%m%d'))
 
 
-for index,stockCode in stockCodeList.items():
-
-    if stockCode<=finance_report_update_to:
-        continue
+#只有在上次更新日期在1个月以上时才进行更新财务报表数据
+if dis>=30:
+    for index,stockCode in stockCodeList.items():
     
-#    if endday-startday<一季度:
-#        log.logger.info('%s到%s时间段不足一季度，跳过取财务报表环节'%(stockCode,startday,endday))
-#        continue
-
-    #获取资产负债表
-    bs=sdDataAPI.balancesheet(ts_code=stockCode,start_date=startday,end_date=endday)
-    #获取现金流量表
-    cf=sdDataAPI.cashflow(ts_code=stockCode,start_date=startday,end_date=endday)
-    #获取利润表
-    ic=sdDataAPI.income(ts_code=stockCode,start_date=startday,end_date=endday)
+        if stockCode<=finance_report_stockcode_update_to:
+            continue
+        
+    #    if endday-startday<一季度:
+    #        log.logger.info('%s到%s时间段不足一季度，跳过取财务报表环节'%(stockCode,startday,endday))
+    #        continue
     
-    if bs.empty or cf.empty or ic.empty:
-        log.logger.info('%s在%s到%s时间段没有发布新的财务报表'%(stockCode,startday,endday))
-        #虽然没有发布新的财务报表
-        #但对于本程序来说，已完成处理任务
-        #该股票数据处理完毕
+        #获取资产负债表
+        bs=sdDataAPI.balancesheet(ts_code=stockCode,start_date=startday,end_date=endday)
+        #获取现金流量表
+        cf=sdDataAPI.cashflow(ts_code=stockCode,start_date=startday,end_date=endday)
+        #获取利润表
+        ic=sdDataAPI.income(ts_code=stockCode,start_date=startday,end_date=endday)
+        
+        if bs.empty or cf.empty or ic.empty:
+            log.logger.info('%s在%s到%s时间段没有发布新的财务报表'%(stockCode,startday,endday))
+            #虽然没有发布新的财务报表
+            #但对于本程序来说，已完成处理任务
+            #该股票数据处理完毕
+            partialUpdate(mysqlSession)
+            lastDataUpdate(mysqlSession,stockCode,"FR")
+            time.sleep(0.75)
+            continue
+        
+        #由于是更新数据，绝大多数的表在此前都已经存在
+        #因此，不能直接用dataframe的to_sql写入，否则会删除原有数据，或者可能重复插入
+        #因此，需要生成sql代码进行插入
+        
+        #但对于确实没有数据的股票：刚刚上市，或者之前还没有发不过去财务报表等的，应当还是先用to_sql建立表格
+        
+        sql="select table_name from information_schema.tables where table_name='s_balancesheet_%s'"%(stockCode[:6])
+        res=mysqlProcessor.querySql(sql)
+        #如果数据库中还没有这个表，需要建立表格
+        if res.empty:
+            bs.to_sql(name='s_balancesheet_'+stockCode[:6],
+                      con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+        else:
+            #数据库中已经有这个表了
+            #对balancesheet表中的数据，生成sql插入语句
+            for bidx in bs.index:
+                valStr=bs[bidx:bidx+1].to_csv(index=False,header=False,sep=",",na_rep='NULL').replace('\n','').replace('\r','')
+                valList=valStr.split(',')
+                paramStr=''
+                for val in valList:
+                    if val=='NULL':
+                        paramStr=paramStr+'NULL,'
+                    else:       
+                        paramStr=paramStr+"'"+val+"'"+','
+                paramStr=paramStr[:-1]
+                sql='insert into s_balancesheet_%s values (%s)'%(stockCode[:6],paramStr)
+                MysqlProcessor.execSql(mysqlSession,sql,False)
+    
+        sql="select table_name from information_schema.tables where table_name='s_cashflow_%s'"%(stockCode[:6])
+        res=mysqlProcessor.querySql(sql)
+        #如果数据库中还没有这个表，需要建立表格
+        if res.empty:    
+            cf.to_sql(name='s_cashflow_'+stockCode[:6],
+                      con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+        else:
+            #数据库中已经有这个表了
+            #对cashflow表中的数据，生成sql插入语句
+            for cidx in cf.index:
+                valStr=cf[cidx:cidx+1].to_csv(index=False,header=False,sep=",",na_rep='NULL').replace('\n','').replace('\r','')
+                valList=valStr.split(',')
+                paramStr=''
+                for val in valList:
+                    if val=='NULL':
+                        paramStr=paramStr+'NULL,'
+                    else:       
+                        paramStr=paramStr+"'"+val+"'"+','
+                paramStr=paramStr[:-1]
+                sql='insert into s_cashflow_%s values (%s)'%(stockCode[:6],paramStr)
+                MysqlProcessor.execSql(mysqlSession,sql,False)  
+        
+        sql="select table_name from information_schema.tables where table_name='s_income_%s'"%(stockCode[:6])
+        res=mysqlProcessor.querySql(sql)
+        #如果数据库中还没有这个表，需要建立表格
+        if res.empty:     
+            ic.to_sql(name='s_income_'+stockCode[:6],
+                      con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+        else:
+            #数据库中已经有这个表了
+            #对income表中的数据，生成sql插入语句
+            for iidx in ic.index:
+                valStr=ic[iidx:iidx+1].to_csv(index=False,header=False,sep=",",na_rep='NULL').replace('\n','').replace('\r','')
+                valList=valStr.split(',')
+                paramStr=''
+                for val in valList:
+                    if val=='NULL':
+                        paramStr=paramStr+'NULL,'
+                    else:       
+                        paramStr=paramStr+"'"+val+"'"+','
+                paramStr=paramStr[:-1]
+                sql='insert into s_income_%s values (%s)'%(stockCode[:6],paramStr)
+                MysqlProcessor.execSql(mysqlSession,sql,False)
+        
+    
+        log.logger.info('处理完%s的财务报表数据'%(stockCode))
+        
         partialUpdate(mysqlSession)
-        lastDataUpdate(mysqlSession,stockCode,"FR")
-        time.sleep(0.75)
-        continue
+        lastDataUpdate(mysqlSession,stockCode,"FR_StockCode")
+        
+        time.sleep(0.25)
     
-    #由于是更新数据，绝大多数的表在此前都已经存在
-    #因此，不能直接用dataframe的to_sql写入，否则会删除原有数据，或者可能重复插入
-    #因此，需要生成sql代码进行插入
-    
-    #但对于确实没有数据的股票：刚刚上市，或者之前还没有发不过去财务报表等的，应当还是先用to_sql建立表格
-    
-    sql="select table_name from information_schema.tables where table_name='s_balancesheet_%s'"%(stockCode[:6])
-    res=mysqlProcessor.querySql(sql)
-    #如果数据库中还没有这个表，需要建立表格
-    if res.empty:
-        bs.to_sql(name='s_balancesheet_'+stockCode[:6],
-                  con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-    else:
-        #数据库中已经有这个表了
-        #对balancesheet表中的数据，生成sql插入语句
-        for bidx in bs.index:
-            valStr=bs[bidx:bidx+1].to_csv(index=False,header=False,sep=",",na_rep='NULL').replace('\n','').replace('\r','')
-            valList=valStr.split(',')
-            paramStr=''
-            for val in valList:
-                if val=='NULL':
-                    paramStr=paramStr+'NULL,'
-                else:       
-                    paramStr=paramStr+"'"+val+"'"+','
-            paramStr=paramStr[:-1]
-            sql='insert into s_balancesheet_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(mysqlSession,sql,False)
-
-    sql="select table_name from information_schema.tables where table_name='s_cashflow_%s'"%(stockCode[:6])
-    res=mysqlProcessor.querySql(sql)
-    #如果数据库中还没有这个表，需要建立表格
-    if res.empty:    
-        cf.to_sql(name='s_cashflow_'+stockCode[:6],
-                  con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-    else:
-        #数据库中已经有这个表了
-        #对cashflow表中的数据，生成sql插入语句
-        for cidx in cf.index:
-            valStr=cf[cidx:cidx+1].to_csv(index=False,header=False,sep=",",na_rep='NULL').replace('\n','').replace('\r','')
-            valList=valStr.split(',')
-            paramStr=''
-            for val in valList:
-                if val=='NULL':
-                    paramStr=paramStr+'NULL,'
-                else:       
-                    paramStr=paramStr+"'"+val+"'"+','
-            paramStr=paramStr[:-1]
-            sql='insert into s_cashflow_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(mysqlSession,sql,False)  
-    
-    sql="select table_name from information_schema.tables where table_name='s_income_%s'"%(stockCode[:6])
-    res=mysqlProcessor.querySql(sql)
-    #如果数据库中还没有这个表，需要建立表格
-    if res.empty:     
-        ic.to_sql(name='s_income_'+stockCode[:6],
-                  con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-    else:
-        #数据库中已经有这个表了
-        #对income表中的数据，生成sql插入语句
-        for iidx in ic.index:
-            valStr=ic[iidx:iidx+1].to_csv(index=False,header=False,sep=",",na_rep='NULL').replace('\n','').replace('\r','')
-            valList=valStr.split(',')
-            paramStr=''
-            for val in valList:
-                if val=='NULL':
-                    paramStr=paramStr+'NULL,'
-                else:       
-                    paramStr=paramStr+"'"+val+"'"+','
-            paramStr=paramStr[:-1]
-            sql='insert into s_income_%s values (%s)'%(stockCode[:6],paramStr)
-            MysqlProcessor.execSql(mysqlSession,sql,False)
-    
-
-    log.logger.info('处理完%s的财务报表数据'%(stockCode))
-    
-    partialUpdate(mysqlSession)
-    lastDataUpdate(mysqlSession,stockCode,"FR")
-    
-    time.sleep(0.25)
-
-
+    lastDataUpdate(mysqlSession,stockCode, "FR_Date")
 
 
 #4、获取股票不复权日K线数据，并存入数据库

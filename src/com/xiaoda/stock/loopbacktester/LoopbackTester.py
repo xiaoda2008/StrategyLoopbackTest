@@ -33,6 +33,7 @@ from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
 import time
 from functools import wraps
+from com.xiaoda.stock.loopbacktester.strategy.trade.HoldStrategy import HoldStrategy
   
 def fn_timer(fn):
     def function_timer(*args, **kwargs):
@@ -538,7 +539,8 @@ if __name__ == '__main__':
         tradeStrategyList.append(SMAStrategy())
     if 'MultiStepStrategy' in tradeStrategyString:
         tradeStrategyList.append(MultiStepStrategy())
-    
+    if 'HoldStrategy' in tradeStrategyString:
+        tradeStrategyList.append(HoldStrategy())    
     
     sdProcessor=StockDataProcessor()
     
@@ -710,7 +712,7 @@ if __name__ == '__main__':
                 if float(cashFlowDict.get(key)[3])==0:
                     print(0)
                 else:
-                    print(round(todayProfit/float(cashFlowDict.get(key)[3]),4))
+                    print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4))
                 
                 cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
             

@@ -79,9 +79,11 @@ def totalUpdate(mysqlSession,sdProcessor):
     
 
 def lastDataUpdate(mysqlSession,stockCode,dataType):
-    if dataType=='FR':
+    if dataType=='FR_StockCode':
         #更新财务报表最新股票代码
-        sql="update u_data_desc set content='%s' where content_name='finance_report_update_to';"%(stockCode)
+        sql="update u_data_desc set content='%s' where content_name='finance_report_stockcode_update_to';"%(stockCode)
+    elif dataType=='FR_Date':
+        sql="update u_data_desc set content='%s' where content_name='finance_report_date_update_to';"%(dt.now().strftime('%Y%m%d'))
     elif dataType=="KD":
         #更新K线最新股票代码
         sql="update u_data_desc set content='%s' where content_name='kdata_update_to';"%(stockCode)
@@ -172,7 +174,7 @@ partialUpdate(mysqlSession)
 #startday=getlastquarterfirstday().strftime('%Y%m%d')
 
 #找到之前处理的最后一个股票的代码
-sql="select content from u_data_desc where content_name='finance_report_update_to'"
+sql="select content from u_data_desc where content_name='finance_report_stock_code_update_to'"
 res=mysqlProcessor.querySql(sql)
 finance_report_update_to=res.at[0,'content']
 
@@ -198,10 +200,11 @@ for index,stockCode in stockCodeList.items():
     
     log.logger.info('处理完%s的财务报表数据'%(stockCode))
     partialUpdate(mysqlSession)
-    lastDataUpdate(mysqlSession,stockCode, "FR")
+    lastDataUpdate(mysqlSession,stockCode, "FR_StockCode")
     
     time.sleep(0.9)
-    
+
+lastDataUpdate(mysqlSession,stockCode, "FR_Date")    
 
 #4、获取股票不复权日K线数据，并存入数据库
 

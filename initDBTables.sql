@@ -32,7 +32,11 @@ insert into u_data_desc (content_name,content,comments) values ('data_end_dealda
 insert into u_data_desc (content_name,content,comments) values ('last_update_time','','the time of last data update');
 
 -- 财务报表最新更新的股票代码，每个股票代码更新财务报表数据后都更新该字段
-insert into u_data_desc (content_name,content,comments) values ('finance_report_update_to','','the stock code of last update of finance report');
+insert into u_data_desc (content_name,content,comments) values ('finance_report_stockcode_update_to','','the stock code of last update of finance report');
+
+-- 财务报表最新更新的日期，更新完所有股票的财务报表后更新该字段
+-- 只有上次更新时间距离当前超过1个月，才会执行更新，否则不执行股票财务报表数据的更新
+insert into u_data_desc (content_name,content,comments) values ('finance_report_date_update_to','','the date of last update of finance report');
 
 -- k线数据最新更新的股票代码，每个股票的k线数据更新后都更新该字段
 insert into u_data_desc (content_name,content,comments) values ('kdata_update_to','','the stock code of last update of k data');
