@@ -30,7 +30,10 @@ class ROEStrategy(StrategyParent):
         sdict=sdProcessor.getAllStockDataDict()
         ROEDict={}
         
-        for (stockCode,listdate) in sdict.items():
+        for (stockCode,scdict) in sdict.items():
+            
+            listdate=scdict['list_date']
+            
             if listdate>startdateStr:
                 continue
 

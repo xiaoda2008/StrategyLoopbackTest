@@ -43,8 +43,8 @@ class StockDataProcessor(object):
         sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
         
         df=self.mysqlProcessor.querySql(sql)
-        self.allStockDict=df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
-
+        #self.allStockDict=df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
+        self.allStockDict=df[['ts_code','list_date','industry']].set_index('ts_code').to_dict(orient="index")
     
     def isDealDay(self,dtStr):
         if self.tradeCalDF.at[dtStr,'is_open']==1:
@@ -144,6 +144,20 @@ class StockDataProcessor(object):
     def getAllStockDataDict(self):    
         return self.allStockDict
     
+    @staticmethod
+    def mktallocation(stringx):
+        if (stringx[:3] in ['000','600','603','601']) or (stringx in ['001696','001896','001979','001965']) :
+            output = 'main'
+        elif stringx[:3] == '002':
+            output = 'SME'
+        elif stringx[:3] == '300':
+            output = 'GEM'
+        elif stringx[:3] == '688':
+            output = 'KCB'
+        else:
+            output = ''
+            print('market allocation error:' + stringx)
+        return output
 
     def getStockKData(self,stockCode,startDate,endDate,adj):
         '''

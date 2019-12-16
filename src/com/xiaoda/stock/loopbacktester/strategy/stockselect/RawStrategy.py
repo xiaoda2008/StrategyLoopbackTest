@@ -47,7 +47,10 @@ class RawStrategy(StrategyParent):
         returnStockList=[]
         
         
-        for (stockCode,listdate) in sdict.items():
+        for (stockCode,scdict) in sdict.items():
+            
+            listdate=scdict['list_date']
+            
             if listdate>startdateStr:
                 continue
             returnStockList.append(stockCode)
