@@ -44,7 +44,7 @@ class StockDataProcessor(object):
         
         df=self.mysqlProcessor.querySql(sql)
         #self.allStockDict=df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
-        self.allStockDict=df[['ts_code','list_date','industry']].set_index('ts_code').to_dict(orient="index")
+        self.allStockDict=df.set_index('ts_code').to_dict(orient="index")
     
     def isDealDay(self,dtStr):
         if self.tradeCalDF.at[dtStr,'is_open']==1:
