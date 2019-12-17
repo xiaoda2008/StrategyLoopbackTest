@@ -40,7 +40,7 @@ class StockDataProcessor(object):
 
         #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%'"
+        sql = "select * from u_stock_list where name not like '%ST%' and name not like '%退%' order by ts_code asc"
         
         df=self.mysqlProcessor.querySql(sql)
         #self.allStockDict=df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
@@ -76,7 +76,29 @@ class StockDataProcessor(object):
         interval=cday2-cday1
         
         return interval.days
+    
+    @staticmethod
+    def getCalDayByOffset(todayDate,offset):
+        '''
+                找到距离当前日期向前offset的自然日
+                负数表示向更早去找
+                正数表示向更晚去找
+        '''
+        cday = dt.strptime(todayDate, "%Y%m%d").date()
         
+        if offset>0:
+            dayOffset=datetime.timedelta(1)
+        else:
+            dayOffset=datetime.timedelta(-1)
+        
+        cnt=0
+        # 获取想要的日期的时间
+        while True:
+            cday=(cday+dayOffset)
+            cnt+=1
+            if cnt==abs(offset):
+                break
+        return cday.strftime('%Y%m%d') 
 
     def getNextDealDay(self,todayDate,include):
         '''
@@ -103,20 +125,41 @@ class StockDataProcessor(object):
     def getDealDayByOffset(self,todayDate,offset):
         '''
                 找到距离当前日期向前offset的交易日
+                负数表示向更早去找
+                正数表示向更晚去找
         '''
         cday = dt.strptime(todayDate, "%Y%m%d").date()
-        dayOffset = datetime.timedelta(1)
+        if offset>0:
+            dayOffset=datetime.timedelta(1)
+        else:
+            dayOffset=datetime.timedelta(-1)
+        
         cnt=0
         # 获取想要的日期的时间
         while True:
-            cday=(cday-dayOffset)
+            cday=(cday+dayOffset)
             if self.tradeCalDF.at[cday.strftime('%Y%m%d'),'is_open']==1:
                 cnt+=1
-                if cnt==offset:
+                if cnt==abs(offset):
                     break
         return cday.strftime('%Y%m%d')
     
     
+    def getStockInfo(self,stockCode):
+        #查询语句
+        sql = "select * from u_stock_list where ts_code=\'%s\'"%(stockCode)
+     
+        #查询结果
+        try:
+            infodf=self.mysqlProcessor.querySql(sql)
+        except sqlalchemy.exc.ProgrammingError:
+            #如果压根就没有这个表
+            #在kdata与股票列表数据不一致的情况下会出现
+            infodf=pandas.DataFrame()
+        finally:
+            return infodf
+
+
     def getLastDealDay(self,todayDate,include):
         '''
         找到上一个交易日

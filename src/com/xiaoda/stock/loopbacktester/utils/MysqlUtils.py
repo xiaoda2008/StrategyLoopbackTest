@@ -65,7 +65,7 @@ class MysqlProcessor():
         #session = MysqlProcessor.getMysqlSession()
         #mysqlEngine=MysqlProcessor.getMysqlEngine()
         sqlStrTxt=sqlalchemy.text(sqlStr)
-        
+        df=DataFrame()
         #执行sql语句
         try:
             #cursor=session.execute(sqlStrTxt)

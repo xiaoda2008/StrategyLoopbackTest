@@ -34,7 +34,9 @@ from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 import time
 from functools import wraps
 from com.xiaoda.stock.loopbacktester.strategy.trade.HoldStrategy import HoldStrategy
-  
+
+
+'''
 def fn_timer(fn):
     def function_timer(*args, **kwargs):
         """装饰器"""
@@ -45,7 +47,7 @@ def fn_timer(fn):
         return result
     return function_timer
 
-
+'''
 
 #@fn_timer
 
@@ -216,7 +218,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     
     
     if stock_k_data.empty:
-        log.logger.info(stockCode, '为新上市股票，或存在停牌情况，进行剔除')
+        log.logger.info('%s为新上市股票，或存在停牌情况，进行剔除'%(stockCode))
         return
     
     #print(stock_his.index)
@@ -552,7 +554,7 @@ if __name__ == '__main__':
     #可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
     #向前找30个交易日
 
-    twentyDaysBeforeFirstOpenDay=sdProcessor.getDealDayByOffset(firstDealDay, 30)
+    twentyDaysBeforeFirstOpenDay=sdProcessor.getDealDayByOffset(firstDealDay, -30)
     
     for stockSelectStrategy in stockSelectStrategyList:
         
