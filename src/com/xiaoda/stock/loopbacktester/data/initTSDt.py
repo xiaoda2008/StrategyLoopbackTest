@@ -416,7 +416,7 @@ totalUpdate(mysqlSession,sdProcessor)
 
 
 #完成所有数据更新，把数据库表重置，以便下一次处理使用
-lastDataUpdate(mysqlSession,"","FR")
+lastDataUpdate(mysqlSession,"","FR_StockCode")
 lastDataUpdate(mysqlSession,"","KD")
 lastDataUpdate(mysqlSession,"","ADJ")
 
