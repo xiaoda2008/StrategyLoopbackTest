@@ -46,8 +46,9 @@ insert into u_data_desc (content_name,content,comments) values ('kdata_update_to
 insert into u_data_desc (content_name,content,comments) values ('adjdata_update_to','','the stock code of last update of adjdata');
 
 -- 建立用于记录分行业涨跌波动率的表
-create table u_volatility_for_industry (
-industry varchar(100),
+create table u_vol_for_industry (
+industry varchar(100) unique,
+stock_num int default 0,
 max_ret_rate float not null default 0,
 max_inc_rate float not null default 0
 );

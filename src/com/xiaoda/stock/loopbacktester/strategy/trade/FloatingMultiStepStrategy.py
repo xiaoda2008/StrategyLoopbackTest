@@ -5,12 +5,12 @@ Created on 2019年10月28日
 '''
 import math
 from com.xiaoda.stock.loopbacktester.strategy.trade.StrategyParent import StrategyParent
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare,RetRate,IncRate
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 
 
 
-class MultiStepStrategy(StrategyParent):
+class FloatingMultiStepStrategy(StrategyParent):
     '''规则：
     #1、以第一天中间价买入n手
     
@@ -29,7 +29,7 @@ class MultiStepStrategy(StrategyParent):
         '''
         Constructor
         '''
-        self.name="MultiStepStrategy"
+        self.name="FloatingMultiStepStrategy"
         self.mysqlProcessor=MysqlProcessor()
         sql='select * from u_vol_for_industry'
         self.volForIndDF=self.mysqlProcessor.querySql(sql)
@@ -42,7 +42,16 @@ class MultiStepStrategy(StrategyParent):
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
                      stockCode,stock_k_data,todayDate):
+        
+        #stock_k_data = stock_k_data.set_index('trade_date')
+        sql='select industry from u_stock_list where ts_code=\'%s\''%(stockCode)
+        idf=self.mysqlProcessor.querySql(sql)
+        stockInd=idf.at[0,'industry']
 
+        
+        RetRate=self.volForIndDF.at[stockInd,'max_ret_rate']/4
+        IncRate=self.volForIndDF.at[stockInd,'max_inc_rate']/4
+        
          
         openPrice=float(stock_k_data.at[todayDate,'open'])
         closePrice=float(stock_k_data.at[todayDate,'close'])

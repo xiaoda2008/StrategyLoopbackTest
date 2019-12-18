@@ -22,11 +22,15 @@ import pandas
 
 from com.xiaoda.stock.loopbacktester.strategy.trade.BuylowSellhighStrategy import BuylowSellhighStrategy
 from com.xiaoda.stock.loopbacktester.strategy.trade.MultiStepStrategy import MultiStepStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.FloatingBuylowSellhighStrategy import FloatingBuylowSellhighStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.FloatingMultiStepStrategy import FloatingMultiStepStrategy
 from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrategy
 
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.RawStrategy import RawStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.CashCowStrategy import CashCowStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROEStrategy import ROEStrategy
+
+
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
@@ -277,7 +281,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
     #第一个交易日的处理，需要各个策略根据自身情况进行确定
     sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
              latestDealType,holdShares,holdAvgPrice,
-             continuousRiseOrFallCnt,stock_k_data,currday)
+             continuousRiseOrFallCnt,stockCode,stock_k_data,currday)
 
     if sharesToBuyOrSell>0:
         #如果判断为应当买入
@@ -360,7 +364,7 @@ def processStock(sdProcessor,stockCode,strategy,strOutputDir,firstDealDay,lastDe
         #print("tic32-toc31:%s"%(tic32-toc31))
         sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
                  latestDealType,holdShares,holdAvgPrice,
-                 continuousRiseOrFallCnt,stock_k_data,currday)
+                 continuousRiseOrFallCnt,stockCode,stock_k_data,currday)
         
         if sharesToBuyOrSell>0:
             #如果判断为下跌超线买入
@@ -537,10 +541,14 @@ if __name__ == '__main__':
     #生成交易策略
     if 'BuylowSellhighStrategy' in tradeStrategyString:
         tradeStrategyList.append(BuylowSellhighStrategy())
-    if 'SMAStrategy' in tradeStrategyString:
-        tradeStrategyList.append(SMAStrategy())
     if 'MultiStepStrategy' in tradeStrategyString:
         tradeStrategyList.append(MultiStepStrategy())
+    if 'FloatingBuylowSellhighStrategy' in tradeStrategyString:
+        tradeStrategyList.append(FloatingBuylowSellhighStrategy())
+    if 'FloatingMultiStepStrategy' in tradeStrategyString:
+        tradeStrategyList.append(FloatingMultiStepStrategy())
+    if 'SMAStrategy' in tradeStrategyString:
+        tradeStrategyList.append(SMAStrategy())
     if 'HoldStrategy' in tradeStrategyString:
         tradeStrategyList.append(HoldStrategy())    
     
@@ -556,15 +564,22 @@ if __name__ == '__main__':
 
     twentyDaysBeforeFirstOpenDay=sdProcessor.getDealDayByOffset(firstDealDay, -30)
     
+    OODir=OUTPUTDIR+'/'+startdate+'-'+enddate
+    
+    
+    if not(Path(OODir).exists()):
+        os.mkdir(OODir)
+    
+    
     for stockSelectStrategy in stockSelectStrategyList:
         
         print('开始处理选股策略:',stockSelectStrategy.getStrategyName())
         #从参数获取股票选取策略
         stockList=stockSelectStrategy.getSelectedStockList(sdProcessor,startdate)
         
-        strOutterOutputDir=OUTPUTDIR+'/'+startdate+'-'+enddate+'-'+stockSelectStrategy.getStrategyName()
+        strOutterOutputDir=OODir+'/'+stockSelectStrategy.getStrategyName()
         
-        myPath = Path(strOutterOutputDir)
+        myPath=Path(strOutterOutputDir)
         
         #如果该位置存在，则直接使用该位置，不用删除掉重新算
         if not(myPath.exists()):

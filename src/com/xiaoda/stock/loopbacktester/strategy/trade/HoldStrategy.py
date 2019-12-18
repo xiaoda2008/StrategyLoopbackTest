@@ -24,7 +24,7 @@ class HoldStrategy(StrategyParent):
     def getShareAndPriceToBuyOrSell(self,latestDealPrice, 
                  latestDealType,holdShares,
                  holdAvgPrice,continuousRiseOrFallCnt,
-                 stock_k_data,todayDate):
+                 stockCode,stock_k_data,todayDate):
         
         #openPrice=float(stock_k_data.at[todayDate,'open'])
         #closePrice=float(stock_k_data.at[todayDate,'close'])

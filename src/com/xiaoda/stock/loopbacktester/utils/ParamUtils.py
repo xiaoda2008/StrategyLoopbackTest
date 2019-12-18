@@ -27,10 +27,11 @@ OUTPUTDIR = 'D:/outputDir'
 
 #mysql连接地址
 mysqlURL = 'mysql+pymysql://ts:ts@localhost/tsdb?charset=utf8mb4'
+#mysqlURL = 'mysql+mysqlconnector://ts:ts@localhost/tsdb?charset=utf8mb4'
 
-#上涨与下跌幅度的参数
-UPRATE = 0.1
-DOWNRATE = 0.15
+#固定上涨与下跌幅度的参数
+IncRate = 0.1
+RetRate = -0.15
 
 nShare = 3 #第一次买入的数量，默认为10手，部分策略中，后续买入的数量，与该参数也相关
 

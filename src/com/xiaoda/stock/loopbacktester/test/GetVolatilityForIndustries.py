@@ -94,8 +94,6 @@ def getVolatilityDFForIndustries():
     #分8个进程，分别计算8段股票波动率
     
     process=[]
-    #pool=multiprocessing.Pool(processes=8)
-    #res_l=[] #从异步提交任务获取结果
 
 
     i=0
@@ -105,36 +103,32 @@ def getVolatilityDFForIndustries():
         
         p=multiprocessing.Process(target=getVolatilityDFForIndustriesForStocks,args=(i,return_dict,stockList,startday,last_endday,))
         p.start()
-        #res=pool.apply_async(getVolatilityDFForIndustriesForStocks,(stockList,startday,last_endday,))
-        #res=pool.apply_async(testFun,(i,))
-        #res_l.append(res) #从异步提交任务获取结果
 
         process.append(p)
-    #for res in res_l:
-        #print(res.get()) #等着func的计算结果
+
     
     for p in process:
         p.join()
     
-    #pool.close()
-    print(len(return_dict))
-    
-    for key in list(return_dict.keys()):
+
+    retvalues=return_dict.values()
+    for retVal in retvalues:
         
-        for ind in list(return_dict[key].keys()):
+        for ind in retVal.keys():
+            
             if not(ind in industryVolDict.keys()):
                 #该产业尚未出现，则直接赋值即可
-                industryVolDict[ind]=return_dict[key][ind]
-                #{'num': 1, 'val': (-0.2435692921236292, 0.40309155766944116)}
+                industryVolDict[ind]=retVal[ind]
+
             else:
                 #该产业已经存在，则需要取数后进行算术平均
                 preNum=industryVolDict[ind]['num']
                 preMaxRetRate=industryVolDict[ind]['val'][0]
                 preMaxIncRate=industryVolDict[ind]['val'][1]    
                 
-                currNum=return_dict[key][ind]['num']
-                currMaxRetRate=return_dict[key][ind]['val'][0]
-                currMaxIncRate=return_dict[key][ind]['val'][1]
+                currNum=retVal[ind]['num']
+                currMaxRetRate=retVal[ind]['val'][0]
+                currMaxIncRate=retVal[ind]['val'][1]
 
                 num=currNum+preNum
                 maxRRate=(preMaxRetRate*preNum+currMaxRetRate*currNum)/num
@@ -148,7 +142,7 @@ def getVolatilityDFForIndustries():
     #将8个进程计算出来的均值进行合并
     
     
-    
+    return industryVolDict
     #for stockDict in stDictList:
     #    industryVolDict=self.getVolatilityDFForIndustriesForStocks(stockDict,startday,last_endday)
     #    industryVolDictList.append(industryVolDict)
@@ -340,13 +334,12 @@ if __name__ == "__main__":
     indList=list(volDict.keys())
     for ind in indList:
         
+        num=volDict.get(ind)['num']
         maxRetRt=volDict.get(ind)['val'][0]
         maxIncRt=volDict.get(ind)['val'][1]
         
         mysqlProcessor=MysqlProcessor()
         mysqlSession=mysqlProcessor.getMysqlSession()
-        sql='replace into u_volatility_for_industry set values(%s,%f,%f)'%(ind,maxRetRt,maxIncRt)
+        sql='replace into u_vol_for_industry values(\'%s\',%d,%f,%f)'%(ind,num,maxRetRt,maxIncRt)
         mysqlProcessor.execSql(mysqlSession, sql, True)
     
-    
-    print()
