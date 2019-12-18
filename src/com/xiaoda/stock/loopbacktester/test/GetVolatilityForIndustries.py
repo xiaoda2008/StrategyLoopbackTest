@@ -70,14 +70,8 @@ mysqlProcessor=MysqlProcessor()
 sdProcessor=StockDataProcessor()
 
 
-def getVolatilityDFForIndustries():
-    
-    #这里为了保证数据完整性
-    #只能取数据库中最新数据的日期作为终止日期
-    sql = "select content from u_data_desc where content_name='data_end_dealday'"
-    res=mysqlProcessor.querySql(sql)
-    last_endday=res.at[0,'content']
-    startday=StockDataProcessor.getCalDayByOffset(last_endday,-365)
+def getVolatilityDFForIndustries(startday,endday):
+
     
     
     allStockDict=sdProcessor.getAllStockDataDict()
@@ -101,7 +95,7 @@ def getVolatilityDFForIndustries():
         stockList=list(stockDict.keys())
         i=i+1
         
-        p=multiprocessing.Process(target=getVolatilityDFForIndustriesForStocks,args=(i,return_dict,stockList,startday,last_endday,))
+        p=multiprocessing.Process(target=getVolatilityDFForIndustriesForStocks,args=(i,return_dict,stockList,startday,endday,))
         p.start()
 
         process.append(p)
@@ -325,7 +319,18 @@ def getLowestPriceInLastYearFromDate(stock_k_data,sd,ed):
     
 if __name__ == "__main__":
     
-    volDict=getVolatilityDFForIndustries()
+    endday='20181231'
+    
+    sql = "select content from u_data_desc where content_name='data_end_dealday'"
+    res=mysqlProcessor.querySql(sql)
+    endDealDay=res.at[0,'content']
+    
+    if endDealDay<endday:
+        endday=endDealDay
+    
+    startday=StockDataProcessor.getCalDayByOffset(endday,-365)
+    
+    volDict=getVolatilityDFForIndustries(startday,endday)
     
     
     #把数据持久化到数据库中去？
@@ -340,6 +345,6 @@ if __name__ == "__main__":
         
         mysqlProcessor=MysqlProcessor()
         mysqlSession=mysqlProcessor.getMysqlSession()
-        sql='replace into u_vol_for_industry values(\'%s\',%d,%f,%f)'%(ind,num,maxRetRt,maxIncRt)
+        sql='replace into u_vol_for_industry values(\'%s\',%d,%f,%f,\'%s\',\'%s\')'%(ind,num,maxRetRt,maxIncRt,startday,endday)
         mysqlProcessor.execSql(mysqlSession, sql, True)
     

@@ -49,8 +49,8 @@ class FloatingMultiStepStrategy(StrategyParent):
         stockInd=idf.at[0,'industry']
 
         
-        RetRate=self.volForIndDF.at[stockInd,'max_ret_rate']/4
-        IncRate=self.volForIndDF.at[stockInd,'max_inc_rate']/4
+        RetRate=self.volForIndDF.at[stockInd,'max_ret_rate']/3
+        IncRate=self.volForIndDF.at[stockInd,'max_inc_rate']/6
         
          
         openPrice=float(stock_k_data.at[todayDate,'open'])

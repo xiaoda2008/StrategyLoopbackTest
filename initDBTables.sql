@@ -47,8 +47,10 @@ insert into u_data_desc (content_name,content,comments) values ('adjdata_update_
 
 -- 建立用于记录分行业涨跌波动率的表
 create table u_vol_for_industry (
-industry varchar(100) unique,
+industry varchar(100),
 stock_num int default 0,
 max_ret_rate float not null default 0,
-max_inc_rate float not null default 0
+max_inc_rate float not null default 0,
+start_date varchar(8),
+end_date varchar(8)
 );
