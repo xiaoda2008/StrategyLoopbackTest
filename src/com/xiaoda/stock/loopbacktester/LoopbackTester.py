@@ -35,8 +35,6 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
-import time
-from functools import wraps
 from com.xiaoda.stock.loopbacktester.strategy.trade.HoldStrategy import HoldStrategy
 
 
@@ -631,6 +629,8 @@ if __name__ == '__main__':
                     continue
                 else:
                     lastDealDay=sdProcessor.getLastDealDay(enddate,True)
+                    
+                    
                     
                     processStock(sdProcessor,stockCode,tradeStrategy,strOutputDir,\
                                  firstDealDay,lastDealDay,twentyDaysBeforeFirstOpenDay,enddate,summaryOutFile)
