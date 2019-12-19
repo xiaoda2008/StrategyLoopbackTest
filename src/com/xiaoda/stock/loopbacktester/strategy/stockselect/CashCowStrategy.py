@@ -35,6 +35,7 @@ class CashCowStrategy(StrategyParent):
         
         cfRatioDict={}
 
+        #可以考虑多进程？
         for (stockCode,scdict) in sdict.items():
             
             listdate=scdict['list_date']
@@ -71,6 +72,9 @@ class CashCowStrategy(StrategyParent):
         
             if bs.empty or cf.empty:
                 ratio=0
+            elif cashequ<100000000 or totalAsset<1000000000:
+                #对于现金等价物小于1亿或者总资产小于10亿的直接排除
+                continue  
             else:
                 ratio=cashequ/totalAsset
     
@@ -82,7 +86,7 @@ class CashCowStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ratio in sortedCFRatioList[:30]:
+        for tscode, ratio in sortedCFRatioList[:10]:
             returnStockList.append(tscode)
         
         return returnStockList

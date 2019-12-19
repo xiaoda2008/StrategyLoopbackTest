@@ -38,16 +38,15 @@ class FloatingBuylowSellhighStrategy(StrategyParent):
     def getShareAndPriceToBuyOrSell(self,latestDealPrice, 
                      latestDealType,holdShares,
                      holdAvgPrice,continuousRiseOrFallCnt,
-                     stockCode,stock_k_data,todayDate):
-        
-        #stock_k_data = stock_k_data.set_index('trade_date')
-        sql='select industry from u_stock_list where ts_code=\'%s\''%(stockCode)
-        idf=self.mysqlProcessor.querySql(sql)
-        stockInd=idf.at[0,'industry']
+                     stockCode,stockInd,stock_k_data,todayDate):
 
+        maxrr=self.volForIndDF.at[stockInd,'max_ret_rate']
+        maxir=self.volForIndDF.at[stockInd,'max_inc_rate']
         
-        RetRate=self.volForIndDF.at[stockInd,'max_ret_rate']/3
-        IncRate=self.volForIndDF.at[stockInd,'max_inc_rate']/6
+        maxr=maxir-maxrr
+        
+        RetRate=-maxr*3/5/3
+        IncRate=maxr*2/5/3
         
         
         openPrice=float(stock_k_data.at[todayDate,'open'])

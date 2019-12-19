@@ -56,8 +56,6 @@ class ROEStrategy(StrategyParent):
             totalLiability=bs[bs['total_liab'].notnull()].reset_index(drop=True).at[0,'total_liab']
             netAssets=totalAssets-totalLiability
             
-    
-
 
             #需要到里面找到最后一个不是空的现金等价物数据
             nincome=ic[ic['n_income'].notnull()].reset_index(drop=True).at[0,'n_income']

@@ -319,7 +319,7 @@ def getLowestPriceInLastYearFromDate(stock_k_data,sd,ed):
     
 if __name__ == "__main__":
     
-    endday='20181231'
+    endday='20161231'
     
     sql = "select content from u_data_desc where content_name='data_end_dealday'"
     res=mysqlProcessor.querySql(sql)
