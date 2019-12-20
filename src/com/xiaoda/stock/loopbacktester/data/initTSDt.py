@@ -40,7 +40,6 @@ from datetime import datetime as dt
 
 mysqlProcessor=MysqlProcessor()
 
-import getopt
 import argparse
 
 DAYONE='19900101'
@@ -100,7 +99,7 @@ def lastDataUpdate(mysqlSession,stockCode,dataType):
 #使用TuShare pro版本
 
 mysqlProcessor=MysqlProcessor()
-sdProcessor=StockDataProcessor()
+
 #写入数据库的引擎
 mysqlEngine = mysqlProcessor.getMysqlEngine()
 mysqlSession=mysqlProcessor.getMysqlSession()
@@ -120,6 +119,21 @@ trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exist
 
 #完成部分信息更新
 partialUpdate(mysqlSession)
+
+
+#2、获取股票列表并存入数据库
+sdf=sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')
+
+#将股票列表存入数据库表中
+sdf.to_sql(name='u_stock_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+
+stockCodeList=sdf['ts_code']
+#完成部分信息更新
+partialUpdate(mysqlSession)
+
+
+
+sdProcessor=StockDataProcessor()
 
 # 创建命令行解析器句柄，并自定义描述信息
 parser = argparse.ArgumentParser(description="test the argparse package")
@@ -158,25 +172,18 @@ for k, v in params.items():
 startday=sd
 endday=ed
 
-#2、获取股票列表并存入数据库
-sdf=sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')
-
-#将股票列表存入数据库表中
-sdf.to_sql(name='u_stock_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
-stockCodeList=sdf['ts_code']
-#完成部分信息更新
-partialUpdate(mysqlSession)
-
 
 
 #3、获取财务报表数据，存入数据库
 #startday=getlastquarterfirstday().strftime('%Y%m%d')
 
 #找到之前处理的最后一个股票的代码
-sql="select content from u_data_desc where content_name='finance_report_stock_code_update_to'"
+sql="select content from u_data_desc where content_name='finance_report_stockcode_update_to'"
 res=mysqlProcessor.querySql(sql)
-finance_report_update_to=res.at[0,'content']
+try:
+    finance_report_update_to=res.at[0,'content']
+except:
+    finance_report_update_to=''
 
 for index,stockCode in stockCodeList.items():
 

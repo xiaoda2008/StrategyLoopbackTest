@@ -86,7 +86,7 @@ class CashCowStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ratio in sortedCFRatioList[:10]:
+        for tscode, ratio in sortedCFRatioList[:20]:
             returnStockList.append(tscode)
         
         return returnStockList
