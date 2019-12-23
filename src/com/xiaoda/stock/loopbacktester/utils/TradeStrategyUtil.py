@@ -9,6 +9,7 @@ from com.xiaoda.stock.loopbacktester.strategy.trade.MultiStepStrategy import Mul
 from com.xiaoda.stock.loopbacktester.strategy.trade.FloatingMultiStepStrategy import FloatingMultiStepStrategy
 from com.xiaoda.stock.loopbacktester.strategy.trade.HoldStrategy import HoldStrategy
 from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrategy
+from com.xiaoda.stock.loopbacktester.strategy.trade.BLSHPlusMAStrategy import BLSHPlusMAStrategy
 
 class TradeStrategyProcessor(object):
     '''
@@ -26,6 +27,7 @@ class TradeStrategyProcessor(object):
         self.fmsStrategy=FloatingMultiStepStrategy()
         self.hStrategy=HoldStrategy()
         self.SMAStrategy=SMAStrategy()
+        self.blshPlusMAStrategy=BLSHPlusMAStrategy()
     
     
     def getStrategy(self,strategyName):
@@ -41,4 +43,7 @@ class TradeStrategyProcessor(object):
             return self.hStrategy
         elif strategyName==self.SMAStrategy.getStrategyName():
             return self.SMAStrategy
-        
+        elif strategyName==self.blshPlusMAStrategy.getStrategyName():
+            return self.blshPlusMAStrategy
+        else:
+            return None
