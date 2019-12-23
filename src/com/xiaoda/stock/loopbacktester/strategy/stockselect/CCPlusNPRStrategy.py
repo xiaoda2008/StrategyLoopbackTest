@@ -44,7 +44,7 @@ class CCPlusNPRStrategy(StrategyParent):
             
             bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
             #bs为所有之前发布的所有资产负债表数据
-                
+            
             #获取现金流量表中，现金等价物总数
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
@@ -92,8 +92,8 @@ class CCPlusNPRStrategy(StrategyParent):
                 #对于现金等价物小于1亿或者总资产小于10亿的直接排除
                 continue 
             else:
-                cashequRatio=cashequ/totalAsset                
-                profitRatio=(netIncome1+netIncome2+netIncome3+netIncome4)/(totalAvenue1+totalAvenue2+totalAvenue3++totalAvenue4)
+                cashequRatio=cashequ/totalAsset              
+                profitRatio=(netIncome1+netIncome2+netIncome3+netIncome4)/(totalAvenue1+totalAvenue2+totalAvenue3+totalAvenue4)
     
             npRatioDict[stockCode]=profitRatio
             cfRatioDict[stockCode]=cashequRatio

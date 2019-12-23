@@ -1,16 +1,15 @@
 '''
-Created on 2019年12月20日
+Created on 2019年12月23日
 
 @author: xiaoda
 '''
-
 import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
 
-class NetProfitRateStrategy(StrategyParent):
+class GrossProfitRateStrategy(StrategyParent):
     '''
     classdocs
     '''
@@ -22,7 +21,7 @@ class NetProfitRateStrategy(StrategyParent):
         '''
         Constructor
         '''
-        self.name="NetProfitRateStrategy"
+        self.name="GrossProfitRateStrategy"
         self.finProcessor=FinanceDataProcessor()
     
     #决定对哪些股票进行投资
@@ -52,10 +51,10 @@ class NetProfitRateStrategy(StrategyParent):
 
             try:
                 #净利润
-                netIncome1=ic[ic['n_income'].notnull()].reset_index(drop=True).at[0,'n_income']
-                netIncome2=ic[ic['n_income'].notnull()].reset_index(drop=True).at[1,'n_income']           
-                netIncome3=ic[ic['n_income'].notnull()].reset_index(drop=True).at[2,'n_income']
-                netIncome4=ic[ic['n_income'].notnull()].reset_index(drop=True).at[3,'n_income']                
+                operateprofit1=ic[ic['operate_profit'].notnull()].reset_index(drop=True).at[0,'operate_profit']
+                operateprofit2=ic[ic['operate_profit'].notnull()].reset_index(drop=True).at[1,'operate_profit']           
+                operateprofit3=ic[ic['operate_profit'].notnull()].reset_index(drop=True).at[2,'operate_profit']
+                operateprofit4=ic[ic['operate_profit'].notnull()].reset_index(drop=True).at[3,'operate_profit']                
                 
                 #总收入
                 totalRavenue1=ic[ic['total_revenue'].notnull()].reset_index(drop=True).at[0,'total_revenue']
@@ -67,19 +66,19 @@ class NetProfitRateStrategy(StrategyParent):
                 continue
 
  
-            if netIncome2>netIncome1 or netIncome3>netIncome2 or netIncome4>netIncome3:
+            if operateprofit2>operateprofit1 or operateprofit3>operateprofit2 or operateprofit4>operateprofit3:
                 continue
             elif totalRavenue2>totalRavenue1 or totalRavenue3>totalRavenue2 or totalRavenue4>totalRavenue3:
                 continue
-            elif netIncome4<100000000:
+            elif operateprofit4<100000000:
                 #对于净利润小于1亿直接排除
                 continue
             else:
-                ratio=(netIncome1+netIncome2+netIncome3+netIncome4)/(totalRavenue1+totalRavenue2+totalRavenue3+totalRavenue4)
+                ratio=(operateprofit1+operateprofit2+operateprofit3+operateprofit4)/(totalRavenue1+totalRavenue2+totalRavenue3+totalRavenue4)
     
             npRatioDict[stockCode]=ratio
             
-            self.log.logger.info('NetProfitRateStrategy:'+stockCode+','+str(ratio))
+            self.log.logger.info('GrossProfitRateStrategy:'+stockCode+','+str(ratio))
 
         sortedNPRatioList=sorted(npRatioDict.items(),key=lambda x:x[1],reverse=True)
 

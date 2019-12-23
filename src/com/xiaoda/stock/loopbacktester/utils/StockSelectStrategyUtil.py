@@ -8,6 +8,7 @@ from com.xiaoda.stock.loopbacktester.strategy.stockselect.CCPlusNPRStrategy impo
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.NetProfitRateStrategy import NetProfitRateStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.RawStrategy import RawStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROEStrategy import ROEStrategy
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.GrossProfitRateStrategy import GrossProfitRateStrategy
 
 class StockSelectStrategyProcessor(object):
     '''
@@ -24,7 +25,7 @@ class StockSelectStrategyProcessor(object):
         self.ccStrategy=CashCowStrategy()
         self.nprStrategy=NetProfitRateStrategy()
         self.ccplusNPRStrategy=CCPlusNPRStrategy()
-
+        self.gprStrategy=GrossProfitRateStrategy()
     
     def getStrategy(self,strategyName):
         if strategyName==self.rawStrategy.getStrategyName():
@@ -37,6 +38,8 @@ class StockSelectStrategyProcessor(object):
             return self.nprStrategy
         elif strategyName==self.ccplusNPRStrategy.getStrategyName():
             return self.ccplusNPRStrategy
+        elif strategyName==self.gprStrategy.getStrategyName():
+            return self.gprStrategy
         else:
             return None
         
