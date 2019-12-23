@@ -5,8 +5,6 @@ Created on 2019年11月18日
 '''
 import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
-from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
-from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 

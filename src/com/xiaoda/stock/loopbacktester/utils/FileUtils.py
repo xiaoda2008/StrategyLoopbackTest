@@ -12,7 +12,6 @@ class FileProcessor(object):
     用于计算实际的策略IRR
     '''
 
-
     def __init__(self, params):
         '''
         Constructor

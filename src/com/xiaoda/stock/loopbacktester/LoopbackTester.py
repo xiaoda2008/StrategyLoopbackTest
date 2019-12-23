@@ -10,26 +10,14 @@ from pathlib import Path
 import os
 from com.xiaoda.stock.loopbacktester.utils.TradeChargeUtils import TradeChargeProcessor
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import OUTPUTDIR
-from datetime import datetime as dt
 import datetime
 #import shutil
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
-from timeit import default_timer as timer
+#from timeit import default_timer as timer
 
 import pandas
-
-from com.xiaoda.stock.loopbacktester.strategy.trade.BuylowSellhighStrategy import BuylowSellhighStrategy
-from com.xiaoda.stock.loopbacktester.strategy.trade.MultiStepStrategy import MultiStepStrategy
-from com.xiaoda.stock.loopbacktester.strategy.trade.FloatingBuylowSellhighStrategy import FloatingBuylowSellhighStrategy
-from com.xiaoda.stock.loopbacktester.strategy.trade.FloatingMultiStepStrategy import FloatingMultiStepStrategy
-from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrategy
-
-from com.xiaoda.stock.loopbacktester.strategy.stockselect.RawStrategy import RawStrategy
-from com.xiaoda.stock.loopbacktester.strategy.stockselect.CashCowStrategy import CashCowStrategy
-from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROEStrategy import ROEStrategy
-from com.xiaoda.stock.loopbacktester.strategy.stockselect.NetProfitRateStrategy import NetProfitRateStrategy
 
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
@@ -386,7 +374,7 @@ def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBefo
         lastDealDayDF=returnValDF
         
         while currday<=enddate:
-   
+        
             #tic32=timer()
             #log.logger.info("tic32:%s"%(tic32))
             
@@ -535,6 +523,19 @@ def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBefo
                 #sys.stdout=savedStdout  #恢复标准输出流
         
              '''
+            if totalOutput/totalInput>0.75:
+                print()
+                #上面是按照股票来循环的
+                #没有整体持仓的概念
+                #如果要考虑按日整体持仓，需要对整个大循环进行重构
+                
+                #是否可以按照股票来进行？
+                #当个股的整体赎回占比高后，可以对该股票进行状态重置？
+                #重置所有股票状态？
+                #重置赚钱的股票状态？
+                #
+            
+            
             
             #currday=StockDataProcessor.getNextDealDay(currday, False)
             currday=StockDataProcessor.getNextCalDay(currday)

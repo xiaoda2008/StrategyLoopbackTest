@@ -40,8 +40,6 @@ class SMAStrategy(StrategyParent):
         
         #lastMarketDay=MysqlUtils.getLastMarketDay(todayDate)
         
-
-        
         openPrice=float(stock_k_data.at[todayDate,'open'])
         closePrice=float(stock_k_data.at[todayDate,'close'])
         highPrice=float(stock_k_data.at[todayDate,'high'])
