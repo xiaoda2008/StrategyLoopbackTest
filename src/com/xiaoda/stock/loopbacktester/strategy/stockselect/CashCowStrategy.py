@@ -45,11 +45,11 @@ class CashCowStrategy(StrategyParent):
             #if stockCode=='300796.SZ':
             #   print()
 
-            bs=self.finProcessor.getLatestStockBalanceSheetReport(stockCode,startdateStr)
+            bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
             #bs为所有之前发布的所有资产负债表数据
                 
             #获取现金流量表中，现金等价物总数
-            cf=self.finProcessor.getLatestStockCashFlowReport(stockCode,startdateStr)
+            cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
             
             #有可能数据不全，直接跳过
@@ -59,20 +59,20 @@ class CashCowStrategy(StrategyParent):
             #需要到里面找到最后一个不是空的总资产
             #if stockCode>'000768.SZ':
             #    print()
-            totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
-            #totalAsset=bs.at[0,'total_assets']
-            
+            try:
+                #总资产
+                totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
 
-            #需要到里面找到最后一个不是空的现金等价物数据
-            cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
-            #cashequ=cf.at[0,'c_cash_equ_end_period']
+                #现金等价物
+                cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
+
+            except KeyError:
+                continue
             
             #cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
             #cf.at[0,'c_cash_equ_end_period']
         
-            if bs.empty or cf.empty:
-                ratio=0
-            elif cashequ<100000000 or totalAsset<1000000000:
+            if cashequ<100000000 or totalAsset<1000000000:
                 #对于现金等价物小于1亿或者总资产小于10亿的直接排除
                 continue  
             else:
@@ -81,12 +81,12 @@ class CashCowStrategy(StrategyParent):
             cfRatioDict[stockCode]=ratio
             
             self.log.logger.info('CashCowStrategy:'+stockCode+','+str(ratio))
-
+            
         sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
 
         returnStockList=[]
 
-        for tscode, ratio in sortedCFRatioList[:20]:
+        for tscode, ratio in sortedCFRatioList[:30]:
             returnStockList.append(tscode)
         
         return returnStockList

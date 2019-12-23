@@ -33,12 +33,16 @@ class FinanceDataProcessor(object):
         self.mysqlProcessor=MysqlProcessor()  
 
 
-    def getLatestStockBalanceSheetReport(self,stockCode,dateStr):
+    def getLatestBalanceSheetReport(self,stockCode,dateStr,isAnnual=False):
         '''
         获取指定日期前最近一次的资产负债表
         '''
         #查询语句
-        sql = 'select * from s_balancesheet_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+        if isAnnual==True:
+            sql = 'select * from s_balancesheet_%s where end_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
+        else:
+            sql = 'select * from s_balancesheet_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+
         return self.mysqlProcessor.querySql(sql)
         #查询结果
         #try:
@@ -50,12 +54,16 @@ class FinanceDataProcessor(object):
         #finally:
         #    return df
         
-    def getLatestStockCashFlowReport(self,stockCode,dateStr):
+    def getLatestCashFlowReport(self,stockCode,dateStr,isAnnual=False):
         '''
         获取指定日期前最近一次的现金流量表
         '''
         #查询语句
-        sql = 'select * from s_cashflow_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+        if isAnnual==True:
+            sql = 'select * from s_cashflow_%s where end_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
+        else:
+            sql = 'select * from s_cashflow_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+        
         return self.mysqlProcessor.querySql(sql)
         #查询结果
         #try:
@@ -67,22 +75,26 @@ class FinanceDataProcessor(object):
         #finally:
         #    return df
 
-    def getLatestIncomeReport(self,stockCode,dateStr):
+    def getLatestIncomeReport(self,stockCode,dateStr,isAnnual=False):
         '''
         获取指定日期前最近一次的利润表
         '''
         #查询语句
-        sql='select * from s_income_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+        if isAnnual==True:
+            sql='select * from s_income_%s where end_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
+        else:
+            sql='select * from s_income_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+       
         return self.mysqlProcessor.querySql(sql)
 
 
-    def getLatestAnnualOrSemiReportEBIT(self):
+    #def getLatestAnnualOrSemiReportEBIT(self):
         '''
         获取最近一次的半年度或年度报表的EBIT
         '''
         #查询语句
-        sql="select * from s_income_000001 where end_date like '%0630' or end_date like '%1231' order by end_date desc;"
-        aosr=self.mysqlProcessor.querySql(sql)
+    #    sql="select * from s_income_000001 where end_date like '%0630' or end_date like '%1231' order by end_date desc;"
+    #    aosr=self.mysqlProcessor.querySql(sql)
 #（营业总收入-营业税金及附加）-（营业成本+利息支出+手续费及佣金支出+销售费用+管理费用+研发费用+坏账损失+存货跌价损失）+其他收益
 
 #营业总收入

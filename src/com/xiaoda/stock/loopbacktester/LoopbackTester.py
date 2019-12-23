@@ -29,7 +29,7 @@ from com.xiaoda.stock.loopbacktester.strategy.trade.SMAStrategy import SMAStrate
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.RawStrategy import RawStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.CashCowStrategy import CashCowStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROEStrategy import ROEStrategy
-
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.NetProfitRateStrategy import NetProfitRateStrategy
 
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
@@ -42,6 +42,8 @@ import multiprocessing
 from multiprocessing import Manager
 from com.xiaoda.stock.loopbacktester.utils.TradeStrategyUtil import TradeStrategyProcessor
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
+from com.xiaoda.stock.loopbacktester.strategy.trade.BLSHPlusMAStrategy import BLSHPlusMAStrategy
+from com.xiaoda.stock.loopbacktester.utils.StockSelectStrategyUtil import StockSelectStrategyProcessor
 
 
 
@@ -236,7 +238,9 @@ def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBefo
     
         #计算出MA20的数据，问题在于，这个MA20是包含当天的，有些问题，应当不包含当天
         stock_k_data['pre_MA20'] = stock_k_data['pre_close'].rolling(20).mean()
-        
+        stock_k_data['pre_MA10'] = stock_k_data['pre_close'].rolling(10).mean()
+        stock_k_data['pre_MA5'] = stock_k_data['pre_close'].rolling(5).mean()
+                        
         #获得前一天的最高值和最低值
         stock_k_data['pre_high'] = stock_k_data['high'].shift(1)
         stock_k_data['pre_low'] = stock_k_data['low'].shift(1)
@@ -550,6 +554,8 @@ def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBefo
 
 
 import argparse
+import warnings
+warnings.filterwarnings("ignore")
 
 if __name__ == '__main__':
     
@@ -593,9 +599,11 @@ if __name__ == '__main__':
         enddate=sdf.at[0,'content']
     
     
-    stockSelectStrategyList=[]#stockSelectStrategyString.split(',')
-    tradeStrategyList=[]#tradeStrategyString.split(',')
+    stockSelectStrategyList=stockSelectStrategyString.split(',')
+    tradeStrategyList=tradeStrategyString.split(',')
     
+    
+    '''
     #生成选股策略
     if 'RawStrategy' in stockSelectStrategyString:
         stockSelectStrategyList.append(RawStrategy())
@@ -603,7 +611,11 @@ if __name__ == '__main__':
         stockSelectStrategyList.append(CashCowStrategy())
     if 'ROEStrategy' in stockSelectStrategyString:
         stockSelectStrategyList.append(ROEStrategy())
-            
+    if 'NetProfitRateStrategy' in stockSelectStrategyString:
+        stockSelectStrategyList.append(NetProfitRateStrategy())
+    '''
+    
+    '''
     #生成交易策略
     if 'BuylowSellhighStrategy' in tradeStrategyString:
         tradeStrategyList.append(BuylowSellhighStrategy())
@@ -616,7 +628,10 @@ if __name__ == '__main__':
     if 'SMAStrategy' in tradeStrategyString:
         tradeStrategyList.append(SMAStrategy())
     if 'HoldStrategy' in tradeStrategyString:
-        tradeStrategyList.append(HoldStrategy())    
+        tradeStrategyList.append(HoldStrategy())
+    if 'BLSHPlusMAStrategy' in tradeStrategyString:
+        tradeStrategyList.append(BLSHPlusMAStrategy())
+    '''
     
     sdProcessor=StockDataProcessor()
     
@@ -637,7 +652,13 @@ if __name__ == '__main__':
         os.mkdir(OODir)
     
     
-    for stockSelectStrategy in stockSelectStrategyList:
+    for stockSelectStrategyStr in stockSelectStrategyList:
+        
+        stockSelectStrategy=StockSelectStrategyProcessor().getStrategy(stockSelectStrategyStr)
+
+        if stockSelectStrategy==None:
+            log.logger.error('StockSelectStrategy：%s输入错误'%(stockSelectStrategyStr))
+            continue
         
         log.logger.info('开始处理选股策略:%s'%(stockSelectStrategy.getStrategyName()))
         #从参数获取股票选取策略
@@ -654,7 +675,15 @@ if __name__ == '__main__':
   
         
         #对所有策略进行循环：
-        for tradeStrategy in tradeStrategyList:
+        for tradeStrategyStr in tradeStrategyList:
+            
+            tradeStrategy=TradeStrategyProcessor().getStrategy(tradeStrategyStr)
+
+            if tradeStrategy==None:
+                log.logger.error('TradeStrategy：%s输入错误'%(tradeStrategyStr))
+                continue
+            
+            
             log.logger.info('开始处理交易策略:%s'%(tradeStrategy.getStrategyName()))
             #savedStdout = sys.stdout  #保存标准输出流
              
