@@ -31,6 +31,10 @@ class BuylowSellhighStrategy(StrategyParent):
         self.volForIndDF.set_index('industry',drop=True,inplace=True)
         
     
+    
+    #def processTrade
+    
+    
     #决定买入或卖出的数量
     #正数代表买入，负数代表卖出
     #continuousRiseOrFallCnt，正数代表连续上涨，负数代表连续下跌

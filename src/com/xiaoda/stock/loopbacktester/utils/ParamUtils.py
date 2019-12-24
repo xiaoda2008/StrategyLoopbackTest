@@ -26,8 +26,9 @@ OUTPUTDIR = 'D:/outputDir'
 #LOGGINGDIR = 'D:/outputDir'
 
 #mysql连接地址
-mysqlURL = 'mysql+pymysql://ts:ts@localhost/tsdb?charset=utf8mb4'
+#mysqlURL = 'mysql+pymysql://ts:ts@localhost/tsdb?charset=utf8mb4'
 #mysqlURL = 'mysql+mysqlconnector://ts:ts@localhost/tsdb?charset=utf8mb4'
+mysqlURL = 'mysql+mysqldb://ts:ts@localhost/tsdb?charset=utf8mb4'
 
 #固定上涨与下跌幅度的参数
 IncRate = 0.1

@@ -23,14 +23,11 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 
-from com.xiaoda.stock.loopbacktester.strategy.trade.HoldStrategy import HoldStrategy
-
 import multiprocessing
 
 from multiprocessing import Manager
 from com.xiaoda.stock.loopbacktester.utils.TradeStrategyUtil import TradeStrategyProcessor
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
-from com.xiaoda.stock.loopbacktester.strategy.trade.BLSHPlusMAStrategy import BLSHPlusMAStrategy
 from com.xiaoda.stock.loopbacktester.utils.StockSelectStrategyUtil import StockSelectStrategyProcessor
 
 
@@ -523,8 +520,9 @@ def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBefo
                 #sys.stdout=savedStdout  #恢复标准输出流
         
              '''
-            if totalOutput/totalInput>0.75:
-                print()
+            #if totalOutput/totalInput>0.75:
+            #    pass
+                #print()
                 #上面是按照股票来循环的
                 #没有整体持仓的概念
                 #如果要考虑按日整体持仓，需要对整个大循环进行重构
@@ -779,6 +777,8 @@ if __name__ == '__main__':
               
                 idx=0
                 while True:
+                    #if stockfileDF.at[idx,'当天资金净流量']==None:
+                    #    print()
                     if not (stockfileDF.at[idx,'日期'] in cashFlowDict):
                         cashFlowDict[stockfileDF.at[idx,'日期']]=\
                         float(stockfileDF.at[idx,'当天资金净流量']),\

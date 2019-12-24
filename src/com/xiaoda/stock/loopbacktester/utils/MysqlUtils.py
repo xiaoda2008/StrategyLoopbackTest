@@ -21,10 +21,18 @@ class MysqlProcessor():
         '''
         Constructor
         '''
+        #print("init of MysqlProcessor()")
         self.engine=create_engine(mysqlURL)
+        self.engine.connect()
         DBSession=sessionmaker(bind=self.engine)
         self.session=DBSession()
     
+    def __del__(self):
+        #print("del of MysqlProcessor()")
+        self.session.close()
+        self.engine.dispose()
+        
+            
     def getMysqlEngine(self):
         return self.engine
    
