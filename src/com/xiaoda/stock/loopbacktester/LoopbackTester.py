@@ -15,8 +15,8 @@ import datetime
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
 from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
-#from timeit import default_timer as timer
-
+from timeit import default_timer as timer
+import time
 import pandas
 
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
@@ -49,6 +49,10 @@ def fn_timer(fn):
 
 log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 
+tradeStrategyProcessor=TradeStrategyProcessor()
+
+
+''
 def printStockOutputHead(outputFile):
     #origStdout=sys.stdout  #保存标准输出流
     #sys.stdout=open(outputFile,'wt')
@@ -116,7 +120,7 @@ def dupLastLineinFile(currday,outputFile,lastDealDayDF):
     #sys.stdout=origStdout  #恢复标准输出流
     #tocdup=timer()
     #log.logger.info("dup部分代码耗时:%s"%(tocdup-ticdup))
-    
+   
 '''
 #@fn_timer
 def printSummaryOutputHead(outputFile):
@@ -184,19 +188,23 @@ def get8slListFromStockList(stockList):
 
 #具体处理股票的处理
 #@fn_timer
-def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBeforeFirstDay,enddate,summaryOutFile):
+def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,twentyDaysBeforeFirstDay,enddate,summaryOutFile):
     
-    sdProcessor=StockDataProcessor()
-    mysqlProcessor=MysqlProcessor()
-         
-    strategy=TradeStrategyProcessor().getStrategy(strategyName)
+    #t1=timer()
+    #print("t1:%s"%(t1))
+    tradeStrategy=tradeStrategyProcessor.getStrategy(tradeStrategyName)
     '''        
     lastDealDay=sdProcessor.getLastDealDay(enddate,True)
     '''
     
+    #t2=timer()
+    #print("t2:%s"%(t2))
+    #print("t2-t1:%s"%(t2-t1))
     #对股票列表中的每一个列表进行计算
     for stockCode in stockList:
         
+        #t3=timer()
+        #print("t3:%s"%(t3))
         outputFile = strOutputDir+'/'+ stockCode + '.csv'
         myPath = Path(outputFile)
     
@@ -204,354 +212,23 @@ def processStock(stockList,strategyName,strOutputDir,firstDealDay,twentyDaysBefo
         if myPath.exists():
             log.logger.info('%s已处理过'%(stockCode))
             continue
-
-        stock_k_data=sdProcessor.getStockKData(stockCode,twentyDaysBeforeFirstDay,enddate,'qfq')
-    
-        sql='select industry from u_stock_list where ts_code=\'%s\''%(stockCode)
-        idf=mysqlProcessor.querySql(sql)
-        stockInd=idf.at[0,'industry']
+        #t4=timer()
+        #print("t4:%s"%(t4))
+        stockTradeDF=tradeStrategy.processTradeDuringPeriod(stockCode,firstDealDay,enddate)
         
-        
-        #sprint(stock_k_data.columns)
-    
-        if type(stock_k_data)==NoneType or stock_k_data.empty:
-            #如果没有任何返回值，说明该日期后没有上市交易过该股票
-            log.logger.info('%s在%s（前推30个交易日）到%s区间内无交易，剔除'%(stockCode,twentyDaysBeforeFirstDay,enddate))
+        #t5=timer()
+        #print("t5:%s"%(t5))
+        if stockTradeDF.empty:
             continue
-    
-        stock_k_data.reset_index(drop=True,inplace=True)
-    
-        #计算出MA20的数据，问题在于，这个MA20是包含当天的，有些问题，应当不包含当天
-        stock_k_data['pre_MA20'] = stock_k_data['pre_close'].rolling(20).mean()
-        stock_k_data['pre_MA10'] = stock_k_data['pre_close'].rolling(10).mean()
-        stock_k_data['pre_MA5'] = stock_k_data['pre_close'].rolling(5).mean()
-                        
-        #获得前一天的最高值和最低值
-        stock_k_data['pre_high'] = stock_k_data['high'].shift(1)
-        stock_k_data['pre_low'] = stock_k_data['low'].shift(1)
-        
-        offset = stock_k_data.index[0]
-        
-        #剔除掉向前找的20个交易日数据
-        #不要这样剔除，而是一直剔除到firstOpenDay
-    
-        a=0
-        flg=False
-        while True:
-            
-            #删空了，在向前推进的交易日有交易，但在查询区间内股票就没有交易
-            if stock_k_data.empty:
-                break
-            
-            #不允许正好这一天股票停牌
-            if stock_k_data.at[a+offset,'trade_date']==firstDealDay:
-                break
-            elif stock_k_data.at[a+offset,'trade_date']>firstDealDay:
-                #直接大于，说明第一天该股票就停牌，不进行处理
-                flg=True
-                break
-            else:
-                stock_k_data = stock_k_data.drop([offset+a])
-                a=a+1
-                
-        if flg==True:
-            ##直接大于，说明第一天该股票就停牌，不进行处理
-            continue
-        
-    #    else:,offset+2,offset+3,offset+4,offset+5,offset+6,offset+7,offset+8,offset+9,offset+10,offset+11,offset+12,offset+13,offset+14,offset+15,offset+16,offset+17,offset+18,offset+19
-            #如果向前找了20个交易日，仍然交易量不足20日，则判定长期停牌，直接剔除，到下面一个日期判断进行剔除也可以
-    #        print(stockCode,'长期停牌，剔除')
-    #        return
-        
-        #发现在2015年以前的股票，get_hist_data没有数据
-        #所以不能再用这个数据，而是要自己去进行历史数据的处理，处理历史数据得到MA20
-        
-        #不能通过hist_data去获取数据了
-        #stock_hist_data = tushare.get_hist_data(code=stockCode, start=firstOpenDay, end=ENDDATE)
-        #存在一种特殊情况，就是类似601360,360借壳上市的情况
-        #变更了股票代码，获取的hist_data周期与k_data不同的情况
-        #需要进行判断并剔除
-        
-        
-        if stock_k_data.empty:
-            log.logger.info('%s为新上市股票，或存在停牌情况，进行剔除'%(stockCode))
-            continue    
-        
-        #第一行的偏移量
-        #因为如果不是从当年第一个交易日开始，标号会有一个偏移量，在后续处理时，需要进行一个处理
-        offset = stock_k_data.index[0]
-
-        #{stock_his.at[0,'date']: 4098}
-        
-        holdShares = 0#持仓手数，1手为100股
-        holdAvgPrice = 0#持仓的平均价格
-        
-        latestDealType = 0#最近一笔成交类型，-1表示卖出，1表示买入
-        latestDealPrice = 0#最近一笔成交的价格
-        
-        totalInput = 0#累计总投入
-        totalOutput = 0#累计总赎回
-        
-        biggestCashOccupy = 0#最大占用总金额，为totalInput-totalOutput的最大值
-        
-        #最大连续下跌/上涨计数：每当连续上涨/下跌超过上涨/下跌线，计数器加1
-        #如果出现多次上涨后的下跌，则上涨计数归0
-        #如果出现多次下跌后的上涨，则下跌计数归0
-        #continuousFallCnt = 0
-        #continuousRiseCnt = 0
-        
-        #最大连续上涨/下跌买入/卖出计数：连续上涨买入为正数，连续下跌卖出为负数，连续上涨超线买入，计数器加1，连续下跌超线卖出，计数器减1
-        continuousRiseOrFallCnt = 0
-        
-        
-        origStdout=sys.stdout  #保存标准输出流
-        outputFile=strOutputDir +'/'+ stockCode + '.csv'
-        #print(outputFile)
-        sys.stdout = open(outputFile,'wt')
-        
-        printStockOutputHead(outputFile)
-        
-        
-        
-        stock_k_data.set_index('trade_date',drop=True, inplace=True)
-        
-        
-        #按照交易日进行循环
-        #而不是只根据股票交易数据进行循环
-        #从firstOpenDay到enddate的交易日循环
-    
-        currday=firstDealDay
-    
-        closePriceToday=stock_k_data.at[currday,'close']
-    
-        #第一个交易日的处理，需要各个策略根据自身情况进行确定
-        sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
-                 latestDealType,holdShares,holdAvgPrice,
-                 continuousRiseOrFallCnt,stockCode,stockInd,stock_k_data,currday)
-    
-        if sharesToBuyOrSell>0:
-            #如果判断为应当买入
-            #更新持仓平均成本
-            holdAvgPrice = (holdShares*holdAvgPrice+sharesToBuyOrSell*priceToBuyOrSell)/(holdShares+sharesToBuyOrSell)
-            holdShares += sharesToBuyOrSell
-            
-            #获取买入交易费
-            dealCharge=TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
-            
-            latestDealType=1
-            latestDealPrice=priceToBuyOrSell
-            totalInput+=sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
-            netCashFlowToday=-(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
-            
-            returnValDF=printTradeInfo(outputFile,currday,1,closePriceToday,holdShares,
-                                        holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
-                                        latestDealType,latestDealPrice,dealCharge)
-            
-            biggestCashOccupy=totalInput
         else:
-            #第一天不可能判断为卖出没有意义，没有份额可以卖出
-            #既不需要买入，又不需要卖出
-            #没有任何交易，打印对账信息:
-    
-            netCashFlowToday=0
-            returnValDF=printTradeInfo(outputFile,currday,0,closePriceToday,holdShares,
-                                        holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
-                                        latestDealType,latestDealPrice,0)
-        
-        #获取下一自然日
-        currday=sdProcessor.getNextCalDay(currday)
+            stockTradeDF.to_csv(outputFile,index=False,encoding='ANSI')
+        #t6=timer()
+        #print("t6:%s"%(t6))
+        #print("t6-t3:%s"%(t6-t3))
+        #print("t6-t4:%s"%(t6-t4))
+        #print("t6-t5:%s"%(t6-t5))
         
         
-        
-        #tic3=timer()
-        #log.logger.info("tic3:%s"%(tic3))
-        
-        #用于传递最近一个交易日的数据
-        #用于在非交易日继续重复输出
-        lastDealDayDF=returnValDF
-        
-        while currday<=enddate:
-        
-            #tic32=timer()
-            #log.logger.info("tic32:%s"%(tic32))
-            
-            if (not sdProcessor.isDealDay(currday)):
-                #当前日期非交易日，需要输出一个空行到文件中
-                #该空行内容与上一个交易日的内容相同
-                dupLastLineinFile(currday,outputFile,lastDealDayDF)
-                currday=StockDataProcessor.getNextCalDay(currday)
-                continue
-    
-            
-            try:
-                closePriceToday=stock_k_data.at[currday,'close']
-            except KeyError:
-                #该交易日股票停牌
-                #需要输出一个空行到文件中
-                #该空行内容与上一个交易日的内容相同
-    
-                dupLastLineinFile(currday,outputFile,lastDealDayDF)
-
-                '''                            
-                #如果直接停牌到endday
-                #这样处理会导致无法输出数据到Summary文件中
-                if currday==lastDealDay:
-                    #最后一个交易日的盈利情况
-                    latestProfit=lastDealDayDF.iat[0,10]
-                    
-                    #最后一个交易日这里，并行计算是否会出现问题?
-                    
-                    
-                    printSummaryTradeInfo(summaryOutFile,stockCode,biggestCashOccupy,totalInput,totalOutput,
-                                    latestProfit,holdShares,closePriceToday)
-                
-                '''
-                currday=StockDataProcessor.getNextCalDay(currday)
-                continue
-            
-        
-    
-            #print("tic32-toc31:%s"%(tic32-toc31))
-            sharesToBuyOrSell,priceToBuyOrSell=strategy.getShareAndPriceToBuyOrSell(latestDealPrice, 
-                     latestDealType,holdShares,holdAvgPrice,
-                     continuousRiseOrFallCnt,stockCode,stockInd,stock_k_data,currday)
-            
-            if sharesToBuyOrSell>0:
-                #如果判断为下跌超线买入
-                
-                if continuousRiseOrFallCnt>=0:
-                    #此前一次是上涨超线卖出或未超线
-                    continuousRiseOrFallCnt=-1
-                else:
-                    #此前就是下跌超线买入
-                    continuousRiseOrFallCnt=continuousRiseOrFallCnt-1
-    
-                    
-                #更新持仓平均成本
-                holdAvgPrice=(holdShares*holdAvgPrice+sharesToBuyOrSell*priceToBuyOrSell)/(holdShares+sharesToBuyOrSell)
-                holdShares+=sharesToBuyOrSell
-                
-                #获取买入交易费
-                dealCharge=TradeChargeProcessor.getBuyCharge(sharesToBuyOrSell*100*priceToBuyOrSell)
-                
-                latestDealType=1
-                latestDealPrice=priceToBuyOrSell
-                totalInput+=sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge
-                netCashFlowToday=-(sharesToBuyOrSell*priceToBuyOrSell*100+dealCharge)
-                
-                returnValDF=printTradeInfo(outputFile,currday,1,closePriceToday,holdShares,
-                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
-                                            latestDealType,latestDealPrice,dealCharge)
-                
-                if totalInput-totalOutput>biggestCashOccupy:
-                    biggestCashOccupy = totalInput - totalOutput
-                
-            elif sharesToBuyOrSell<0 and holdShares>=abs(sharesToBuyOrSell):
-                #如果判断为应当卖出，而且确实有持仓可以卖出
-                #如果已经没有持仓能够卖出，那就没有任何操作
-                
-                if continuousRiseOrFallCnt<=0:
-                    #此前一次是下跌超线买入或未超线
-                    continuousRiseOrFallCnt=1
-                else:
-                    #此前就是上涨超线买入
-                    continuousRiseOrFallCnt=continuousRiseOrFallCnt+1
-    
-                if holdShares>abs(sharesToBuyOrSell):
-                    holdAvgPrice=(holdShares*holdAvgPrice-abs(sharesToBuyOrSell)*priceToBuyOrSell)/(holdShares-abs(sharesToBuyOrSell))
-                else:
-                    holdAvgPrice=0
-                holdShares -= abs(sharesToBuyOrSell)
-    
-            
-                #获取卖出交易费
-                dealCharge = TradeChargeProcessor.getSellCharge(abs(sharesToBuyOrSell)*100*priceToBuyOrSell)
-                    
-                latestDealType = -1
-                latestDealPrice = priceToBuyOrSell
-                totalOutput += abs(sharesToBuyOrSell)*priceToBuyOrSell*100-dealCharge
-                netCashFlowToday=abs(sharesToBuyOrSell)*priceToBuyOrSell*100-dealCharge
-            
-                if totalInput - totalOutput > biggestCashOccupy:
-                    biggestCashOccupy = totalInput - totalOutput
-                        
-                returnValDF=printTradeInfo(outputFile,currday,-1,closePriceToday,holdShares,
-                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
-                                            latestDealType,latestDealPrice,dealCharge)
-            
-            else:
-                #既不需要买入，又不需要卖出
-                #没有任何交易，打印对账信息:
-                netCashFlowToday=0
-                returnValDF=printTradeInfo(outputFile,currday,0,closePriceToday,holdShares,
-                                            holdAvgPrice,netCashFlowToday,totalInput,totalOutput,
-                                            latestDealType,latestDealPrice,0)
-            
-            
-            lastDealDayDF=returnValDF
-        
-            #toc32=timer()
-            #log.logger.info("toc32:%s"%(toc32))
-            #log.logger.info("第3.2部分代码耗时:%s"%(toc32-tic32)) # 输出的时间，秒为单位
-            
-    
-            #try:
-            #    print("tic33-toc32:%s"%(tic33-toc32))
-            #except UnboundLocalError:
-            #    pass
-            
-            #tic33=timer()
-            #log.logger.info("tic33:%s"%(tic33))
-            '''
-            if currday==lastDealDay:
-                #跳出之前进行输出
-    
-                #outputFile = strOutputDir + '/Summary.csv'
-                #sys.stdout = open(outputFile,'at+')
-        
-                #最后一个交易日的盈利情况
-                latestProfit=returnValDF.iat[0,10]
-                
-                printSummaryTradeInfo(summaryOutFile,stockCode,biggestCashOccupy,totalInput,totalOutput,
-                                      latestProfit,holdShares,closePriceToday)
-                
-                #log.logger.info("%s:持仓金额:%f"%(stockCode,round(holdShares*100*closePriceToday,2)))
-            
-                #sys.stdout=savedStdout  #恢复标准输出流
-        
-             '''
-            #if totalOutput/totalInput>0.75:
-            #    pass
-                #print()
-                #上面是按照股票来循环的
-                #没有整体持仓的概念
-                #如果要考虑按日整体持仓，需要对整个大循环进行重构
-                
-                #是否可以按照股票来进行？
-                #当个股的整体赎回占比高后，可以对该股票进行状态重置？
-                #重置所有股票状态？
-                #重置赚钱的股票状态？
-                #
-            
-            
-            
-            #currday=StockDataProcessor.getNextDealDay(currday, False)
-            currday=StockDataProcessor.getNextCalDay(currday)
-            
-            #toc33=timer()
-            #log.logger.info("toc33:%s"%(toc33))
-            #log.logger.info("第3.3部分代码耗时:%s"%(toc33-tic33)) # 输出的时间，秒为单位
-            
-            #log.logger.info("toc33-tic32:%s"%(toc33-tic32))
-        
-        
-        sys.stdout=origStdout  #恢复标准输出流
-        #log.logger.info("%s:处理完股票:%s"%(os.getpid(),stockCode))
-        #toc3=timer()
-        #log.logger.info("toc3:%s"%(toc3))
-        #log.logger.info("第3部分代码耗时:%s"%(toc3-tic3)) # 输出的时间，秒为单位  
-
-
 import argparse
 import warnings
 warnings.filterwarnings("ignore")
@@ -600,37 +277,7 @@ if __name__ == '__main__':
     
     stockSelectStrategyList=stockSelectStrategyString.split(',')
     tradeStrategyList=tradeStrategyString.split(',')
-    
-    
-    '''
-    #生成选股策略
-    if 'RawStrategy' in stockSelectStrategyString:
-        stockSelectStrategyList.append(RawStrategy())
-    if 'CashCowStrategy' in stockSelectStrategyString:
-        stockSelectStrategyList.append(CashCowStrategy())
-    if 'ROEStrategy' in stockSelectStrategyString:
-        stockSelectStrategyList.append(ROEStrategy())
-    if 'NetProfitRateStrategy' in stockSelectStrategyString:
-        stockSelectStrategyList.append(NetProfitRateStrategy())
-    '''
-    
-    '''
-    #生成交易策略
-    if 'BuylowSellhighStrategy' in tradeStrategyString:
-        tradeStrategyList.append(BuylowSellhighStrategy())
-    if 'MultiStepStrategy' in tradeStrategyString:
-        tradeStrategyList.append(MultiStepStrategy())
-    if 'FloatingBuylowSellhighStrategy' in tradeStrategyString:
-        tradeStrategyList.append(FloatingBuylowSellhighStrategy())
-    if 'FloatingMultiStepStrategy' in tradeStrategyString:
-        tradeStrategyList.append(FloatingMultiStepStrategy())
-    if 'SMAStrategy' in tradeStrategyString:
-        tradeStrategyList.append(SMAStrategy())
-    if 'HoldStrategy' in tradeStrategyString:
-        tradeStrategyList.append(HoldStrategy())
-    if 'BLSHPlusMAStrategy' in tradeStrategyString:
-        tradeStrategyList.append(BLSHPlusMAStrategy())
-    '''
+
     
     sdProcessor=StockDataProcessor()
     
@@ -688,7 +335,7 @@ if __name__ == '__main__':
              
             strOutputDir=strOutterOutputDir+'/'+tradeStrategy.getStrategyName()
             
-            myPath = Path(strOutputDir)
+            myPath=Path(strOutputDir)
         
             #如果该位置存在，则直接使用该位置，不用删除掉重新算
             if not(myPath.exists()):

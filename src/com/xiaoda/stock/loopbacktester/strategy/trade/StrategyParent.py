@@ -4,6 +4,7 @@ Created on 2019年10月28日
 @author: picc
 '''
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import profitStop
+from pandas.core.frame import DataFrame
 
 class StrategyParent:
     
@@ -15,6 +16,9 @@ class StrategyParent:
     
     
     #可以考虑将买入/卖出进行合并，返回值直接使用正负号代表买入/卖出
+    
+    def processTradeDuringPeriod(self,stockCode, startday, endday):
+        return DataFrame()
     
     
     #决定买入或卖出的数量以及买入卖出的价格

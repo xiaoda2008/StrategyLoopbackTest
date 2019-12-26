@@ -16,7 +16,7 @@ from multiprocessing import Manager
 log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
  
  
- 
+
 def get8DictListFromStockDict(allStockDict):
     stDictList=[]
     dfLen=len(allStockDict)

@@ -30,7 +30,7 @@ class MysqlProcessor():
     def __del__(self):
         #print("del of MysqlProcessor()")
         self.session.close()
-        self.engine.dispose()
+        #self.engine.dispose()
         
             
     def getMysqlEngine(self):

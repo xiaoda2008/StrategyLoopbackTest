@@ -201,6 +201,14 @@ class StockDataProcessor(object):
             print('market allocation error:' + stringx)
         return output
 
+
+
+    def preProcessKDataDF(self,stock_k_data):
+        '''
+        预处理Kdata，完成MA20等的计算
+        '''
+        pass
+    
     def getStockKData(self,stockCode,startDate,endDate,adj):
         '''
         stockCode：股票代码
@@ -234,7 +242,7 @@ class StockDataProcessor(object):
             
             adjdf[['adj_factor']]=adjdf[['adj_factor']].astype(float)
             
-            joineddf=pandas.merge(kdatadf, adjdf, on=['ts_code','trade_date'], how='left')
+            joineddf=pandas.merge(kdatadf,adjdf,on=['ts_code','trade_date'],how='left')
             #显示所有列
             #pandas.set_option('display.max_columns', None)
             #显示所有行
