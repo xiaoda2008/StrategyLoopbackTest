@@ -48,10 +48,28 @@ import multiprocessing
 
 from multiprocessing import Process
 
+   
+#显示所有列
+pd.set_option('display.max_columns', None)
+#显示所有行
+pd.set_option('display.max_rows',None)
+np.set_printoptions(threshold = np.inf)
+#若想不以科学计数显示:
+
+tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+sdDataAPI=tushare.pro_api()
+   
+pro=tushare.pro_api()
+
+df=pro.daily_basic(ts_code='000001.SZ',start_date='19991201',end_date='20191203')
+    
+
+print(df)
+print()
 
 
-
-
+    
+    
 
 def testFun(i):
     print("test Func%s"%(i))

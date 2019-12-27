@@ -1,6 +1,6 @@
 -- 对股票清单表，进行扩充，标记沪深300、上证50、深证100、中证500等指数标记
 
-use tsdata;
+use tsdb;
 
 -- 添加表列：沪深300
 alter table u_stock_list add column HS300 boolean not null default 0;
