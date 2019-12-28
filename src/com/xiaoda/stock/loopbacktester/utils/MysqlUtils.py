@@ -4,10 +4,9 @@ Created on 2019年11月3日
 @author: xiaoda
 '''
 import pandas
-import copy
 import sqlalchemy
 
-from sqlalchemy import Column, String,Integer,create_engine
+from sqlalchemy import create_engine
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
 from pandas.core.frame import DataFrame
 from sqlalchemy.orm import sessionmaker

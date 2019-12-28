@@ -3,12 +3,10 @@ Created on 2019年11月18日
 
 @author: xiaoda
 '''
-import tushare
 import pandas
 import sqlalchemy
 import datetime
 from datetime import datetime as dt
-from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 
 class StockDataProcessor(object):
@@ -218,10 +216,10 @@ class StockDataProcessor(object):
         '''
         #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
-        sql_kdata = 'select * from s_kdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
+        sql_kdata = 'select * from s_k_data where ts_code=%s and trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
         #sqltxt_kdata = sqlalchemy.text(sql_kdata)
         
-        sql_adj = 'select * from s_adjdata_%s where trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
+        sql_adj = 'select * from s_adj_data where ts_code=%s and trade_date>=%s and trade_date<=%s order by trade_date'%(stockCode[:6],startDate,endDate)
         #sqltxt_adj = sqlalchemy.text(sql_adj)
         
         

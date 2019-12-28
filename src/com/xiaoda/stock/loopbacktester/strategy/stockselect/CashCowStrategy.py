@@ -7,7 +7,7 @@ import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
-
+import time
 
 class CashCowStrategy(StrategyParent):
     '''
@@ -43,14 +43,19 @@ class CashCowStrategy(StrategyParent):
                 continue
             #if stockCode=='300796.SZ':
             #   print()
-
+            #t1=time.time()
             bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
+            #t2=time.time()
+            #print("t2-t1:%s"%(t2-t1))
             #bs为所有之前发布的所有资产负债表数据
-                
+            
+            #t3=time.time()
             #获取现金流量表中，现金等价物总数
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
-            
+            #t4=time.time()
+            #print("t4-t3:%s"%(t4-t3))
+                        
             #有可能数据不全，直接跳过
             if bs.empty or cf.empty:
                 continue
