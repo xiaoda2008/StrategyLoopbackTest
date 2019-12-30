@@ -289,14 +289,20 @@ while ix<length:
             ic.to_sql(name='s_finreport_income_'+stockCode[:6],
                       con=mysqlEngine,chunksize=100,if_exists='append',index=None)
             
-            
+                        变更表结构，增加索引、主键等
                          
         #插入kdata表
         
+                    变更表结构，增加索引、主键等
+                    
         #插入dailybasic表
         
+                    变更表结构，增加索引、主键等
+                    
         #插入adjdata表
-
+            
+                变更表结构，增加索引、主键等
+            
 
 
 #3、获取财务报表数据，存入数据库

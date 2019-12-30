@@ -195,6 +195,24 @@ def processStockDataGet(stockList,startday,endday):
                 payables,hfs_assets,hfs_sales,update_flag') 
             bs.to_sql(name='s_finreport_balancesheet_'+stockCode[:6],
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
+            
+            sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)           
+
+            sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+
+            sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)              
+
+            sql='alter table s_finreport_balancesheet_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+            
+            sql='alter table s_finreport_balancesheet_%s add CONSTRAINT `FK_BS_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)              
+
+
+            
             #获取现金流量表
             cf = sdDataAPI.cashflow(ts_code=stockCode,start_date=startday,end_date=endday,fields=
                 'ts_code,ann_date,f_ann_date,end_date,comp_type,report_type,net_profit,finan_exp,\
@@ -220,6 +238,23 @@ def processStockDataGet(stockList,startday,endday):
                 beg_bal_cash,end_bal_cash_equ,beg_bal_cash_equ,im_n_incr_cash_equ,update_flag')
             cf.to_sql(name='s_finreport_cashflow_'+stockCode[:6],
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
+            
+            sql='alter table s_finreport_cashflow_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)           
+
+            sql='alter table s_finreport_cashflow_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+
+            sql='alter table s_finreport_cashflow_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)              
+
+            sql='alter table s_finreport_cashflow_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+            
+            sql='alter table s_finreport_cashflow_%s add CONSTRAINT `FK_CF_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)   
+
+            
             #获取利润表
             ic = sdDataAPI.income(ts_code=stockCode,start_date=startday,end_date=endday,fields=
                 'ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,basic_eps,diluted_eps,\
@@ -236,14 +271,44 @@ def processStockDataGet(stockList,startday,endday):
             ic.to_sql(name='s_finreport_income_'+stockCode[:6],
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
             
+            sql='alter table s_finreport_income_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)           
+
+            sql='alter table s_finreport_income_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+
+            sql='alter table s_finreport_income_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)              
+
+            sql='alter table s_finreport_income_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+            
+            sql='alter table s_finreport_income_%s add CONSTRAINT `FK_IC_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
+                        
+                        
+                        
             #3.2写入复权因子
             #获取该股票的复权因子数据并写入数据库
             adj_data = sdDataAPI.adj_factor(ts_code=stockCode,start_date=startday,end_date=endday)
             adj_data.sort_index(inplace=True,ascending=False) 
             #存入数据库
             adj_data.to_sql(name='s_adjdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None) 
+
+            sql='alter table s_adjdata_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)           
+
+            sql='alter table s_adjdata_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
             
+            sql='alter table s_adjdata_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
             
+            sql='alter table s_adjdata_%s add CONSTRAINT `FK_AJD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
+                                    
+
+                        
             #3.3写入kdata、dailybasic数据
 
             
@@ -266,7 +331,7 @@ def processStockDataGet(stockList,startday,endday):
                 else:
                     tmpENDDATE=endday
                 
-                #获取该股票数据并写入数据库
+                #获取该股票KDATA数据并写入数据库
                 stock_k_data=tushare.pro_bar(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if stock_k_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
@@ -279,8 +344,18 @@ def processStockDataGet(stockList,startday,endday):
                     stock_k_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
-
-                #获取该股票数据并写入数据库
+                    
+                    sql='alter table s_kdata_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add CONSTRAINT `FK_KD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                
+                
+                #获取该股票DB数据并写入数据库
                 daily_basic_data=sdDataAPI.daily_basic(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if daily_basic_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
@@ -291,7 +366,14 @@ def processStockDataGet(stockList,startday,endday):
                     #存入数据库
                     daily_basic_data.to_sql(name='s_dailybasic_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
                     
-                
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add CONSTRAINT `FK_DB_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
                 
             #将2000-01-01到2009-12-31该股票数据导入数据库
             if startday>'20091231' or endday<'20000101':
@@ -320,6 +402,15 @@ def processStockDataGet(stockList,startday,endday):
                     stock_k_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)                                  
+                    
+                    sql='alter table s_kdata_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add CONSTRAINT `FK_KD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
                 else:
                     #该股票出现交易数据
                     #且在上一区间已经有过交易，直接增加数据即可
@@ -339,6 +430,14 @@ def processStockDataGet(stockList,startday,endday):
                     #存入数据库
                     daily_basic_data.to_sql(name='s_dailybasic_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
                     
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add CONSTRAINT `FK_DB_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)                    
                 else:
                     daily_basic_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
@@ -370,6 +469,15 @@ def processStockDataGet(stockList,startday,endday):
                     stock_k_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)                    
+                    
+                    sql='alter table s_kdata_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add CONSTRAINT `FK_KD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
                 else:
                     #该股票出现交易数据
                     #且在上一区间已经有过交易，直接增加数据即可
@@ -387,6 +495,15 @@ def processStockDataGet(stockList,startday,endday):
                     daily_basic_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     daily_basic_data.to_sql(name='s_dailybasic_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
+                    
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add CONSTRAINT `FK_DB_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
                 else:
                     daily_basic_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
@@ -418,6 +535,15 @@ def processStockDataGet(stockList,startday,endday):
                     stock_k_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     stock_k_data.to_sql(name='s_kdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)                      
+                    
+                    sql='alter table s_kdata_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_kdata_%s add CONSTRAINT `FK_KD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
                 else:
                     #该股票出现交易数据
                     #且在上一区间已经有过交易，直接增加数据即可
@@ -435,11 +561,20 @@ def processStockDataGet(stockList,startday,endday):
                     daily_basic_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     daily_basic_data.to_sql(name='s_dailybasic_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None)
+
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
+                    sql='alter table s_dailybasic_%s add CONSTRAINT `FK_DB_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+                    MysqlProcessor.execSql(mysqlSession,sql,True)
                 else:
                     daily_basic_data.sort_index(inplace=True,ascending=False)
                     #存入数据库
                     daily_basic_data.to_sql(name='s_dailybasic_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='append', index=None)
-            
+                        
         except Exception as e:#出现异常
             #出现异常，则还需要继续循环，继续对该股票继续处理
             traceback.print_exc()
@@ -496,8 +631,6 @@ if __name__ == '__main__':
     #完成部分信息更新
     #partialUpdate(mysqlSession)
     
-    
-    
     sqlStr='alter table u_stock_list modify column ts_code varchar(20) primary key;'
     try:
         mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
@@ -507,7 +640,7 @@ if __name__ == '__main__':
 
 
     sqlStr1="create table u_data_desc (content_name varchar(100),content varchar(200) not null default '',comments varchar(300) not null default '');"
-    sqlStr2="insert into u_data_desc (content_name,content,comments) values ('last_totally_update_time','','the time of last total data update');"
+    sqlStr2="insert into u_data_desc (content_name,content,comments) values ('last_total_update_time','','the time of last total data update');"
     sqlStr3="insert into u_data_desc (content_name,content,comments) values ('data_start_dealday','','the start deal day(include) of all data');"
     sqlStr4="insert into u_data_desc (content_name,content,comments) values ('data_end_dealday','','the end deal day(include) of all data');"
     sqlStr5="insert into u_data_desc (content_name,content,comments) values ('finance_report_date_update_to','','the date of last update of finance report');"
@@ -523,404 +656,12 @@ if __name__ == '__main__':
     except sqlalchemy.exc.OperationalError:
         log.logger.warning("初始化u_data_desc表出错")
 
-
-    
     #sqlStr='alter table u_stock_list add column is_data_available tinyint(1) default 0;'
     #try:
     #    mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
     #except sqlalchemy.exc.OperationalError:
     #    log.logger.warning("修正股票清单表出错，可能已经修正过")
-        
-        
-    
-    #事实上在初始化过程中
-    #已经将所有表replace掉了
-    #事先建表已经失去意义
-    #可以考虑在建立完数据后，进行表格的变更
-    try:
-        #这里应当做一件事，就是根据股票列表
-        #建立所有的财务报表、kdata表、adjdata表，以及dailybasic表
-        
-        sqlStr=''
-        
-        for stockCode in stockCodeList:
-            
-            sqlStr='CREATE TABLE `s_finreport_income_%s` (\
-    `ts_code` varchar(20) COLLATE utf8mb4_bin,\
-      `ann_date` text COLLATE utf8mb4_bin,\
-      `f_ann_date` text COLLATE utf8mb4_bin,\
-      `end_date` varchar(20) COLLATE utf8mb4_bin,\
-      `report_type` text COLLATE utf8mb4_bin,\
-      `comp_type` text COLLATE utf8mb4_bin,\
-      `basic_eps` double DEFAULT NULL,\
-      `diluted_eps` double DEFAULT NULL,\
-      `total_revenue` double DEFAULT NULL,\
-      `revenue` double DEFAULT NULL,\
-      `int_income` text COLLATE utf8mb4_bin,\
-      `prem_earned` text COLLATE utf8mb4_bin,\
-      `comm_income` text COLLATE utf8mb4_bin,\
-      `n_commis_income` text COLLATE utf8mb4_bin,\
-      `n_oth_income` text COLLATE utf8mb4_bin,\
-      `n_oth_b_income` text COLLATE utf8mb4_bin,\
-      `prem_income` text COLLATE utf8mb4_bin,\
-      `out_prem` text COLLATE utf8mb4_bin,\
-      `une_prem_reser` text COLLATE utf8mb4_bin,\
-      `reins_income` text COLLATE utf8mb4_bin,\
-      `n_sec_tb_income` text COLLATE utf8mb4_bin,\
-      `n_sec_uw_income` text COLLATE utf8mb4_bin,\
-      `n_asset_mg_income` text COLLATE utf8mb4_bin,\
-      `oth_b_income` text COLLATE utf8mb4_bin,\
-      `fv_value_chg_gain` double DEFAULT NULL,\
-      `invest_income` double DEFAULT NULL,\
-      `ass_invest_income` double DEFAULT NULL,\
-      `forex_gain` text COLLATE utf8mb4_bin,\
-      `total_cogs` double DEFAULT NULL,\
-      `oper_cost` double DEFAULT NULL,\
-      `int_exp` text COLLATE utf8mb4_bin,\
-      `comm_exp` text COLLATE utf8mb4_bin,\
-      `biz_tax_surchg` double DEFAULT NULL,\
-      `sell_exp` double DEFAULT NULL,\
-      `admin_exp` double DEFAULT NULL,\
-      `fin_exp` double DEFAULT NULL,\
-      `assets_impair_loss` double DEFAULT NULL,\
-      `prem_refund` text COLLATE utf8mb4_bin,\
-      `compens_payout` text COLLATE utf8mb4_bin,\
-      `reser_insur_liab` text COLLATE utf8mb4_bin,\
-      `div_payt` text COLLATE utf8mb4_bin,\
-      `reins_exp` text COLLATE utf8mb4_bin,\
-      `oper_exp` text COLLATE utf8mb4_bin,\
-      `compens_payout_refu` text COLLATE utf8mb4_bin,\
-      `insur_reser_refu` text COLLATE utf8mb4_bin,\
-      `reins_cost_refund` text COLLATE utf8mb4_bin,\
-      `other_bus_cost` text COLLATE utf8mb4_bin,\
-      `operate_profit` double DEFAULT NULL,\
-      `non_oper_income` double DEFAULT NULL,\
-      `non_oper_exp` double DEFAULT NULL,\
-      `nca_disploss` double DEFAULT NULL,\
-      `total_profit` double DEFAULT NULL,\
-      `income_tax` double DEFAULT NULL,\
-      `n_income` double DEFAULT NULL,\
-      `n_income_attr_p` double DEFAULT NULL,\
-      `minority_gain` double DEFAULT NULL,\
-      `oth_compr_income` double DEFAULT NULL,\
-      `t_compr_income` double DEFAULT NULL,\
-      `compr_inc_attr_p` double DEFAULT NULL,\
-      `compr_inc_attr_m_s` double DEFAULT NULL,\
-      `ebit` double DEFAULT NULL,\
-      `ebitda` double DEFAULT NULL,\
-      `insurance_exp` text COLLATE utf8mb4_bin,\
-      `undist_profit` text COLLATE utf8mb4_bin,\
-      `distable_profit` text COLLATE utf8mb4_bin,\
-      `update_flag` TINYINT(1) NOT NULL,\
-       PRIMARY KEY (`ts_code`,`end_date`,`update_flag`),\
-       CONSTRAINT `FK_TC_IC_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list`(`ts_code`)\
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;'%(stockCode[:6],stockCode[:6])
-    
-            #建立表
-            mysqlProcessor.execSql(mysqlSession,sqlStr,False)
-    
-            sqlStr='CREATE TABLE `s_finreport_balancesheet_%s` (\
-    `ts_code` varchar(20) COLLATE utf8mb4_bin,\
-    `ann_date` text COLLATE utf8mb4_bin,\
-    `f_ann_date` text COLLATE utf8mb4_bin,\
-    `end_date` varchar(20) COLLATE utf8mb4_bin,\
-    `report_type` text COLLATE utf8mb4_bin,\
-    `comp_type` text COLLATE utf8mb4_bin,\
-    `total_share` double DEFAULT NULL,\
-    `cap_rese` double DEFAULT NULL,\
-    `undistr_porfit` double DEFAULT NULL,\
-    `surplus_rese` double DEFAULT NULL,\
-    `special_rese` text COLLATE utf8mb4_bin,\
-    `money_cap` double DEFAULT NULL,\
-    `trad_asset` double DEFAULT NULL,\
-    `notes_receiv` double DEFAULT NULL,\
-    `accounts_receiv` double DEFAULT NULL,\
-    `oth_receiv` double DEFAULT NULL,\
-    `prepayment` double DEFAULT NULL,\
-    `div_receiv` text COLLATE utf8mb4_bin,\
-    `int_receiv` double DEFAULT NULL,\
-    `inventories` double DEFAULT NULL,\
-    `amor_exp` double DEFAULT NULL,\
-    `nca_within_1y` text COLLATE utf8mb4_bin,\
-    `sett_rsrv` text COLLATE utf8mb4_bin,\
-    `loanto_oth_bank_fi` double DEFAULT NULL,\
-    `premium_receiv` text COLLATE utf8mb4_bin,\
-    `reinsur_receiv` text COLLATE utf8mb4_bin,\
-    `reinsur_res_receiv` text COLLATE utf8mb4_bin,\
-    `pur_resale_fa` double DEFAULT NULL,\
-    `oth_cur_assets` text COLLATE utf8mb4_bin,\
-    `total_cur_assets` double DEFAULT NULL,\
-    `fa_avail_for_sale` double DEFAULT NULL,\
-    `htm_invest` double DEFAULT NULL,\
-    `lt_eqt_invest` double DEFAULT NULL,\
-    `invest_real_estate` double DEFAULT NULL,\
-    `time_deposits` text COLLATE utf8mb4_bin,\
-    `oth_assets` double DEFAULT NULL,\
-    `lt_rec` text COLLATE utf8mb4_bin,\
-    `fix_assets` double DEFAULT NULL,\
-    `cip` double DEFAULT NULL,\
-    `const_materials` text COLLATE utf8mb4_bin,\
-    `fixed_assets_disp` double DEFAULT NULL,\
-    `produc_bio_assets` text COLLATE utf8mb4_bin,\
-    `oil_and_gas_assets` text COLLATE utf8mb4_bin,\
-    `intan_assets` double DEFAULT NULL,\
-    `r_and_d` text COLLATE utf8mb4_bin,\
-    `goodwill` double DEFAULT NULL,\
-    `lt_amor_exp` double DEFAULT NULL,\
-    `defer_tax_assets` double DEFAULT NULL,\
-    `decr_in_disbur` double DEFAULT NULL,\
-    `oth_nca` text COLLATE utf8mb4_bin,\
-    `total_nca` double DEFAULT NULL,\
-    `cash_reser_cb` double DEFAULT NULL,\
-    `depos_in_oth_bfi` double DEFAULT NULL,\
-    `prec_metals` double DEFAULT NULL,\
-    `deriv_assets` double DEFAULT NULL,\
-    `rr_reins_une_prem` text COLLATE utf8mb4_bin,\
-    `rr_reins_outstd_cla` text COLLATE utf8mb4_bin,\
-    `rr_reins_lins_liab` text COLLATE utf8mb4_bin,\
-    `rr_reins_lthins_liab` text COLLATE utf8mb4_bin,\
-    `refund_depos` text COLLATE utf8mb4_bin,\
-    `ph_pledge_loans` text COLLATE utf8mb4_bin,\
-    `refund_cap_depos` text COLLATE utf8mb4_bin,\
-    `indep_acct_assets` text COLLATE utf8mb4_bin,\
-    `client_depos` text COLLATE utf8mb4_bin,\
-    `client_prov` text COLLATE utf8mb4_bin,\
-    `transac_seat_fee` text COLLATE utf8mb4_bin,\
-    `invest_as_receiv` double DEFAULT NULL,\
-    `total_assets` double DEFAULT NULL,\
-    `lt_borr` double DEFAULT NULL,\
-    `st_borr` double DEFAULT NULL,\
-    `cb_borr` double DEFAULT NULL,\
-    `depos_ib_deposits` text COLLATE utf8mb4_bin,\
-    `loan_oth_bank` double DEFAULT NULL,\
-    `trading_fl` double DEFAULT NULL,\
-    `notes_payable` text COLLATE utf8mb4_bin,\
-    `acct_payable` double DEFAULT NULL,\
-    `adv_receipts` double DEFAULT NULL,\
-    `sold_for_repur_fa` double DEFAULT NULL,\
-    `comm_payable` text COLLATE utf8mb4_bin,\
-    `payroll_payable` double DEFAULT NULL,\
-    `taxes_payable` double DEFAULT NULL,\
-    `int_payable` double DEFAULT NULL,\
-    `div_payable` double DEFAULT NULL,\
-    `oth_payable` double DEFAULT NULL,\
-    `acc_exp` double DEFAULT NULL,\
-    `deferred_inc` double DEFAULT NULL,\
-    `st_bonds_payable` text COLLATE utf8mb4_bin,\
-    `payable_to_reinsurer` text COLLATE utf8mb4_bin,\
-    `rsrv_insur_cont` text COLLATE utf8mb4_bin,\
-    `acting_trading_sec` text COLLATE utf8mb4_bin,\
-    `acting_uw_sec` text COLLATE utf8mb4_bin,\
-    `non_cur_liab_due_1y` double DEFAULT NULL,\
-    `oth_cur_liab` double DEFAULT NULL,\
-    `total_cur_liab` double DEFAULT NULL,\
-    `bond_payable` double DEFAULT NULL,\
-    `lt_payable` double DEFAULT NULL,\
-    `specific_payables` text COLLATE utf8mb4_bin,\
-    `estimated_liab` double DEFAULT NULL,\
-    `defer_tax_liab` double DEFAULT NULL,\
-    `defer_inc_non_cur_liab` text COLLATE utf8mb4_bin,\
-    `oth_ncl` text COLLATE utf8mb4_bin,\
-    `total_ncl` double DEFAULT NULL,\
-    `depos_oth_bfi` double DEFAULT NULL,\
-    `deriv_liab` double DEFAULT NULL,\
-    `depos` double DEFAULT NULL,\
-    `agency_bus_liab` double DEFAULT NULL,\
-    `oth_liab` double DEFAULT NULL,\
-    `prem_receiv_adva` text COLLATE utf8mb4_bin,\
-    `depos_received` text COLLATE utf8mb4_bin,\
-    `ph_invest` text COLLATE utf8mb4_bin,\
-    `reser_une_prem` text COLLATE utf8mb4_bin,\
-    `reser_outstd_claims` text COLLATE utf8mb4_bin,\
-    `reser_lins_liab` text COLLATE utf8mb4_bin,\
-    `reser_lthins_liab` text COLLATE utf8mb4_bin,\
-    `indept_acc_liab` text COLLATE utf8mb4_bin,\
-    `pledge_borr` text COLLATE utf8mb4_bin,\
-    `indem_payable` text COLLATE utf8mb4_bin,\
-    `policy_div_payable` text COLLATE utf8mb4_bin,\
-    `total_liab` double DEFAULT NULL,\
-    `treasury_share` text COLLATE utf8mb4_bin,\
-    `ordin_risk_reser` double DEFAULT NULL,\
-    `forex_differ` double DEFAULT NULL,\
-    `invest_loss_unconf` text COLLATE utf8mb4_bin,\
-    `minority_int` double DEFAULT NULL,\
-    `total_hldr_eqy_exc_min_int` double DEFAULT NULL,\
-    `total_hldr_eqy_inc_min_int` double DEFAULT NULL,\
-    `total_liab_hldr_eqy` double DEFAULT NULL,\
-    `lt_payroll_payable` text COLLATE utf8mb4_bin,\
-    `oth_comp_income` double DEFAULT NULL,\
-    `oth_eqt_tools` double DEFAULT NULL,\
-    `oth_eqt_tools_p_shr` double DEFAULT NULL,\
-    `lending_funds` text COLLATE utf8mb4_bin,\
-    `acc_receivable` text COLLATE utf8mb4_bin,\
-    `st_fin_payable` text COLLATE utf8mb4_bin,\
-    `payables` text COLLATE utf8mb4_bin,\
-    `hfs_assets` text COLLATE utf8mb4_bin,\
-    `hfs_sales` text COLLATE utf8mb4_bin,\
-    `update_flag` TINYINT(1) NOT NULL,\
-     PRIMARY KEY (`ts_code`,`end_date`,`update_flag`),\
-     CONSTRAINT `FK_TC_BS_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`)\
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;'%(stockCode[:6],stockCode[:6])
-            #建立表
-            mysqlProcessor.execSql(mysqlSession,sqlStr,False)
-        
-            sqlStr='CREATE TABLE `s_finreport_cashflow_%s` (\
-      `ts_code` varchar(20) COLLATE utf8mb4_bin,\
-      `ann_date` text COLLATE utf8mb4_bin,\
-      `f_ann_date` text COLLATE utf8mb4_bin,\
-      `end_date` varchar(20) COLLATE utf8mb4_bin,\
-      `comp_type` text COLLATE utf8mb4_bin,\
-      `report_type` text COLLATE utf8mb4_bin,\
-      `net_profit` double DEFAULT NULL,\
-      `finan_exp` double DEFAULT NULL,\
-      `c_fr_sale_sg` double DEFAULT NULL,\
-      `recp_tax_rends` double DEFAULT NULL,\
-      `n_depos_incr_fi` text COLLATE utf8mb4_bin,\
-      `n_incr_loans_cb` text COLLATE utf8mb4_bin,\
-      `n_inc_borr_oth_fi` text COLLATE utf8mb4_bin,\
-      `prem_fr_orig_contr` text COLLATE utf8mb4_bin,\
-      `n_incr_insured_dep` text COLLATE utf8mb4_bin,\
-      `n_reinsur_prem` text COLLATE utf8mb4_bin,\
-      `n_incr_disp_tfa` text COLLATE utf8mb4_bin,\
-      `ifc_cash_incr` text COLLATE utf8mb4_bin,\
-      `n_incr_disp_faas` text COLLATE utf8mb4_bin,\
-      `n_incr_loans_oth_bank` text COLLATE utf8mb4_bin,\
-      `n_cap_incr_repur` text COLLATE utf8mb4_bin,\
-      `c_fr_oth_operate_a` double DEFAULT NULL,\
-      `c_inf_fr_operate_a` double DEFAULT NULL,\
-      `c_paid_goods_s` double DEFAULT NULL,\
-      `c_paid_to_for_empl` double DEFAULT NULL,\
-      `c_paid_for_taxes` double DEFAULT NULL,\
-      `n_incr_clt_loan_adv` text COLLATE utf8mb4_bin,\
-      `n_incr_dep_cbob` text COLLATE utf8mb4_bin,\
-      `c_pay_claims_orig_inco` text COLLATE utf8mb4_bin,\
-      `pay_handling_chrg` text COLLATE utf8mb4_bin,\
-      `pay_comm_insur_plcy` text COLLATE utf8mb4_bin,\
-      `oth_cash_pay_oper_act` double DEFAULT NULL,\
-      `st_cash_out_act` double DEFAULT NULL,\
-      `n_cashflow_act` double DEFAULT NULL,\
-      `oth_recp_ral_inv_act` double DEFAULT NULL,\
-      `c_disp_withdrwl_invest` double DEFAULT NULL,\
-      `c_recp_return_invest` double DEFAULT NULL,\
-      `n_recp_disp_fiolta` double DEFAULT NULL,\
-      `n_recp_disp_sobu` double DEFAULT NULL,\
-      `stot_inflows_inv_act` double DEFAULT NULL,\
-      `c_pay_acq_const_fiolta` double DEFAULT NULL,\
-      `c_paid_invest` double DEFAULT NULL,\
-      `n_disp_subs_oth_biz` double DEFAULT NULL,\
-      `oth_pay_ral_inv_act` double DEFAULT NULL,\
-      `n_incr_pledge_loan` double DEFAULT NULL,\
-      `stot_out_inv_act` double DEFAULT NULL,\
-      `n_cashflow_inv_act` double DEFAULT NULL,\
-      `c_recp_borrow` double DEFAULT NULL,\
-      `proc_issue_bonds` double DEFAULT NULL,\
-      `oth_cash_recp_ral_fnc_act` double DEFAULT NULL,\
-      `stot_cash_in_fnc_act` double DEFAULT NULL,\
-      `free_cashflow` double DEFAULT NULL,\
-      `c_prepay_amt_borr` double DEFAULT NULL,\
-      `c_pay_dist_dpcp_int_exp` double DEFAULT NULL,\
-      `incl_dvd_profit_paid_sc_ms` text COLLATE utf8mb4_bin,\
-      `oth_cashpay_ral_fnc_act` double DEFAULT NULL,\
-      `stot_cashout_fnc_act` double DEFAULT NULL,\
-      `n_cash_flows_fnc_act` double DEFAULT NULL,\
-      `eff_fx_flu_cash` double DEFAULT NULL,\
-      `n_incr_cash_cash_equ` double DEFAULT NULL,\
-      `c_cash_equ_beg_period` double DEFAULT NULL,\
-      `c_cash_equ_end_period` double DEFAULT NULL,\
-      `c_recp_cap_contrib` double DEFAULT NULL,\
-      `incl_cash_rec_saims` double DEFAULT NULL,\
-      `uncon_invest_loss` text COLLATE utf8mb4_bin,\
-      `prov_depr_assets` double DEFAULT NULL,\
-      `depr_fa_coga_dpba` double DEFAULT NULL,\
-      `amort_intang_assets` double DEFAULT NULL,\
-      `lt_amort_deferred_exp` double DEFAULT NULL,\
-      `decr_deferred_exp` double DEFAULT NULL,\
-      `incr_acc_exp` double DEFAULT NULL,\
-      `loss_disp_fiolta` double DEFAULT NULL,\
-      `loss_scr_fa` double DEFAULT NULL,\
-      `loss_fv_chg` double DEFAULT NULL,\
-      `invest_loss` double DEFAULT NULL,\
-      `decr_def_inc_tax_assets` double DEFAULT NULL,\
-      `incr_def_inc_tax_liab` double DEFAULT NULL,\
-      `decr_inventories` double DEFAULT NULL,\
-      `decr_oper_payable` double DEFAULT NULL,\
-      `incr_oper_payable` double DEFAULT NULL,\
-      `others` double DEFAULT NULL,\
-      `im_net_cashflow_oper_act` double DEFAULT NULL,\
-      `conv_debt_into_cap` text COLLATE utf8mb4_bin,\
-      `conv_copbonds_due_within_1y` text COLLATE utf8mb4_bin,\
-      `fa_fnc_leases` double DEFAULT NULL,\
-      `end_bal_cash` double DEFAULT NULL,\
-      `beg_bal_cash` double DEFAULT NULL,\
-      `end_bal_cash_equ` text COLLATE utf8mb4_bin,\
-      `beg_bal_cash_equ` text COLLATE utf8mb4_bin,\
-      `im_n_incr_cash_equ` double DEFAULT NULL,\
-      `update_flag` TINYINT(1) NOT NULL,\
-       PRIMARY KEY (`ts_code`,`end_date`,`update_flag`),\
-       CONSTRAINT `FK_TC_CF_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`)\
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;' %(stockCode[:6],stockCode[:6])
-            #建立表
-            mysqlProcessor.execSql(mysqlSession,sqlStr,False)    
-    
-    
-            sqlStr='CREATE TABLE `s_kdata_%s` (\
-    `ts_code` varchar(20) COLLATE utf8mb4_bin,\
-    `trade_date` varchar(20) COLLATE utf8mb4_bin,\
-    `open` double DEFAULT NULL,\
-    `high` double DEFAULT NULL,\
-    `low` double DEFAULT NULL,\
-    `close` double DEFAULT NULL,\
-    `pre_close` double DEFAULT NULL,\
-    `change` double DEFAULT NULL,\
-    `pct_chg` double DEFAULT NULL,\
-    `vol` double DEFAULT NULL,\
-    `amount` double DEFAULT NULL,\
-     PRIMARY KEY (`ts_code`,`trade_date`),\
-     CONSTRAINT `FK_TC_KD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`)\
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;'%(stockCode[:6],stockCode[:6])
-            #建立表
-            mysqlProcessor.execSql(mysqlSession,sqlStr,False)  
-    
-    
-            sqlStr='CREATE TABLE `s_dailybasic_%s` (\
-      `ts_code` varchar(20) COLLATE utf8mb4_bin,\
-      `trade_date` varchar(20) COLLATE utf8mb4_bin,\
-      `close` double DEFAULT NULL,\
-      `turnover_rate` double DEFAULT NULL,\
-      `turnover_rate_f` double DEFAULT NULL,\
-      `volume_ratio` double DEFAULT NULL,\
-      `pe` double DEFAULT NULL,\
-      `pe_ttm` double DEFAULT NULL,\
-      `pb` double DEFAULT NULL,\
-      `ps` double DEFAULT NULL,\
-      `ps_ttm` double DEFAULT NULL,\
-      `dv_ratio` double DEFAULT NULL,\
-      `dv_ttm` double DEFAULT NULL,\
-      `total_share` double DEFAULT NULL,\
-      `float_share` double DEFAULT NULL,\
-      `free_share` double DEFAULT NULL,\
-      `total_mv` double DEFAULT NULL,\
-      `circ_mv` double DEFAULT NULL,\
-       PRIMARY KEY (`ts_code`,`trade_date`),\
-       CONSTRAINT `FK_TC_DB_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`)\
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;'%(stockCode[:6],stockCode[:6])
-            #建立表
-            mysqlProcessor.execSql(mysqlSession,sqlStr,False)  
-            
-            sqlStr='CREATE TABLE `s_adjdata_%s` (\
-    `ts_code` varchar(20) COLLATE utf8mb4_bin,\
-    `trade_date` varchar(20) COLLATE utf8mb4_bin,\
-    `adj_factor` double DEFAULT NULL,\
-     PRIMARY KEY (`ts_code`,`trade_date`),\
-     CONSTRAINT `FK_TC_ADJ_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`)\
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;'%(stockCode[:6],stockCode[:6])
-            #建立表
-            mysqlProcessor.execSql(mysqlSession,sqlStr,False)     
-            log.logger.info('建立完股票%s的所有表'%(stockCode[:6]))
-    except sqlalchemy.exc.OperationalError:
-        log.logger.warning("为股票%s建表时出现异常"%(stockCode[:6]))
-    
-    
+     
     sdProcessor=StockDataProcessor()
     
     # 创建命令行解析器句柄，并自定义描述信息
@@ -962,11 +703,6 @@ if __name__ == '__main__':
     
     
     
-    #调整代码逻辑，按照股票来进行更新
-    #每次更新一个股票
-    #这样可以避免限次数问题
-    
-    
     
     '''
     #找到之前处理的最后一个股票的代码
@@ -998,7 +734,6 @@ if __name__ == '__main__':
     
     slList=get8slListFromStockList(stockCodeList)
     
-
     #manager=Manager()
     
     #分8个进程，分别计算8段股票波动率
@@ -1014,8 +749,6 @@ if __name__ == '__main__':
         p.join()           
                 
     
-    
-
        
     #完成所有数据的更新
     totalUpdate(mysqlSession,sdProcessor)
