@@ -306,7 +306,7 @@ if __name__ == '__main__':
             log.logger.error('StockSelectStrategy：%s输入错误'%(stockSelectStrategyStr))
             continue
         
-        log.logger.info('开始处理选股策略:%s'%(stockSelectStrategy.getStrategyName()))
+        log.logger.info('%s,开始处理选股策略:%s'%(os.getpid(),stockSelectStrategy.getStrategyName()))
         #从参数获取股票选取策略
         stockList=stockSelectStrategy.getSelectedStockList(sdProcessor,startdate)
         
@@ -330,7 +330,7 @@ if __name__ == '__main__':
                 continue
             
             
-            log.logger.info('开始处理交易策略:%s'%(tradeStrategy.getStrategyName()))
+            log.logger.info('%s,开始处理交易策略:%s'%(os.getpid(),tradeStrategy.getStrategyName()))
             #savedStdout = sys.stdout  #保存标准输出流
              
             strOutputDir=strOutterOutputDir+'/'+tradeStrategy.getStrategyName()
