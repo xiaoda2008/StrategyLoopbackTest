@@ -44,9 +44,9 @@ class SMAStrategy(StrategyParent):
         '''
         self.name="SMAStrategy"
         self.mysqlProcessor=MysqlProcessor()
-        sql='select * from u_vol_for_industry'
-        self.volForIndDF=self.mysqlProcessor.querySql(sql)
-        self.volForIndDF.set_index('industry',drop=True,inplace=True)
+        #sql='select * from u_vol_for_industry'
+        #self.volForIndDF=self.mysqlProcessor.querySql(sql)
+        #self.volForIndDF.set_index('industry',drop=True,inplace=True)
         self.sdProcessor=StockDataProcessor()
         
         

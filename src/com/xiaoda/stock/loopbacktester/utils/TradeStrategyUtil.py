@@ -22,9 +22,9 @@ class TradeStrategyProcessor(object):
         Constructor
         '''
         self.blshStrategy=BuylowSellhighStrategy()
-        self.fblshStrategy=FloatingBuylowSellhighStrategy()
+        #self.fblshStrategy=FloatingBuylowSellhighStrategy()
         self.msStrategy=MultiStepStrategy()
-        self.fmsStrategy=FloatingMultiStepStrategy()
+        #self.fmsStrategy=FloatingMultiStepStrategy()
         self.hStrategy=HoldStrategy()
         self.SMAStrategy=SMAStrategy()
         self.blshPlusMAStrategy=BLSHPlusMAStrategy()
@@ -33,12 +33,12 @@ class TradeStrategyProcessor(object):
     def getStrategy(self,strategyName):
         if strategyName==self.blshStrategy.getStrategyName():
             return self.blshStrategy
-        elif strategyName==self.fblshStrategy.getStrategyName():
-            return self.fblshStrategy
+        #elif strategyName==self.fblshStrategy.getStrategyName():
+        #    return self.fblshStrategy
         elif strategyName==self.msStrategy.getStrategyName():
             return self.msStrategy
-        elif strategyName==self.fmsStrategy.getStrategyName():
-            return self.fmsStrategy
+        #elif strategyName==self.fmsStrategy.getStrategyName():
+        #    return self.fmsStrategy
         elif strategyName==self.hStrategy.getStrategyName():
             return self.hStrategy
         elif strategyName==self.SMAStrategy.getStrategyName():

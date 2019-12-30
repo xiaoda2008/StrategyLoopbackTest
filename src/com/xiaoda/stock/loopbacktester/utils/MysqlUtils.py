@@ -17,12 +17,16 @@ import traceback
 
 class MysqlProcessor():
     
-    def __init__(self):
+    def __init__(self,url=''):
         '''
         Constructor
         '''
         #print("init of MysqlProcessor()")
-        self.engine=create_engine(mysqlURL)
+        if len(url)==0:
+            self.engine=create_engine(mysqlURL)
+        else:
+            self.engine=create_engine(url)
+            
         self.engine.connect()
         DBSession=sessionmaker(bind=self.engine)
         self.session=DBSession()

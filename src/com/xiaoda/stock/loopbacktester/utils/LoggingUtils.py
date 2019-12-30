@@ -36,7 +36,7 @@ class Logger(object):
         th.setLevel(logging.DEBUG) #设置日志等级
         
         self.logger.addHandler(sh) #把对象加到logger里
-        self.logger.addHandler(th)
+        #self.logger.addHandler(th)
         
 
 '''

@@ -29,9 +29,9 @@ class BLSHPlusMAStrategy(StrategyParent):
         '''
         self.name="BLSHPlusMAStrategy"
         self.mysqlProcessor=MysqlProcessor()
-        sql='select * from u_vol_for_industry'
-        self.volForIndDF=self.mysqlProcessor.querySql(sql)
-        self.volForIndDF.set_index('industry',drop=True,inplace=True)
+        #sql='select * from u_vol_for_industry'
+        #self.volForIndDF=self.mysqlProcessor.querySql(sql)
+        #self.volForIndDF.set_index('industry',drop=True,inplace=True)
         self.sdProcessor=StockDataProcessor()
        
     def getStockTradeDF(self,currday,dealType,closePriceToday,holdShares,holdAvgPrice,netCashFlowToday,
