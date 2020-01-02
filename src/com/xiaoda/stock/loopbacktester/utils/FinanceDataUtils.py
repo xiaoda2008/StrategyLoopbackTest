@@ -88,6 +88,15 @@ class FinanceDataProcessor(object):
         return self.mysqlProcessor.querySql(sql)
 
 
+    def getLatestDailyBasic(self,stockCode,dateStr):
+        '''
+        获取指定日期前最近的每日信息
+        '''
+        #查询语句
+        sql='select * from s_dailybasic_%s where trade_date<=%s order by trade_date desc limit 1;'%(stockCode[:6],dateStr)
+       
+        return self.mysqlProcessor.querySql(sql)
+    
     #def getLatestAnnualOrSemiReportEBIT(self):
         '''
         获取最近一次的半年度或年度报表的EBIT

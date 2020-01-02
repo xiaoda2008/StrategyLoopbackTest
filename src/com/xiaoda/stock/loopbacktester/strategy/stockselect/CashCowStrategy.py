@@ -7,6 +7,7 @@ import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
+from numpy.distutils.log import good
 
 
 class CashCowStrategy(StrategyParent):
@@ -55,6 +56,14 @@ class CashCowStrategy(StrategyParent):
             if bs.empty or cf.empty:
                 continue
             
+            
+            try:
+                #商誉
+                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
+            except:
+                goodwill=0
+                pass
+            
             #需要到里面找到最后一个不是空的总资产
             #if stockCode>'000768.SZ':
             #    print()
@@ -62,6 +71,11 @@ class CashCowStrategy(StrategyParent):
                 #总资产
                 totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
 
+                #总负债
+                #totalLiab=bs[bs['total_liab'].notnull()].reset_index(drop=True).at[0,'total_liab']       
+                
+                #netAssets=totalAsset-totalLiab
+                
                 #现金等价物
                 cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
 
@@ -74,12 +88,14 @@ class CashCowStrategy(StrategyParent):
             if cashequ<100000000 or totalAsset<1000000000:
                 #对于现金等价物小于1亿或者总资产小于10亿的直接排除
                 continue  
+            elif goodwill/totalAsset>0.5:
+                continue
             else:
                 ratio=cashequ/totalAsset
     
             cfRatioDict[stockCode]=ratio
             
-            self.log.logger.info('CashCowStrategy:'+stockCode+','+str(ratio))
+            self.log.logger.info('CashCowStrategy:%s的CCRate:%f,商誉:%f'%(stockCode,ratio,goodwill/totalAsset))
             
         sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
 

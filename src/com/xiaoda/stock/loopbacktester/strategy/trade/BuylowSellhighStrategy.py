@@ -276,7 +276,19 @@ class BuylowSellhighStrategy(StrategyParent):
             #pre_low=float(stock_k_data.at[currday,'pre_low'])
             #pre_close=float(stock_k_data.at[currday,'pre_close'])
             
-            if lowPrice<(1+RetRate)*latestDealPrice:
+            
+            
+            #如果当前手里已经实际没有了持仓
+            #而股票又一直涨上去了，是否需要补仓？
+            
+            
+            if holdShares==0:
+                
+                sharesToBuyOrSell=math.floor(nShare)
+                priceToBuyOrSell=avgPrice
+                                
+            elif lowPrice<(1+RetRate)*latestDealPrice:
+            #if lowPrice<(1+RetRate)*latestDealPrice:    
                 #如果下跌超线，应当买入
                 sharesToBuyOrSell=math.floor(nShare/2)
                 priceToBuyOrSell=(1+RetRate)*latestDealPrice
@@ -285,7 +297,6 @@ class BuylowSellhighStrategy(StrategyParent):
                 #如果上涨超线，应当卖出
                 sharesToBuyOrSell=-1*math.ceil(holdShares/2)
                 priceToBuyOrSell=max((1+IncRate)*holdAvgPrice,latestDealPrice*(1+IncRate))
-
             else:
                 #未上涨或下跌超线
                 sharesToBuyOrSell=0

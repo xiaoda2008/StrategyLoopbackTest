@@ -39,17 +39,33 @@ class GrossProfitRateStrategy(StrategyParent):
             if listdate>startdateStr:
                 continue
             
-            
+
+            bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
+            #bs为所有之前发布的所有资产负债表数据
+                        
             ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
             #ic为之前发布的所有利润表数据
             
             #有可能数据不全，直接跳过
             if ic.empty:
                 continue
+
+            
+            try:
+                #商誉
+                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
+            except:
+                goodwill=0
+                pass
+            
+
             
             #需要到里面找到最后一个不是空的总资产
 
             try:
+                #总资产
+                totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
+
                 #净利润
                 operateprofit1=ic[ic['operate_profit'].notnull()].reset_index(drop=True).at[0,'operate_profit']
                 operateprofit2=ic[ic['operate_profit'].notnull()].reset_index(drop=True).at[1,'operate_profit']           
@@ -67,6 +83,8 @@ class GrossProfitRateStrategy(StrategyParent):
 
  
             if operateprofit2>operateprofit1 or operateprofit3>operateprofit2 or operateprofit4>operateprofit3:
+                continue
+            elif goodwill/totalAsset>0.5:
                 continue
             elif totalRavenue2>totalRavenue1 or totalRavenue3>totalRavenue2 or totalRavenue4>totalRavenue3:
                 continue

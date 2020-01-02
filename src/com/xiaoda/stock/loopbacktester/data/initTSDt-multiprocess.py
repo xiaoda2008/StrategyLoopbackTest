@@ -638,7 +638,7 @@ if __name__ == '__main__':
         log.logger.warning("修正股票清单表出错，可能已经修正过")
 
 
-
+    '''
     sqlStr1="create table u_data_desc (content_name varchar(100),content varchar(200) not null default '',comments varchar(300) not null default '');"
     sqlStr2="insert into u_data_desc (content_name,content,comments) values ('last_total_update_time','','the time of last total data update');"
     sqlStr3="insert into u_data_desc (content_name,content,comments) values ('data_start_dealday','','the start deal day(include) of all data');"
@@ -655,7 +655,8 @@ if __name__ == '__main__':
      
     except sqlalchemy.exc.OperationalError:
         log.logger.warning("初始化u_data_desc表出错")
-
+    '''
+    
     #sqlStr='alter table u_stock_list add column is_data_available tinyint(1) default 0;'
     #try:
     #    mysqlProcessor.execSql(mysqlSession,sqlStr,True)       

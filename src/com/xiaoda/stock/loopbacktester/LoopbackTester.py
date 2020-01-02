@@ -382,24 +382,13 @@ if __name__ == '__main__':
             for p in process:
                 p.join()           
             
-            
-            '''
-            for stockCode in stockList:
-                
-                processStock(sdProcessor,stockCode,tradeStrategy,strOutputDir,\
-                                 firstDealDay,twentyDaysBeforeFirstOpenDay,enddate,summaryOutFile)
-                
-            '''    
-                #print('完成'+stockCode+'的处理')
-        
-        
-        
-            
+
+
             #完成所有股票的数据处理
             #需要通过扫描所有股票的计算结果
             #计算出整体的IRR
         
-            log.logger.info('开始处理IRR计算')
+            log.logger.info('开始处理IRR及Summary计算')
             #读取结果文件列表
             stockfileList = os.listdir(strOutputDir)
             
@@ -409,8 +398,74 @@ if __name__ == '__main__':
             #对文件列表中的文件进行处理，获取内容列表
             for stockfileStr in stockfileList:
                 if not 'Summary' in stockfileStr:
-                    df = FileProcessor.readFile(strOutputDir+'/'+stockfileStr)
+                    df=FileProcessor.readFile(strOutputDir+'/'+stockfileStr)
                     fileContentTupleList.append((stockfileStr[:-4],df))
+
+            #log.logger.info("开始处理Summary计算")
+
+
+            savedStdout=sys.stdout  #保存标准输出流
+            sys.stdout=open(strOutputDir+'/Summary.csv','wt+')            
+            
+            print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
+            
+            #对已有的内容列表进行处理
+            for stockfileName,stockfileDF in fileContentTupleList:
+                
+                stockCode=stockfileName[:6]
+                biggestCashOccupy=0
+                totalIn=0
+                totalOut=0
+                latestProfit=0
+                currMarketValue=0
+                idx=0
+                while True:
+
+                    if float(stockfileDF.at[idx,'当天资金净占用'])>biggestCashOccupy:
+                        biggestCashOccupy=float(stockfileDF.at[idx,'当天资金净占用'])
+                    
+                    idx=idx+1
+                    if idx==len(stockfileDF):
+                        totalIn=stockfileDF.at[idx-1,'累计投入金额']
+                        totalOut=stockfileDF.at[idx-1,'累计赎回金额']
+                        latestProfit=stockfileDF.at[idx-1,'当前持仓盈亏']
+                        currMarketValue=stockfileDF.at[idx-1,'当天收盘持仓市值']
+                        break
+                
+                print(stockCode,end=',')
+                print(biggestCashOccupy,end=',')            
+                print(totalIn,end=',')
+                print(totalOut,end=',')
+                print(latestProfit,end=',')
+                print(currMarketValue)
+                                            
+            sys.stdout = savedStdout #恢复标准输出流
+            
+            
+            '''
+            #@fn_timer
+            def printSummaryOutputHead(outputFile):
+                origStdout=sys.stdout  #保存标准输出流
+                sys.stdout=open(outputFile,'wt')
+                print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
+                sys.stdout=origStdout  #恢复标准输出流
+            
+            #@fn_timer
+            def printSummaryTradeInfo(outputFile,stockCode, biggestCashOccupy, totalInput,totalOutput,latestProfit,holdShares,closePriceToday):
+                origStdout=sys.stdout  #保存标准输出流
+                sys.stdout=open(outputFile,'at+')
+                print('\''+str(stockCode),end=', ')
+                print(round(biggestCashOccupy,2), end=', ')
+                print(round(totalInput,2), end=', ')
+                print(round(totalOutput,2), end=', ')    
+                print(latestProfit, end=', ')
+                print(round(holdShares*100*closePriceToday,2), end='\n')
+                sys.stdout=origStdout  #恢复标准输出流
+            '''            
+            
+            
+            
+
         
         
         

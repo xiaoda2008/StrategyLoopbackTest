@@ -40,7 +40,9 @@ class NetProfitRateStrategy(StrategyParent):
             if listdate>startdateStr:
                 continue
             
-            
+            bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
+            #bs为所有之前发布的所有资产负债表数据
+                        
             ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
             #ic为之前发布的所有利润表数据
             
@@ -48,9 +50,20 @@ class NetProfitRateStrategy(StrategyParent):
             if ic.empty:
                 continue
             
+            try:
+                #商誉
+                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
+            except:
+                goodwill=0
+                pass
+            
+            
             #需要到里面找到最后一个不是空的总资产
 
             try:
+                #总资产
+                totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
+
                 #净利润
                 netIncome1=ic[ic['n_income'].notnull()].reset_index(drop=True).at[0,'n_income']
                 netIncome2=ic[ic['n_income'].notnull()].reset_index(drop=True).at[1,'n_income']           
@@ -68,6 +81,8 @@ class NetProfitRateStrategy(StrategyParent):
 
  
             if netIncome2>netIncome1 or netIncome3>netIncome2 or netIncome4>netIncome3:
+                continue
+            elif goodwill/totalAsset>0.5:
                 continue
             elif totalRavenue2>totalRavenue1 or totalRavenue3>totalRavenue2 or totalRavenue4>totalRavenue3:
                 continue

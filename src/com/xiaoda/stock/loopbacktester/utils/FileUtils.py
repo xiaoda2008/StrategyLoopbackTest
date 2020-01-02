@@ -27,7 +27,10 @@ class FileProcessor(object):
             reader=csv.reader(f)
             for row in reader:
                 tmp_lst.append(row)
-        df = pandas.DataFrame(tmp_lst[1:], columns=tmp_lst[0]) 
+        try:
+            df=pandas.DataFrame(tmp_lst[1:], columns=tmp_lst[0]) 
+        except:
+            print()
         return df
     
     

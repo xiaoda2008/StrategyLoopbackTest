@@ -51,9 +51,20 @@ class CCPlusNPRStrategy(StrategyParent):
             ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
             #ic为之前发布的所有利润表数据
             
+            db=self.finProcessor.getLatestDailyBasic(stockCode,startdateStr)
+            #db为之前最近一个交易日的每日数据
+            
             #有可能数据不全，直接跳过
-            if bs.empty or cf.empty or ic.empty:
+            if bs.empty or cf.empty or ic.empty or db.empty:
                 continue
+            
+            try:
+                #商誉
+                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
+            except:
+                goodwill=0
+                pass
+            
             
             #需要到里面找到最后一个不是空的总资产
             try:
@@ -75,12 +86,28 @@ class CCPlusNPRStrategy(StrategyParent):
                 #现金等价物
                 cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
 
+                #总市值
+                total_mv=db.at[0,'total_mv']
+                
+                #流通市值
+                circ_mv=db.at[0,'circ_mv']
+                
             except KeyError:
                 
                 continue
 
  
+            #if total_mv<2000000:
+                #剔除市值在200亿以下的
+            #    continue
+            #if total_mv>2000000 or total_mv<800000:
+            #    continue
+            #if circ_mv/total_mv>0.6:
+                #剔除流通市值占比过大的
+            #    continue
             if netIncome4>netIncome3 or netIncome3>netIncome2 or netIncome2>netIncome1:
+                continue
+            elif goodwill/totalAsset>0.5:
                 continue
             elif totalAvenue4>totalAvenue3 or totalAvenue3>totalAvenue2 or totalAvenue2>totalAvenue1:
                 continue

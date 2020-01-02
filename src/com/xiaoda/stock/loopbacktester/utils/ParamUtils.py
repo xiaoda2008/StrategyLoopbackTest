@@ -31,7 +31,7 @@ OUTPUTDIR = 'D:/outputDir'
 mysqlURL = 'mysql+mysqldb://ts:ts@localhost/tsdb?charset=utf8mb4'
 
 #固定上涨与下跌幅度的参数
-IncRate = 0.1
+IncRate = 0.10
 RetRate = -0.15
 
 nShare = 3 #第一次买入的数量，默认为10手，部分策略中，后续买入的数量，与该参数也相关

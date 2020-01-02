@@ -48,6 +48,13 @@ class ROEStrategy(StrategyParent):
             if bs.empty or ic.empty:
                 continue
             
+            try:
+                #商誉
+                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
+            except:
+                goodwill=0
+                pass
+            
             #需要到里面找到最后一个不是空的总资产
 
             totalAssets=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
@@ -60,7 +67,11 @@ class ROEStrategy(StrategyParent):
 
         
             if bs.empty or ic.empty:
-                ROE=0
+                #ROE=0
+                continue
+            elif goodwill/totalAssets>0.5:
+                #ROE=0
+                continue
             else:
                 ROE=nincome/netAssets
     
