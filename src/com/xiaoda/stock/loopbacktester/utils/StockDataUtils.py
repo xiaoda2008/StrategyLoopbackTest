@@ -44,6 +44,13 @@ class StockDataProcessor(object):
         #self.allStockDict=df[['ts_code','list_date']].set_index('ts_code')['list_date'].to_dict()
         self.allStockDict=df.set_index('ts_code').to_dict(orient="index")
 
+        #查询语句
+        sql = "select * from u_stock_list where HS300=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"
+        
+        df=self.mysqlProcessor.querySql(sql)
+
+        self.hs300Dict=df.set_index('ts_code').to_dict(orient="index")
+
     
     def isDealDay(self,dtStr):
         if self.tradeCalDF.at[dtStr,'is_open']==1:
@@ -185,6 +192,12 @@ class StockDataProcessor(object):
     
     def getAllStockDataDict(self):    
         return self.allStockDict
+ 
+
+    
+    def getHS300Dict(self):
+        return self.hs300Dict 
+ 
     
     @staticmethod
     def mktallocation(stringx):

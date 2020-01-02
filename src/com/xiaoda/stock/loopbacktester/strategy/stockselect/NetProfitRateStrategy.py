@@ -28,7 +28,7 @@ class NetProfitRateStrategy(StrategyParent):
     #决定对哪些股票进行投资
     def getSelectedStockList(self,sdProcessor,startdateStr):
         
-        sdict=sdProcessor.getAllStockDataDict()
+        sdict=sdProcessor.getHS300Dict()
         
         npRatioDict={}
 
@@ -100,7 +100,7 @@ class NetProfitRateStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ratio in sortedNPRatioList[:30]:
+        for tscode, ratio in sortedNPRatioList[:10]:
             returnStockList.append(tscode)
         
         return returnStockList

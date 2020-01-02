@@ -28,7 +28,7 @@ class CCPlusNPRStrategy(StrategyParent):
     #决定对哪些股票进行投资
     def getSelectedStockList(self,sdProcessor,startdateStr):
         
-        sdict=sdProcessor.getAllStockDataDict()
+        sdict=sdProcessor.getHS300Dict()
         
         npRatioDict={}
         cfRatioDict={}
@@ -142,7 +142,7 @@ class CCPlusNPRStrategy(StrategyParent):
         
         
         
-        returnStockList=list(set(sortedNPRatioList[:100]).intersection(set(sortedCFRatioList[:100])))
+        returnStockList=list(set(sortedNPRatioList[:30]).intersection(set(sortedCFRatioList[:30])))
 
         
         return returnStockList

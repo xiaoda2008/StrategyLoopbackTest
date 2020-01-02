@@ -6,14 +6,15 @@ Created on 2019年10月28日
 import math
 import os
 from com.xiaoda.stock.loopbacktester.strategy.trade.StrategyParent import StrategyParent
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare,RetRate,IncRate
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare,RetRate,IncRate,\
+    multiplier
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 import pandas as pd
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.TradeChargeUtils import TradeChargeProcessor
-import time
-from timeit import default_timer as timer
+#import time
+#from timeit import default_timer as timer
 
 class BuylowSellhighStrategy(StrategyParent):
     '''规则：
@@ -162,7 +163,10 @@ class BuylowSellhighStrategy(StrategyParent):
         #最大连续上涨/下跌买入/卖出计数：连续上涨买入为正数，连续下跌卖出为负数，连续上涨超线买入，计数器加1，连续下跌超线卖出，计数器减1
         continuousRiseOrFallCnt=0
 
-        
+        #乘数，用于标记买入的份额倍数
+        #最初都是1，当出现了份额全部卖出
+        #即出现了较好收益时，乘数需要相应扩大
+        currMultiplier=1
         
         
         closePriceToday=stock_k_data.at[currday,'close']
@@ -174,7 +178,7 @@ class BuylowSellhighStrategy(StrategyParent):
         avgPrice=(highPrice+lowPrice)/2
  
         #Simple策略第一天，直接以当日平均价格进行买入
-        sharesToBuyOrSell=nShare
+        sharesToBuyOrSell=nShare*currMultiplier
         priceToBuyOrSell=avgPrice
     
         if sharesToBuyOrSell>0:
@@ -221,6 +225,8 @@ class BuylowSellhighStrategy(StrategyParent):
         #td=timer()
         #print("td:%s"%(td))
         #print("td-tc:%s"%(td-tc))
+        
+        
         
         
         while currday<=endday:
@@ -284,18 +290,24 @@ class BuylowSellhighStrategy(StrategyParent):
             
             if holdShares==0:
                 
-                sharesToBuyOrSell=math.floor(nShare)
+                #当出现较好收益
+                #已经卖出全部持仓后，应当乘数放大
+                #currMultiplier=currMultiplier*multiplier
+                
+                currMultiplier=multiplier
+                
+                sharesToBuyOrSell=math.floor(nShare*currMultiplier)
                 priceToBuyOrSell=avgPrice
                                 
             elif lowPrice<(1+RetRate)*latestDealPrice:
-            #if lowPrice<(1+RetRate)*latestDealPrice:    
+            #if lowPrice<(1+RetRate)*latestDealPrice:
                 #如果下跌超线，应当买入
-                sharesToBuyOrSell=math.floor(nShare/2)
+                sharesToBuyOrSell=math.floor(nShare/2)*currMultiplier
                 priceToBuyOrSell=(1+RetRate)*latestDealPrice
                 
             elif highPrice>(1+IncRate)*holdAvgPrice and highPrice>latestDealPrice*(1+IncRate) and holdShares>0:
                 #如果上涨超线，应当卖出
-                sharesToBuyOrSell=-1*math.ceil(holdShares/2)
+                sharesToBuyOrSell=-1*math.ceil(holdShares/2)*currMultiplier
                 priceToBuyOrSell=max((1+IncRate)*holdAvgPrice,latestDealPrice*(1+IncRate))
             else:
                 #未上涨或下跌超线

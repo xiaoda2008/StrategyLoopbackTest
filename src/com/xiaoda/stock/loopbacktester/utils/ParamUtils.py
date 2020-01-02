@@ -42,3 +42,7 @@ SecChargeRate = 0.00025
 
 #标记是否进行止损
 profitStop=True
+
+
+#在当前股票已经全部抛出以后，再次买入的股票时nShare的多少倍
+multiplier=1

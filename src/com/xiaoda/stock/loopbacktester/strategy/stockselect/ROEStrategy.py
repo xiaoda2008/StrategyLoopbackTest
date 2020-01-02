@@ -25,7 +25,7 @@ class ROEStrategy(StrategyParent):
     #决定对哪些股票进行投资
     def getSelectedStockList(self,sdProcessor,startdateStr):
         
-        sdict=sdProcessor.getAllStockDataDict()
+        sdict=sdProcessor.getHS300Dict()
         ROEDict={}
         
         for (stockCode,scdict) in sdict.items():
@@ -83,7 +83,7 @@ class ROEStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ROE in sortedROEList[:30]:
+        for tscode, ROE in sortedROEList[:10]:
             returnStockList.append(tscode)
         
         return returnStockList

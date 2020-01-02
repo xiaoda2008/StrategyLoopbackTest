@@ -31,7 +31,7 @@ class CashCowStrategy(StrategyParent):
 
 
         #sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-        sdict=sdProcessor.getAllStockDataDict()
+        sdict=sdProcessor.getHS300Dict()
         
         cfRatioDict={}
 
@@ -101,7 +101,7 @@ class CashCowStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ratio in sortedCFRatioList[:30]:
+        for tscode, ratio in sortedCFRatioList[:10]:
             returnStockList.append(tscode)
         
         return returnStockList
