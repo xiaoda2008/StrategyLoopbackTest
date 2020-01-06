@@ -198,16 +198,12 @@ def processStockDataGet(stockList,startday,endday):
             
             sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)           
-
             sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)  
-
             sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)              
-
             sql='alter table s_finreport_balancesheet_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)  
-            
             sql='alter table s_finreport_balancesheet_%s add CONSTRAINT `FK_BS_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)              
 
@@ -240,17 +236,13 @@ def processStockDataGet(stockList,startday,endday):
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
             
             sql='alter table s_finreport_cashflow_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)           
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_cashflow_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_cashflow_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)              
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_cashflow_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
-            
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_cashflow_%s add CONSTRAINT `FK_CF_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)   
 
@@ -272,17 +264,13 @@ def processStockDataGet(stockList,startday,endday):
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
             
             sql='alter table s_finreport_income_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)           
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_income_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_income_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)              
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_income_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
-            
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_income_%s add CONSTRAINT `FK_IC_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)
                         
@@ -296,14 +284,11 @@ def processStockDataGet(stockList,startday,endday):
             adj_data.to_sql(name='s_adjdata_'+stockCode[:6], con=mysqlEngine, chunksize=1000, if_exists='replace', index=None) 
 
             sql='alter table s_adjdata_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)           
-
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_adjdata_%s MODIFY COLUMN trade_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
-            
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_adjdata_%s add PRIMARY KEY (`ts_code`,`trade_date`);'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
-            
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_adjdata_%s add CONSTRAINT `FK_AJD_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)
                                     
@@ -609,7 +594,8 @@ if __name__ == '__main__':
     #1、获取交易日信息，并存入数据库
     startday=DAYONE
     
-    trade_cal_data=sdDataAPI.trade_cal(exchange='',start_date=startday,end_date=dt.now().strftime('%Y%m%d'),fields='exchange,cal_date,is_open,pretrade_date')
+    trade_cal_data=sdDataAPI.trade_cal(exchange='SSE',start_date=startday,end_date=dt.now().strftime('%Y%m%d'),\
+                                       fields='exchange,cal_date,is_open,pretrade_date')
     
     #将交易日列表存入数据库表中
     trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)

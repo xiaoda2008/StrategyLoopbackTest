@@ -14,7 +14,7 @@ rootPath = os.path.split(curPath)[0]
 
 #print(sys.path)
 #sys.path.clear()
-print(sys.path)
+#print(sys.path)
 sys.path.append(r'E:\eclipse-workspace\StrategyLoopbackTest\src')
 sys.path.append(r'D:\Program Files\Python38\Lib\site-packages')
 sys.path.append(r'D:\Program Files\Python38')
@@ -112,7 +112,8 @@ startday=DAYONE
 
 #交易日历数据相对简单，可以每次都全量获取
 #需要先获取完整的交易日历，以方便后续对日期的处理和判断
-trade_cal_data=sdDataAPI.trade_cal(exchange='',start_date=startday,end_date=dt.now().strftime('%Y%m%d'),fields='exchange,cal_date,is_open,pretrade_date')
+trade_cal_data=sdDataAPI.trade_cal(exchange='SSE',start_date=startday,end_date=dt.now().strftime('%Y%m%d'),\
+                                   fields='exchange,cal_date,is_open,pretrade_date')
 
 #将交易日列表存入数据库表中
 trade_cal_data.to_sql(name='u_trade_cal',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
@@ -141,7 +142,7 @@ else:
 endday=sdProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False)
 
 #如果前一个交易日已经更新过，直接退出
-if last_endday>=endday:
+if last_endday.strftime('%Y%m%d')>=endday:
     sys.exit(0)
 
 
@@ -186,6 +187,10 @@ while ix<length:
         cnt=mysqlProcessor.querySql("select count(*) as count from u_stock_list where ts_code='%s'"%(stockCode))
     
         if cnt.at[0,'count']>0:
+        
+            #ix+=1
+            #continue
+            
             #在股票清单中已存在
             #不需要在股票清单表中进行处理
             
@@ -437,7 +442,7 @@ while ix<length:
                 else:       
                     paramStr=paramStr+"'"+val+"'"+','
             paramStr=paramStr[:-1]
-            sql='insert into u_stock_list values (%s)'%(paramStr)
+            sql='insert into u_stock_list(ts_code,symbol,name,area,industry,list_date) values (%s)'%(paramStr)
             MysqlProcessor.execSql(mysqlSession,sql,True)       
     
     
@@ -469,6 +474,18 @@ while ix<length:
                 oth_eqt_tools,oth_eqt_tools_p_shr,lending_funds,acc_receivable,st_fin_payable,\
                 payables,hfs_assets,hfs_sales,update_flag') 
             bs.to_sql(name='s_finreport_balancesheet_'+stockCode[:6],con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
+
+            sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)           
+            sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+            sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)              
+            sql='alter table s_finreport_balancesheet_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)  
+            sql='alter table s_finreport_balancesheet_%s add CONSTRAINT `FK_BS_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)              
+
               
             #获取现金流量表
             cf=sdDataAPI.cashflow(ts_code=stockCode,start_date=startday,end_date=endday,fields=
@@ -494,6 +511,17 @@ while ix<length:
                 conv_debt_into_cap,conv_copbonds_due_within_1y,fa_fnc_leases,end_bal_cash,\
                 beg_bal_cash,end_bal_cash_equ,beg_bal_cash_equ,im_n_incr_cash_equ,update_flag')
             cf.to_sql(name='s_finreport_cashflow_'+stockCode[:6],con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
+
+            sql='alter table s_finreport_cashflow_%s MODIFY COLUMN ts_code VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
+            sql='alter table s_finreport_cashflow_%s MODIFY COLUMN end_date VARCHAR(20) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
+            sql='alter table s_finreport_cashflow_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
+            sql='alter table s_finreport_cashflow_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
+            sql='alter table s_finreport_cashflow_%s add CONSTRAINT `FK_CF_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
+            MysqlProcessor.execSql(mysqlSession,sql,True)
             
             #获取利润表
             ic=sdDataAPI.income(ts_code=stockCode,start_date=startday,end_date=endday,fields=
@@ -805,8 +833,6 @@ while ix<length:
         #数据更新异常，需要继续重新更新
     else:
         ix=ix+1
-
-
 
 #完成所有数据的更新
 totalUpdate(mysqlSession,endday)

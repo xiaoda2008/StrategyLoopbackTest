@@ -3,13 +3,25 @@
 use tsdb;
 
 -- 添加表列：沪深300
-alter table u_stock_list add column HS300 boolean not null default 0;
+alter table u_stock_list add column HS300 tinyint(1) not null default 0;
 -- 添加表列：上证50
-alter table u_stock_list add column SH50 boolean not null default 0;
+alter table u_stock_list add column SH50 tinyint(1) not null default 0;
 -- 添加表列：深证100
-alter table u_stock_list add column SZ100 boolean not null default 0;
+alter table u_stock_list add column SZ100 tinyint(1) not null default 0;
 -- 添加表列：中证500
-alter table u_stock_list add column ZZ500 boolean not null default 0;
+alter table u_stock_list add column ZZ500 tinyint(1) not null default 0;
+-- 添加表列：自选股
+alter table u_stock_list add column selfselected tinyint(1) not null default 0;
+
+-- 自选股
+update u_stock_list set selfselected=1 where ts_code='000938.SZ';
+update u_stock_list set selfselected=1 where ts_code='000977.SZ';
+update u_stock_list set selfselected=1 where ts_code='000999.SZ';
+update u_stock_list set selfselected=1 where ts_code='002415.SZ';
+update u_stock_list set selfselected=1 where ts_code='300750.SZ';
+update u_stock_list set selfselected=1 where ts_code='600036.SH';
+update u_stock_list set selfselected=1 where ts_code='601066.SH';
+update u_stock_list set selfselected=1 where ts_code='601318.SH';
 
 -- 上证50
 update u_stock_list set SH50=1 where ts_code='600000.SH';

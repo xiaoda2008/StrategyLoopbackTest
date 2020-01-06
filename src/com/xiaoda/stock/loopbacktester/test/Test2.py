@@ -8,10 +8,127 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 from com.xiaoda.stock.loopbacktester.strategy.trade.BuylowSellhighStrategy import BuylowSellhighStrategy
 from timeit import default_timer as timer
 import time
-
+import matplotlib.pyplot as plt
+from datetime import datetime as dt
 from com.xiaoda.stock.loopbacktester.utils.TradeStrategyUtil import TradeStrategyProcessor
 
 if __name__ == '__main__':
+    
+    sdProcessor=StockDataProcessor()    
+    mysqlProcessor=MysqlProcessor()
+    mysqlSession=mysqlProcessor.getMysqlSession()
+        
+    sql="select content from u_data_desc where content_name='data_end_dealday'"
+    df=mysqlProcessor.querySql(sql)    
+    
+    lstDealDayInDB=df.at[0,'content']
+    
+    sd=sdProcessor.getCalDayByOffset(lstDealDayInDB, -365*5)
+    ed=lstDealDayInDB  
+    
+    hs300Dict=sdProcessor.getHS300Dict()      
+    
+    #cfRatioDict={}
+
+    #可以考虑多进程？
+    for (stockCode,scdict) in hs300Dict.items():    
+    
+        sql='alter table s_dailybasic_%s drop column avg_PE_Lst_5Years;'%(stockCode[:6]) 
+        MysqlProcessor.execSql(mysqlSession,sql,True)
+
+        sql='alter table s_dailybasic_%s drop column mAvg_PE_Lst_5Years;'%(stockCode[:6]) 
+        MysqlProcessor.execSql(mysqlSession,sql,True)
+
+        sql='alter table s_dailybasic_%s drop column Percentage_PE_Lst_5Years;'%(stockCode[:6]) 
+        MysqlProcessor.execSql(mysqlSession,sql,True)
+           
+    
+    print()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    sd=sdProcessor.getCalDayByOffset(lstDealDayInDB, -365*5)
+    
+    sql="SELECT\
+    db.trade_date trade_date,\
+    db.pe pe,\
+    db.pb pb,\
+    db.ps ps,\
+    kd.vol vol\
+    FROM\
+    s_dailybasic_000063 db,\
+    s_kdata_000063 kd \
+    WHERE\
+    db.trade_date = kd.trade_date \
+    AND db.trade_date > '%s' \
+    ORDER BY\
+    trade_date ASC;"%(sd)
+    
+    df=mysqlProcessor.querySql(sql)
+
+    df.set_index('trade_date',drop=True,inplace=True)
+
+    try:
+        lastPE=df.at[lstDealDayInDB,'pe']
+    except:
+        print("股票在最后一个交易日停牌")
+    
+    df.reset_index(inplace=True)
+    
+    avgPE=0
+    sumPE=0
+    biggerCnt=0
+    
+    
+    sumVol=0
+    wSumPE=0 
+    wAvgPE=0
+    
+    idx=0
+    while idx<len(df):
+        sumPE+=df.at[idx,'pe']
+        if df.at[idx,'pe']>=lastPE:
+            biggerCnt+=1
+         
+        
+        sumVol+=df.at[idx,'vol']
+        wSumPE+=df.at[idx,'vol']*df.at[idx,'pe']
+        
+        idx+=1
+
+    avgPE=sumPE/len(df)
+    wAvgPE=wSumPE/sumVol
+    
+    print()
+    print("股票%s当前PE值为：%.2f过去5年，有%.2f%%的交易日PE值低于当前"%("000063",lastPE,(1-biggerCnt/len(df))*100),end=',')
+    print("过去5年平均PE:%.2f，按交易量加权平均PE:%.2f"%(avgPE,wAvgPE))
+    
+    
+    df.drop(columns=['vol'],inplace=True)
+    
+    df.set_index('trade_date',drop=True,inplace=True)
+    
+
+    df.plot()
+    plt.grid(True)    
+    plt.savefig('d:\\foo.png')    
+    
+
+    #plt.show()
+
+    print()
+   
+    
+    
     
     '''
     processor=MysqlProcessor()

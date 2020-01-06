@@ -45,12 +45,32 @@ class StockDataProcessor(object):
         self.allStockDict=df.set_index('ts_code').to_dict(orient="index")
 
         #查询语句
-        sql = "select * from u_stock_list where HS300=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"
-        
+        sql = "select * from u_stock_list where HS300=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"    
         df=self.mysqlProcessor.querySql(sql)
-
         self.hs300Dict=df.set_index('ts_code').to_dict(orient="index")
 
+        sql = "select * from u_stock_list where SZ100=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"    
+        df=self.mysqlProcessor.querySql(sql)
+        self.sz100Dict=df.set_index('ts_code').to_dict(orient="index")
+     
+        sql = "select * from u_stock_list where SH50=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"    
+        df=self.mysqlProcessor.querySql(sql)     
+        self.sh50Dict=df.set_index('ts_code').to_dict(orient="index")
+
+        sql='select * from u_stock_list where selfselected=1;'
+        df=self.mysqlProcessor.querySql(sql)
+        self.selfselectedDict=df.set_index('ts_code').to_dict(orient="index") 
+    
+    def getTradeCalDF(self,startday,endday,dealDayOnly=False):
+        #查询语句
+        if dealDayOnly==False:
+            sql = "select * from u_trade_cal where cal_date>=%s and cal_date<=%s"%(startday,endday)
+        else:
+            sql = "select * from u_trade_cal where is_open=1 and cal_date>=%s and cal_date<=%s"%(startday,endday)
+        #查询结果
+        tcDF=self.mysqlProcessor.querySql(sql)
+        #tcDF.set_index('cal_date',drop=True,inplace=True)
+        return tcDF
     
     def isDealDay(self,dtStr):
         if self.tradeCalDF.at[dtStr,'is_open']==1:
@@ -194,10 +214,18 @@ class StockDataProcessor(object):
         return self.allStockDict
  
 
-    
+    def getSelfSelectedStockList(self):
+        return self.selfselectedDict     
+        
     def getHS300Dict(self):
         return self.hs300Dict 
- 
+
+    def getSZ100Dict(self):
+        return self.sz100Dict
+     
+    def getSH50Dict(self):
+        return self.sh50Dict  
+
     
     @staticmethod
     def mktallocation(stringx):

@@ -45,7 +45,10 @@ class NetProfitRateStrategy(StrategyParent):
                         
             ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
             #ic为之前发布的所有利润表数据
-            
+
+            #获取最近的每日信息
+            db=self.finProcessor.getLatestDailyBasic(stockCode, startdateStr)
+                        
             #有可能数据不全，直接跳过
             if ic.empty:
                 continue
@@ -75,8 +78,13 @@ class NetProfitRateStrategy(StrategyParent):
                 totalRavenue2=ic[ic['total_revenue'].notnull()].reset_index(drop=True).at[1,'total_revenue']
                 totalRavenue3=ic[ic['total_revenue'].notnull()].reset_index(drop=True).at[2,'total_revenue']
                 totalRavenue4=ic[ic['total_revenue'].notnull()].reset_index(drop=True).at[3,'total_revenue']
-            except KeyError:
-                
+
+                if db.empty:
+                    percentInLst5Years=0
+                else:
+                    percentInLst5Years=db.at[0,'Percentage_PE_Lst_5Years']
+            
+            except KeyError:     
                 continue
 
  
@@ -89,6 +97,8 @@ class NetProfitRateStrategy(StrategyParent):
             elif netIncome4<100000000:
                 #对于净利润小于1亿直接排除
                 continue
+            #elif percentInLst5Years>0.9:
+            #    continue            
             else:
                 ratio=(netIncome1+netIncome2+netIncome3+netIncome4)/(totalRavenue1+totalRavenue2+totalRavenue3+totalRavenue4)
     
@@ -100,7 +110,7 @@ class NetProfitRateStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ratio in sortedNPRatioList[:10]:
+        for tscode, ratio in sortedNPRatioList[:30]:
             returnStockList.append(tscode)
         
         return returnStockList

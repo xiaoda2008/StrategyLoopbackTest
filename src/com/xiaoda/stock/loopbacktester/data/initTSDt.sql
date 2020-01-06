@@ -40,6 +40,13 @@ insert into u_data_desc (content_name,content,comments) values ('data_end_dealda
 -- 只有上次更新时间距离当前超过1个月，才会执行更新，否则不执行股票财务报表数据的更新
 insert into u_data_desc (content_name,content,comments) values ('finance_report_date_update_to','','the date of last update of finance report');
 
+-- 市场估值水平计算更新的日期，更新完所有股票的财务报表后更新该字段
+insert into u_data_desc (content_name,content,comments) values ('marketval_date_update_to','','the date of last update of stock data market valuation');
+
+-- 市场估值水平计算更新的最新股票代码，更新某个股票的财务报表后更新该字段
+insert into u_data_desc (content_name,content,comments) values ('marketval_stock_update_to','','the stockcode of last update of stock data market valuation');
+
+
 -- k线数据最新更新的股票代码，每个股票的k线数据更新后都更新该字段
 -- insert into u_data_desc (content_name,content,comments) values ('kdata_stockcode_update_to','','the stock code of last update of k data');
 

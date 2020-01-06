@@ -52,6 +52,11 @@ class CashCowStrategy(StrategyParent):
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
             
+            
+            #获取最近的每日信息
+            db=self.finProcessor.getLatestDailyBasic(stockCode, startdateStr)
+            
+            
             #有可能数据不全，直接跳过
             if bs.empty or cf.empty:
                 continue
@@ -79,6 +84,11 @@ class CashCowStrategy(StrategyParent):
                 #现金等价物
                 cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
 
+                if db.empty:
+                    percentInLst5Years=0
+                else:
+                    percentInLst5Years=db.at[0,'Percentage_PE_Lst_5Years']
+                
             except KeyError:
                 continue
             
@@ -89,6 +99,8 @@ class CashCowStrategy(StrategyParent):
                 #对于现金等价物小于1亿或者总资产小于10亿的直接排除
                 continue  
             elif goodwill/totalAsset>0.5:
+                continue
+            elif percentInLst5Years>0.9:
                 continue
             else:
                 ratio=cashequ/totalAsset
@@ -101,7 +113,7 @@ class CashCowStrategy(StrategyParent):
 
         returnStockList=[]
 
-        for tscode, ratio in sortedCFRatioList[:10]:
+        for tscode, ratio in sortedCFRatioList[:30]:
             returnStockList.append(tscode)
         
         return returnStockList

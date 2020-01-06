@@ -39,9 +39,9 @@ class FinanceDataProcessor(object):
         '''
         #查询语句
         if isAnnual==True:
-            sql = 'select * from s_finreport_balancesheet_%s where end_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
+            sql = 'select * from s_finreport_balancesheet_%s where f_ann_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
         else:
-            sql = 'select * from s_finreport_balancesheet_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+            sql = 'select * from s_finreport_balancesheet_%s where f_ann_date<=%s order by f_ann_date desc;'%(stockCode[:6],dateStr)
 
         return self.mysqlProcessor.querySql(sql)
         #查询结果
@@ -60,9 +60,9 @@ class FinanceDataProcessor(object):
         '''
         #查询语句
         if isAnnual==True:
-            sql = 'select * from s_finreport_cashflow_%s where end_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
+            sql = 'select * from s_finreport_cashflow_%s where f_ann_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
         else:
-            sql = 'select * from s_finreport_cashflow_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+            sql = 'select * from s_finreport_cashflow_%s where f_ann_date<=%s order by f_ann_date desc;'%(stockCode[:6],dateStr)
         
         return self.mysqlProcessor.querySql(sql)
         #查询结果
@@ -81,12 +81,11 @@ class FinanceDataProcessor(object):
         '''
         #查询语句
         if isAnnual==True:
-            sql='select * from s_finreport_income_%s where end_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
+            sql='select * from s_finreport_income_%s where f_ann_date<=%s and end_date like \'%%1231%%\' order by end_date desc;'%(stockCode[:6],dateStr)
         else:
-            sql='select * from s_finreport_income_%s where end_date<=%s order by end_date desc;'%(stockCode[:6],dateStr)
+            sql='select * from s_finreport_income_%s where f_ann_date<=%s order by f_ann_date desc;'%(stockCode[:6],dateStr)
        
         return self.mysqlProcessor.querySql(sql)
-
 
     def getLatestDailyBasic(self,stockCode,dateStr):
         '''
