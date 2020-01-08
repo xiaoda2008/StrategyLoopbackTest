@@ -11,10 +11,48 @@ import time
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
 from com.xiaoda.stock.loopbacktester.utils.TradeStrategyUtil import TradeStrategyProcessor
+import tushare
+import pandas
 
 if __name__ == '__main__':
+
     
-    sdProcessor=StockDataProcessor()    
+
+
+            
+    pltDF=pandas.DataFrame(data=[],columns=['Date','Profit','HS300'])
+
+    tmpDF=pandas.DataFrame({'Date':'a','Profit':'b','HS300':'c'},index=[1])
+
+
+    pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
+    
+    
+    sdProcessor=StockDataProcessor()
+    
+    df=sdProcessor.getidxData('HS300','20191101','20191101')
+
+    tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+    sdDataAPI=tushare.pro_api()
+
+    df=sdDataAPI.index_daily(ts_code='000300.SH', start_date='20000101', end_date='20001010')
+
+    print()
+
+
+    df=sdDataAPI.index_dailybasic(ts_code='000300.SH',start_date='20190101',end_date='20191231')
+
+    print()
+    
+    
+    
+    
+    
+    
+    
+    
+
+    sdProcessor=StockDataProcessor()
     mysqlProcessor=MysqlProcessor()
     mysqlSession=mysqlProcessor.getMysqlSession()
         

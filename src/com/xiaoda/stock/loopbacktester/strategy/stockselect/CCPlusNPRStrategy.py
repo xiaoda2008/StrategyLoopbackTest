@@ -8,7 +8,7 @@ import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
-
+from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
 
 class CCPlusNPRStrategy(StrategyParent):
     '''
@@ -58,13 +58,6 @@ class CCPlusNPRStrategy(StrategyParent):
             if bs.empty or cf.empty or ic.empty or db.empty:
                 continue
             
-            try:
-                #商誉
-                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
-            except:
-                goodwill=0
-                pass
-            
             
             #需要到里面找到最后一个不是空的总资产
             try:
@@ -96,7 +89,11 @@ class CCPlusNPRStrategy(StrategyParent):
                 
                 continue
 
- 
+
+            #防暴雷、防财务造假逻辑
+            if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
+                continue
+             
             #if total_mv<2000000:
                 #剔除市值在200亿以下的
             #    continue
@@ -106,8 +103,6 @@ class CCPlusNPRStrategy(StrategyParent):
                 #剔除流通市值占比过大的
             #    continue
             if netIncome4>netIncome3 or netIncome3>netIncome2 or netIncome2>netIncome1:
-                continue
-            elif goodwill/totalAsset>0.5:
                 continue
             elif totalAvenue4>totalAvenue3 or totalAvenue3>totalAvenue2 or totalAvenue2>totalAvenue1:
                 continue

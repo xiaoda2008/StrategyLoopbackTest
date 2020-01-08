@@ -8,6 +8,7 @@ import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
+from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
 
 
 class NetProfitRateStrategy(StrategyParent):
@@ -46,20 +47,17 @@ class NetProfitRateStrategy(StrategyParent):
             ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
             #ic为之前发布的所有利润表数据
 
+            #获取现金流量表中，现金等价物总数
+            cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
+            #cf为之前发布的所有现金流量表数据
+            
             #获取最近的每日信息
             db=self.finProcessor.getLatestDailyBasic(stockCode, startdateStr)
                         
             #有可能数据不全，直接跳过
             if ic.empty:
                 continue
-            
-            try:
-                #商誉
-                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
-            except:
-                goodwill=0
-                pass
-            
+
             
             #需要到里面找到最后一个不是空的总资产
 
@@ -87,10 +85,11 @@ class NetProfitRateStrategy(StrategyParent):
             except KeyError:     
                 continue
 
- 
-            if netIncome2>netIncome1 or netIncome3>netIncome2 or netIncome4>netIncome3:
+            #防暴雷、防财务造假逻辑
+            if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
                 continue
-            elif goodwill/totalAsset>0.5:
+             
+            if netIncome2>netIncome1 or netIncome3>netIncome2 or netIncome4>netIncome3:
                 continue
             elif totalRavenue2>totalRavenue1 or totalRavenue3>totalRavenue2 or totalRavenue4>totalRavenue3:
                 continue

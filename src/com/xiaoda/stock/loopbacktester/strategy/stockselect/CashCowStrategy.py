@@ -8,6 +8,7 @@ from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import 
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from numpy.distutils.log import good
+from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
 
 
 class CashCowStrategy(StrategyParent):
@@ -52,7 +53,9 @@ class CashCowStrategy(StrategyParent):
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
             
-            
+            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
+            #ic为之前发布的所有利润表数据
+             
             #获取最近的每日信息
             db=self.finProcessor.getLatestDailyBasic(stockCode, startdateStr)
             
@@ -61,13 +64,6 @@ class CashCowStrategy(StrategyParent):
             if bs.empty or cf.empty:
                 continue
             
-            
-            try:
-                #商誉
-                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
-            except:
-                goodwill=0
-                pass
             
             #需要到里面找到最后一个不是空的总资产
             #if stockCode>'000768.SZ':
@@ -94,12 +90,15 @@ class CashCowStrategy(StrategyParent):
             
             #cf = sdDataAPI.cashflow(ts_code=sdf.at[idx,'ts_code'],start_date=startday,end_date=dt.now().strftime('%Y%m%d'))#, period='20190930')
             #cf.at[0,'c_cash_equ_end_period']
-        
+
+
+            #防暴雷、防财务造假逻辑
+            if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
+                continue
+            
             if cashequ<100000000 or totalAsset<1000000000:
                 #对于现金等价物小于1亿或者总资产小于10亿的直接排除
                 continue  
-            elif goodwill/totalAsset>0.5:
-                continue
             elif percentInLst5Years>0.9:
                 continue
             else:

@@ -7,6 +7,7 @@ import os
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import StrategyParent
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
+from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
 
 
 class ROEStrategy(StrategyParent):
@@ -44,16 +45,14 @@ class ROEStrategy(StrategyParent):
             ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
             #ic为之前发布的所有利润表数据
             
+            #获取现金流量表中，现金等价物总数
+            cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
+            #cf为之前发布的所有现金流量表数据
+                        
             #有可能数据不全，直接跳过
             if bs.empty or ic.empty:
                 continue
             
-            try:
-                #商誉
-                goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
-            except:
-                goodwill=0
-                pass
             
             #需要到里面找到最后一个不是空的总资产
 
@@ -65,11 +64,13 @@ class ROEStrategy(StrategyParent):
             #需要到里面找到最后一个不是空的现金等价物数据
             nincome=ic[ic['n_income'].notnull()].reset_index(drop=True).at[0,'n_income']
 
+
+            #防暴雷、防财务造假逻辑
+            if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
+                continue
+             
         
             if bs.empty or ic.empty:
-                #ROE=0
-                continue
-            elif goodwill/totalAssets>0.5:
                 #ROE=0
                 continue
             else:

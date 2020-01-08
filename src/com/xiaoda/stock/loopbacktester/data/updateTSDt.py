@@ -123,6 +123,8 @@ log.logger.info('处理完交易日数据的更新')
 partialUpdate(mysqlSession)
 
 
+
+
 #查询语句
 #查询当前数据截止的日期
 sql = "select content from u_data_desc where content_name='data_end_dealday'"
@@ -141,9 +143,23 @@ else:
 #日期是最新的，在日历表中没有数据，需要先获取日历数据后再进行判断
 endday=sdProcessor.getLastDealDay(dt.now().strftime('%Y%m%d'),False)
 
+
+
+
+
 #如果前一个交易日已经更新过，直接退出
 if last_endday.strftime('%Y%m%d')>=endday:
     sys.exit(0)
+
+
+
+#3、获取指数信息
+indexDF=sdDataAPI.index_daily(ts_code='000300.SH',start_date=startday,end_date=endday)
+
+#将指数数据存入数据库表中
+indexDF.to_sql(name='u_idx_hs300',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+
+
 
 
 
@@ -161,6 +177,11 @@ proFinRepFlg=False
 if finReportDis>=30:
     proFinRepFlg=True
 
+
+
+
+
+
 #2、获取股票列表并存入数据库
 #股票列表数据相对简单，可以每次都全量获取
 
@@ -173,6 +194,10 @@ stockCodeList=list(stockListDF['ts_code'])
 #如果是已经存在在数据库里，则不用建表，直接向股票清单表及其他相关表插入数据即可
 #如果是还不存在数据库里面的，需要为这个股票新建各种表，然后插入数据
 #整体框架应当是以股票为单位进行循环
+
+
+
+
 
 ix=0
 length=len(stockCodeList)

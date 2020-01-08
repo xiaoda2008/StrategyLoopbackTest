@@ -603,6 +603,13 @@ if __name__ == '__main__':
     #完成部分信息更新
     #partialUpdate(mysqlSession)
     
+
+    #2、获取指数信息
+    indexDF=sdDataAPI.index_daily(ts_code='000300.SH',start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
+    
+    #将指数数据存入数据库表中
+    indexDF.to_sql(name='u_idx_hs300',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+
     
     #2、获取股票列表并存入数据库
     sdf=sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')

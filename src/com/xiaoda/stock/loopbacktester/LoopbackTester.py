@@ -30,7 +30,9 @@ from com.xiaoda.stock.loopbacktester.utils.TradeStrategyUtil import TradeStrateg
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockSelectStrategyUtil import StockSelectStrategyProcessor
 
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 '''
 def fn_timer(fn):
@@ -522,12 +524,32 @@ if __name__ == '__main__':
             sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
             
             cashFlowList=[]
-            print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率')
+            print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率,沪深300指数收盘')
             keysList=list(cashFlowDict.keys())
             keysList.sort()
             yesterdayTotalProfit=0
 
+
+            lastIdxClose=0
+            
+            
+            pltDF=pandas.DataFrame(data=[],columns=['Date','Profit','HS300'])
+            
             for key in keysList:
+                
+                dtStr=key[0:8]
+                
+                
+                #如果不是交易日
+                #直接取上一交易日收盘点数
+                if sdProcessor.isDealDay(dtStr):
+                    #根据日期，获取当天收盘指数
+                    idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
+                    idxClose=idxDF.at[dtStr,'close']
+                    lastIdxClose=idxClose
+                else:
+                    idxClose=lastIdxClose
+                
                 #日期
                 print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
                 #当日发生资金净流量
@@ -546,14 +568,31 @@ if __name__ == '__main__':
                 
                 #持仓当日盈亏率
                 if float(cashFlowDict.get(key)[3])==0:
-                    print(0)
+                    print(0,end=',')
                 else:
-                    print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4))
+                    print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4),end=',')
+                
+                
+                #沪深300指数
+                print(idxClose)
+
+                tmpDF=pandas.DataFrame({'Date':dtStr,'Profit':todayTotalProfit,'HS300':idxClose},index=[1])
+
+
+                pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
+    
                 
                 cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
-            
             
             print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(startdate,enddate),end=',')
             print(IRRProcessor.xirr2(cashFlowList))
             
             sys.stdout = savedStdout #恢复标准输出流
+            pltDF.plot()
+            
+            plt.grid(True)
+            plt.savefig(strOutputDir+'/Summary.png')
+            
+            plt.cla()
+            plt.clf()
+            plt.close()
