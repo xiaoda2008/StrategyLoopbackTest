@@ -320,7 +320,8 @@ def processStockDataGet(stockList,startday,endday):
                 stock_k_data=tushare.pro_bar(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if stock_k_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))   
+                    #log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))   
+                    pass
                     #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
                     #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
                 else:
@@ -344,7 +345,8 @@ def processStockDataGet(stockList,startday,endday):
                 daily_basic_data=sdDataAPI.daily_basic(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if daily_basic_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    #log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    pass
                 else:
                     dbFlg=True
                     daily_basic_data.sort_index(inplace=True,ascending=False)
@@ -377,7 +379,8 @@ def processStockDataGet(stockList,startday,endday):
                 stock_k_data=tushare.pro_bar(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if stock_k_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    #log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    pass
                     #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
                     #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
                 elif kdataFlg==False:
@@ -408,7 +411,8 @@ def processStockDataGet(stockList,startday,endday):
                 daily_basic_data=sdDataAPI.daily_basic(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if daily_basic_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    #log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    pass
                 elif dbFlg==False:
                     dbFlg=True
                     daily_basic_data.sort_index(inplace=True,ascending=False)
@@ -446,7 +450,8 @@ def processStockDataGet(stockList,startday,endday):
                 stock_k_data=tushare.pro_bar(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)   
                 if stock_k_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    #log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    pass
                     #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
                     #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
                 elif kdataFlg==False:
@@ -474,7 +479,8 @@ def processStockDataGet(stockList,startday,endday):
                 daily_basic_data=sdDataAPI.daily_basic(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if daily_basic_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    #log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    pass
                 elif dbFlg==False:
                     dbFlg=True
                     daily_basic_data.sort_index(inplace=True,ascending=False)
@@ -512,7 +518,8 @@ def processStockDataGet(stockList,startday,endday):
                 stock_k_data=tushare.pro_bar(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)  
                 if stock_k_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE)) 
+                    #log.logger.warning('%s在%s到%s时段内无交易'%(stockCode,tmpSTARTDATE,tmpENDDATE)) 
+                    pass
                     #要注意一个问题，如果是为空，如果直接跳出，会导致下一次如果在本时段没有交易的股票，没有replace的过程
                     #会重复添加到数据库表，按理说如果是空，在这个过程中应当是先创建一个空表才对
                 elif kdataFlg==False:
@@ -540,7 +547,8 @@ def processStockDataGet(stockList,startday,endday):
                 daily_basic_data=sdDataAPI.daily_basic(ts_code=stockCode,start_date=tmpSTARTDATE,end_date=tmpENDDATE)
                 if daily_basic_data.empty:
                     #如果没有任何返回值，说明该时间段内没有上市交易过该股票
-                    log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    #log.logger.warning('%s在%s到%s时段内无每日数据'%(stockCode,tmpSTARTDATE,tmpENDDATE))
+                    pass
                 elif dbFlg==False:
                     dbFlg=True
                     daily_basic_data.sort_index(inplace=True,ascending=False)
@@ -625,10 +633,18 @@ if __name__ == '__main__':
     #partialUpdate(mysqlSession)
     
     sqlStr='alter table u_stock_list modify column ts_code varchar(20) primary key;'
+    sqlStr+='alter table u_stock_list add column HS300 tinyint(1) not null default 0;'
+    sqlStr+='alter table u_stock_list add column SH50 tinyint(1) not null default 0;'
+    sqlStr+='alter table u_stock_list add column SZ100 tinyint(1) not null default 0;'
+    sqlStr+='alter table u_stock_list add column ZZ500 tinyint(1) not null default 0;'
+    sqlStr+='alter table u_stock_list add column selfselected tinyint(1) not null default 0;'
+
     try:
         mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
     except sqlalchemy.exc.OperationalError:
         log.logger.warning("修正股票清单表出错，可能已经修正过")
+
+
 
 
     '''
@@ -655,6 +671,11 @@ if __name__ == '__main__':
     #    mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
     #except sqlalchemy.exc.OperationalError:
     #    log.logger.warning("修正股票清单表出错，可能已经修正过")
+
+
+
+
+
      
     sdProcessor=StockDataProcessor()
     

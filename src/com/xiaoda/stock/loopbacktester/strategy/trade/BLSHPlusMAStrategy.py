@@ -7,7 +7,8 @@ Created on 2019年12月20日
 import math
 import os
 from com.xiaoda.stock.loopbacktester.strategy.trade.StrategyParent import StrategyParent
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare,RetRate,IncRate
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import nShare,RetRate,IncRate,\
+    multiplier
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 import pandas as pd
@@ -197,7 +198,11 @@ class BLSHPlusMAStrategy(StrategyParent):
         #最大连续上涨/下跌买入/卖出计数：连续上涨买入为正数，连续下跌卖出为负数，连续上涨超线买入，计数器加1，连续下跌超线卖出，计数器减1
         continuousRiseOrFallCnt=0
 
-        
+        #乘数，用于标记买入的份额倍数
+        #最初都是1，当出现了份额全部卖出
+        #即出现了较好收益时，乘数需要相应扩大
+        currMultiplier=1
+                
         closePriceToday=stock_k_data.at[currday,'close']
     
         #openPrice=float(stock_k_data.at[currday,'open'])
@@ -207,7 +212,7 @@ class BLSHPlusMAStrategy(StrategyParent):
         avgPrice=(highPrice+lowPrice)/2
  
         #Simple策略第一天，直接以当日平均价格进行买入
-        sharesToBuyOrSell=nShare
+        sharesToBuyOrSell=nShare*currMultiplier
         priceToBuyOrSell=avgPrice
     
         if sharesToBuyOrSell>0:
@@ -318,17 +323,27 @@ class BLSHPlusMAStrategy(StrategyParent):
             if pd.isna(pre_MA20) or pd.isna(pre_MA10) or pd.isna(pre_MA5):
                 sharesToBuyOrSell=0
                 priceToBuyOrSell=0
-    
+
+            if holdShares==0:
+                
+                #当出现较好收益
+                #已经卖出全部持仓后，应当乘数放大
+                #currMultiplier=currMultiplier*multiplier
+                
+                currMultiplier=multiplier
+                
+                sharesToBuyOrSell=math.floor(nShare*currMultiplier)
+                priceToBuyOrSell=avgPrice    
             
-            if lowPrice<(1+RetRate)*latestDealPrice and lowPrice>pre_MA5:
+            elif lowPrice<(1+RetRate)*latestDealPrice and lowPrice>pre_MA5:
                 #如果下跌超线，应当买入
-                sharesToBuyOrSell=math.floor(nShare/2)
+                sharesToBuyOrSell=math.floor(nShare/2)*currMultiplier
                 priceToBuyOrSell=(1+RetRate)*latestDealPrice
                 
             elif highPrice>(1+IncRate)*holdAvgPrice and highPrice>latestDealPrice*(1+IncRate)\
             and holdShares>0 and highPrice<pre_MA10:
                 #如果上涨超线，应当卖出
-                sharesToBuyOrSell=-1*math.ceil(holdShares/2)
+                sharesToBuyOrSell=-1*math.ceil(holdShares/2)*currMultiplier
                 priceToBuyOrSell=max((1+IncRate)*holdAvgPrice,latestDealPrice*(1+IncRate))
             else:
                 #未上涨或下跌超线

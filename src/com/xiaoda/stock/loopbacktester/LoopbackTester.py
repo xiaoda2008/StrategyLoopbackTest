@@ -11,6 +11,7 @@ import os
 from com.xiaoda.stock.loopbacktester.utils.TradeChargeUtils import TradeChargeProcessor
 from com.xiaoda.stock.loopbacktester.utils.ParamUtils import OUTPUTDIR
 import datetime
+from datetime import datetime as dt
 #import shutil
 from sqlalchemy.util.langhelpers import NoneType
 from com.xiaoda.stock.loopbacktester.utils.FileUtils import FileProcessor
@@ -18,6 +19,7 @@ from com.xiaoda.stock.loopbacktester.utils.IRRUtils import IRRProcessor
 from timeit import default_timer as timer
 import time
 import pandas
+import math
 
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 
@@ -33,6 +35,10 @@ from com.xiaoda.stock.loopbacktester.utils.StockSelectStrategyUtil import StockS
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+from mpl_toolkits.axes_grid1 import host_subplot
+import mpl_toolkits.axisartist as AA
+
 
 '''
 def fn_timer(fn):
@@ -392,10 +398,10 @@ if __name__ == '__main__':
         
             log.logger.info('开始处理IRR及Summary计算')
             #读取结果文件列表
-            stockfileList = os.listdir(strOutputDir)
+            stockfileList=os.listdir(strOutputDir)
             
             #记录csv内容的列表
-            fileContentTupleList = []
+            fileContentTupleList=[]
             
             #对文件列表中的文件进行处理，获取内容列表
             for stockfileStr in stockfileList:
@@ -520,8 +526,8 @@ if __name__ == '__main__':
             #对字典进行一下排序
             sorted(cashFlowDict)
             
-            savedStdout = sys.stdout  #保存标准输出流
-            sys.stdout = open(strOutputDir+'/Summary-xirr.csv','wt+')
+            savedStdout=sys.stdout  #保存标准输出流
+            sys.stdout=open(strOutputDir+'/Summary-xirr.csv','wt+')
             
             cashFlowList=[]
             print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率,沪深300指数收盘')
@@ -533,7 +539,15 @@ if __name__ == '__main__':
             lastIdxClose=0
             
             
-            pltDF=pandas.DataFrame(data=[],columns=['Date','Profit','HS300'])
+            pltDF=pandas.DataFrame(data=[],columns=['Date','ProIncRate','HS300IncRate'])
+            
+            #获取最初的资金投入，以作为后续计算的依据
+            origInput=math.fabs(cashFlowDict.get(keysList[0])[0])
+            
+            dtStr=(keysList[0])[0:8]
+            idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
+            origIdxClose=idxDF.at[dtStr,'close']           
+            
             
             for key in keysList:
                 
@@ -576,7 +590,7 @@ if __name__ == '__main__':
                 #沪深300指数
                 print(idxClose)
 
-                tmpDF=pandas.DataFrame({'Date':dtStr,'Profit':todayTotalProfit,'HS300':idxClose},index=[1])
+                tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/origInput,4),'HS300IncRate':round(idxClose/origIdxClose-1,4)},index=[1])
 
 
                 pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
@@ -588,11 +602,96 @@ if __name__ == '__main__':
             print(IRRProcessor.xirr2(cashFlowList))
             
             sys.stdout = savedStdout #恢复标准输出流
-            pltDF.plot()
             
+            
+            
+            
+
+            plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
+                     pltDF['ProIncRate'].to_list(),label='ProfitRate',c='blue')            
+            plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
+                     pltDF['HS300IncRate'].to_list(),label='HS300Rate',c='green')    
+            
+            
+            plt.title('Return ratio vs. HS300',fontsize=14)
+            #设置图表标题和标题字号
+            
+            plt.tick_params(axis='both',which='major',labelsize=8)
+            #设置刻度的字号
+            
+            plt.xlabel('Date',fontsize=8)
+            #设置x轴标签及其字号
+            
+            plt.ylabel('IncRate',fontsize=8)
+            #设置y轴标签及其字号
+           
+            #pltDF.plot()
+            plt.legend()#显示图例，如果注释改行，即使设置了图例仍然不显示
             plt.grid(True)
+            
             plt.savefig(strOutputDir+'/Summary.png')
+            plt.savefig(OODir+'/'+stockSelectStrategyStr+'-'+tradeStrategyStr+'-'+'Summary.png')
             
             plt.cla()
             plt.clf()
             plt.close()
+            
+            '''
+            from matplotlib.pyplot import MultipleLocator
+            #从pyplot导入MultipleLocator类，这个类用于设置刻度间隔
+
+            x_major_locator=MultipleLocator(1)
+            #把x轴的刻度间隔设置为1，并存在变量里
+            y_major_locator=MultipleLocator(10)
+            #把y轴的刻度间隔设置为10，并存在变量里
+            ax=plt.gca()
+            #ax为两条坐标轴的实例
+            ax.xaxis.set_major_locator(x_major_locator)
+            #把x轴的主刻度设置为1的倍数
+            ax.yaxis.set_major_locator(y_major_locator)
+            #把y轴的主刻度设置为10的倍数
+            plt.xlim(-0.5,11)
+            #把x轴的刻度范围设置为-0.5到11，因为0.5不满一个刻度间隔，所以数字不会显示出来，但是能看到一点空白
+            plt.ylim(-5,110)
+            #把y轴的刻度范围设置为-5到110，同理，-5不会标出来，但是能看到一点空白
+            '''
+
+            
+            '''
+            host=host_subplot(111, axes_class=AA.Axes)
+            plt.subplots_adjust(right=0.75)
+            
+            par1=host.twinx()
+            #par2=host.twinx()
+            
+            #offset = 100
+            #new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+            #par2.axis["right"]=new_fixed_axis(loc="right",axes=par2,offset=(offset, 0))
+            
+            par1.axis["right"].toggle(all=True)
+            #par2.axis["right"].toggle(all=True)
+            
+            #host.set_xlim(0, 2)
+            #host.set_ylim(0, 2)
+            
+            host.set_xlabel("Date")
+            
+            host.set_ylabel("Profit")
+            par1.set_ylabel("HS300")
+            #par2.set_ylabel("Velocity")
+            
+            p1,=host.plot(pltDF['Date'].to_list(),pltDF['Profit'].to_list(), label="Profit")
+            p2,=par1.plot(pltDF['Date'].to_list(),pltDF['HS300'].to_list(), label="HS300")
+            #p3, = par2.plot([0, 1, 2], [50, 30, 15], label="Velocity")
+            
+            par1.set_ylim(0, 4)
+            #par2.set_ylim(1, 65)
+            
+            host.legend()
+            
+            host.axis["left"].label.set_color(p1.get_color())
+            par1.axis["right"].label.set_color(p2.get_color())
+            #par2.axis["right"].label.set_color(p3.get_color())
+            
+            plt.savefig(strOutputDir+'/Summary.png')
+            '''

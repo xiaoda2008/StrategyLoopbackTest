@@ -362,8 +362,7 @@ class BuylowSellhighStrategy(StrategyParent):
                 else:
                     holdAvgPrice=0
                 holdShares -= abs(sharesToBuyOrSell)
-    
-            
+
                 #获取卖出交易费
                 dealCharge=TradeChargeProcessor.getSellCharge(abs(sharesToBuyOrSell)*100*priceToBuyOrSell)
                     

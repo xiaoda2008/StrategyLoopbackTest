@@ -13,8 +13,8 @@ class RiskAvoidProcessor(object):
         '''
         Constructor
         '''   
-    
-    def getRiskAvoidFlg(self,stockCode,ic,bs,cf,sdProcessor):
+    @staticmethod
+    def getRiskAvoidFlg(stockCode,ic,bs,cf,sdProcessor):
 
         totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
         

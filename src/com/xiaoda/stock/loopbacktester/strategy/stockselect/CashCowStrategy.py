@@ -80,10 +80,10 @@ class CashCowStrategy(StrategyParent):
                 #现金等价物
                 cashequ=cf[cf['c_cash_equ_end_period'].notnull()].reset_index(drop=True).at[0,'c_cash_equ_end_period']
 
-                if db.empty:
-                    percentInLst5Years=0
-                else:
-                    percentInLst5Years=db.at[0,'Percentage_PE_Lst_5Years']
+                #if db.empty:
+                #    percentInLst5Years=0
+                #else:
+                #    percentInLst5Years=db.at[0,'Percentage_PE_Lst_5Years']
                 
             except KeyError:
                 continue
@@ -99,14 +99,14 @@ class CashCowStrategy(StrategyParent):
             if cashequ<100000000 or totalAsset<1000000000:
                 #对于现金等价物小于1亿或者总资产小于10亿的直接排除
                 continue  
-            elif percentInLst5Years>0.9:
-                continue
+            #elif percentInLst5Years>0.9:
+            #    continue
             else:
                 ratio=cashequ/totalAsset
     
             cfRatioDict[stockCode]=ratio
             
-            self.log.logger.info('CashCowStrategy:%s的CCRate:%f,商誉:%f'%(stockCode,ratio,goodwill/totalAsset))
+            self.log.logger.info('CashCowStrategy:%s的CCRate:%f'%(stockCode,ratio))
             
         sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
 
