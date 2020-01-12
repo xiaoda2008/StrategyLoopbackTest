@@ -9,6 +9,7 @@ from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import 
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
+from com.xiaoda.stock.loopbacktester.strategy.utils.StockListFilterUtil import StockListFilterProcessor
 
 class CCPlusNPRStrategy(StrategyParent):
     '''
@@ -35,7 +36,9 @@ class CCPlusNPRStrategy(StrategyParent):
         
         #可以考虑多进程？
         for (stockCode,scdict) in sdict.items():
-            
+            if stockCode=="600519.SH":
+                continue
+                        
             listdate=scdict['list_date']
             
             if listdate>startdateStr:
@@ -135,9 +138,20 @@ class CCPlusNPRStrategy(StrategyParent):
         for tscode,ratio in sortedCFRatioTuples:
             sortedCFRatioList.append(tscode)           
         
-        
-        
-        returnStockList=list(set(sortedNPRatioList[:30]).intersection(set(sortedCFRatioList[:30])))
+                
+        intStockList=list(set(sortedNPRatioList[:50]).intersection(set(sortedCFRatioList[:50])))
 
+        
+        #删选以避免某一行业占比过高
+        returnStockList=StockListFilterProcessor.filterStockList(intStockList, sdProcessor)        
+
+        #选出的股票不要少于10支
+        if len(returnStockList)<10:
+            
+            intStockList=list(set(sortedNPRatioList[:80]).intersection(set(sortedCFRatioList[:80])))
+ 
+            #删选以避免某一行业占比过高
+            returnStockList=StockListFilterProcessor.filterStockList(intStockList, sdProcessor)        
+                
         
         return returnStockList

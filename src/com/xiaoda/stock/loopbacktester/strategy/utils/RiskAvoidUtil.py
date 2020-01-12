@@ -7,6 +7,9 @@ Created on 2020年1月8日
 class RiskAvoidProcessor(object):
     '''
     防暴雷逻辑
+    根据股票的财务等情况，确定是否应当剔除
+    如果是True，说明应当被剔除
+    
     '''
     
     def __init__(self, params):

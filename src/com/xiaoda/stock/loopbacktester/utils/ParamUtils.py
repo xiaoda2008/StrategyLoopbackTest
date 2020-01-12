@@ -31,8 +31,8 @@ OUTPUTDIR = 'D:/outputDir'
 mysqlURL = 'mysql+mysqldb://ts:ts@localhost/tsdb?charset=utf8mb4'
 
 #固定上涨与下跌幅度的参数
-IncRate = 0.10
-RetRate = -0.15
+RetRate=-0.25
+IncRate=0.20
 
 nShare = 3 #第一次买入的数量，默认为10手，部分策略中，后续买入的数量，与该参数也相关
 
@@ -46,3 +46,7 @@ profitStop=True
 
 #在当前股票已经全部抛出以后，再次买入的股票时nShare的多少倍
 multiplier=1
+
+
+#股票选择策略中，选出来的策略中，同一行业允许的最大占比
+industryProprtion=0.05

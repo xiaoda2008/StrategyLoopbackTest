@@ -159,9 +159,14 @@ if last_endday.strftime('%Y%m%d')>=endday:
 #3、获取指数信息
 indexDF=sdDataAPI.index_daily(ts_code='000300.SH',start_date=startday,end_date=endday)
 
-#将指数数据存入数据库表中
-indexDF.to_sql(name='u_idx_hs300',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
+try:
+    #将指数数据存入数据库表中
+    indexDF.to_sql(name='u_idx_hs300',con=mysqlEngine,chunksize=1000,if_exists='append',index=None)
+except Exception as e:
+    if type(e)==sqlalchemy.exc.IntegrityError:
+        pass
+    else:
+        raise e    
 
 
 

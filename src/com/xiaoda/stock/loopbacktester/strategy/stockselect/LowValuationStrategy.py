@@ -35,7 +35,9 @@ class LowValuationStrategy(StrategyParent):
 
         #可以考虑多进程？
         for (stockCode,scdict) in sdict.items():
-            
+            if stockCode=="600519.SH":
+                continue
+                        
             listdate=scdict['list_date']
             
             if listdate>startdateStr:

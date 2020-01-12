@@ -9,6 +9,8 @@ from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataPr
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from numpy.distutils.log import good
 from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
+from com.xiaoda.stock.loopbacktester.strategy.utils.StockListFilterUtil import StockListFilterProcessor
+
 
 
 class CashCowStrategy(StrategyParent):
@@ -38,7 +40,9 @@ class CashCowStrategy(StrategyParent):
 
         #可以考虑多进程？
         for (stockCode,scdict) in sdict.items():
-            
+            if stockCode=="600519.SH":
+                continue
+                        
             listdate=scdict['list_date']
             
             if listdate>startdateStr:
@@ -110,9 +114,22 @@ class CashCowStrategy(StrategyParent):
             
         sortedCFRatioList=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
 
-        returnStockList=[]
-
+        tmpStockList=[]
         for tscode, ratio in sortedCFRatioList[:30]:
-            returnStockList.append(tscode)
+            tmpStockList.append(tscode)
+
+        
+        #删选以避免某一行业占比过高
+        returnStockList=StockListFilterProcessor.filterStockList(tmpStockList, sdProcessor)        
+        
+        #选出的股票不要少于10支
+        if len(returnStockList)<10:
+            tmpStockList=[]
+            for tscode, ratio in sortedCFRatioList[:50]:
+                tmpStockList.append(tscode)
+            
+            #删选以避免某一行业占比过高
+            returnStockList=StockListFilterProcessor.filterStockList(tmpStockList, sdProcessor)        
+        
         
         return returnStockList

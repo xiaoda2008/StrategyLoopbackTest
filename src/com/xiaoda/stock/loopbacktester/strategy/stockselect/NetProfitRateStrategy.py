@@ -9,6 +9,8 @@ from com.xiaoda.stock.loopbacktester.strategy.stockselect.StrategyParent import 
 from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataProcessor
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
+from com.xiaoda.stock.loopbacktester.strategy.utils.StockListFilterUtil import StockListFilterProcessor
+
 
 
 class NetProfitRateStrategy(StrategyParent):
@@ -35,7 +37,9 @@ class NetProfitRateStrategy(StrategyParent):
 
         #可以考虑多进程？
         for (stockCode,scdict) in sdict.items():
-            
+            if stockCode=="600519.SH":
+                continue
+                        
             listdate=scdict['list_date']
             
             if listdate>startdateStr:
@@ -77,10 +81,10 @@ class NetProfitRateStrategy(StrategyParent):
                 totalRavenue3=ic[ic['total_revenue'].notnull()].reset_index(drop=True).at[2,'total_revenue']
                 totalRavenue4=ic[ic['total_revenue'].notnull()].reset_index(drop=True).at[3,'total_revenue']
 
-                if db.empty:
-                    percentInLst5Years=0
-                else:
-                    percentInLst5Years=db.at[0,'Percentage_PE_Lst_5Years']
+                #if db.empty:
+                #    percentInLst5Years=0
+                #else:
+                #    percentInLst5Years=db.at[0,'Percentage_PE_Lst_5Years']
             
             except KeyError:     
                 continue
@@ -107,9 +111,22 @@ class NetProfitRateStrategy(StrategyParent):
 
         sortedNPRatioList=sorted(npRatioDict.items(),key=lambda x:x[1],reverse=True)
 
-        returnStockList=[]
+        tmpStockList=[]
 
         for tscode, ratio in sortedNPRatioList[:30]:
-            returnStockList.append(tscode)
-        
+            tmpStockList.append(tscode)
+
+        #删选以避免某一行业占比过高
+        returnStockList=StockListFilterProcessor.filterStockList(tmpStockList, sdProcessor)        
+
+
+        #选出的股票不要少于10支
+        if len(returnStockList)<10:
+            tmpStockList=[]
+            for tscode, ratio in sortedNPRatioList[:50]:
+                tmpStockList.append(tscode)
+            
+            #删选以避免某一行业占比过高
+            returnStockList=StockListFilterProcessor.filterStockList(tmpStockList, sdProcessor)      
+                          
         return returnStockList

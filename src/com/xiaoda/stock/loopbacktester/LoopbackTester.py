@@ -196,7 +196,7 @@ def get8slListFromStockList(stockList):
 
 #具体处理股票的处理
 #@fn_timer
-def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,twentyDaysBeforeFirstDay,enddate,summaryOutFile):
+def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
     
     #t1=timer()
     #print("t1:%s"%(t1))
@@ -214,7 +214,7 @@ def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,twentyDay
         #t3=timer()
         #print("t3:%s"%(t3))
         outputFile = strOutputDir+'/'+ stockCode + '.csv'
-        myPath = Path(outputFile)
+        myPath=Path(outputFile)
     
         #如果文件已经存在，说明已经处理过了，直接跳过该股票即可
         if myPath.exists():
@@ -382,7 +382,7 @@ if __name__ == '__main__':
             for subStockList in slList:
                 
                 p=multiprocessing.Process(target=processStock,args=(subStockList,tradeStrategy.getStrategyName(),strOutputDir,\
-                                 firstDealDay,twentyDaysBeforeFirstOpenDay,enddate,summaryOutFile,))
+                                 firstDealDay,enddate,))
                 p.start()
         
                 process.append(p)
@@ -415,12 +415,15 @@ if __name__ == '__main__':
             savedStdout=sys.stdout  #保存标准输出流
             sys.stdout=open(strOutputDir+'/Summary.csv','wt+')            
             
-            print('股票代码,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
+            print('股票代码,股票名称,所属行业,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
             
             #对已有的内容列表进行处理
-            for stockfileName,stockfileDF in fileContentTupleList:
+            for stockCode,stockfileDF in fileContentTupleList:
                 
-                stockCode=stockfileName[:6]
+                stInfoDF=sdProcessor.getStockInfo(stockCode)
+                stName=stInfoDF.at[0,'name']
+                stInd=stInfoDF.at[0,'industry']
+                
                 biggestCashOccupy=0
                 totalIn=0
                 totalOut=0
@@ -441,6 +444,8 @@ if __name__ == '__main__':
                         break
                 
                 print(stockCode,end=',')
+                print(stName,end=',')
+                print(stInd,end=',')
                 print(biggestCashOccupy,end=',')            
                 print(totalIn,end=',')
                 print(totalOut,end=',')
@@ -546,7 +551,7 @@ if __name__ == '__main__':
             
             dtStr=(keysList[0])[0:8]
             idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
-            origIdxClose=idxDF.at[dtStr,'close']           
+            origIdxClose=idxDF.at[dtStr,'close']
             
             
             for key in keysList:
@@ -613,7 +618,7 @@ if __name__ == '__main__':
                      pltDF['HS300IncRate'].to_list(),label='HS300Rate',c='green')    
             
             
-            plt.title('Return ratio vs. HS300',fontsize=14)
+            plt.title('Return ratio:%s,%s'%(stockSelectStrategyStr,tradeStrategyStr),fontsize=10)
             #设置图表标题和标题字号
             
             plt.tick_params(axis='both',which='major',labelsize=8)
