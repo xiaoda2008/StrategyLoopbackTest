@@ -257,7 +257,7 @@ class MultiStepStrategy(StrategyParent):
     
                 appendlDF=self.getDupLastDayDF(currday,lastDealDayDF)
 
-                stockOutDF.append(appendlDF,ignore_index=True,sort=False)
+                stockOutDF=stockOutDF.append(appendlDF,ignore_index=True,sort=False)
 
                 '''                            
                 #如果直接停牌到endday

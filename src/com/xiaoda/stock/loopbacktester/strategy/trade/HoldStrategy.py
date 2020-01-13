@@ -114,6 +114,9 @@ class HoldStrategy(StrategyParent):
         对stockCode股票从startday到endday之间的交易进行处理
         并返回一个结构，用于表示实际的每天的交易及每天的持仓信息
         '''
+        #if stockCode=='000661.SZ':
+        #    pass
+        
         #tc=timer()
         #print("tc:%s"%(tc))
         stockOutDF=pd.DataFrame(columns=('日期','交易类型','当天收盘持仓市值','当天持仓手数','累计投入金额',\
@@ -229,6 +232,8 @@ class HoldStrategy(StrategyParent):
         while currday<=endday:
             #ta=timer()
             #print("ta:%s"%(ta))
+            #if currday=='20190910' and stockCode=='000661.SZ':
+            #    print()
             if (not self.sdProcessor.isDealDay(currday)):
                 #当前日期非交易日，需要输出一个空行到文件中
                 #该空行内容与上一个交易日的内容相同
@@ -248,7 +253,7 @@ class HoldStrategy(StrategyParent):
     
                 appendlDF=self.getDupLastDayDF(currday,lastDealDayDF)
 
-                stockOutDF.append(appendlDF,ignore_index=True,sort=False)
+                stockOutDF=stockOutDF.append(appendlDF,ignore_index=True,sort=False)
 
                 currday=StockDataProcessor.getNextCalDay(currday)
                 

@@ -111,6 +111,9 @@ class BuylowSellhighStrategy(StrategyParent):
 
      
     def processTradeDuringPeriod(self,stockCode,startday,endday):
+        
+        #if stockCode=='000661.SZ':
+        #    pass
         '''
         对stockCode股票从startday到endday之间的交易进行处理
         并返回一个结构，用于表示实际的每天的交易及每天的持仓信息
@@ -230,6 +233,9 @@ class BuylowSellhighStrategy(StrategyParent):
         
         
         while currday<=endday:
+            #if currday=='20190910' and stockCode=='000661.SZ':
+            #    print()
+            
             #ta=timer()
             #print("ta:%s"%(ta))
             if (not self.sdProcessor.isDealDay(currday)):
@@ -251,7 +257,7 @@ class BuylowSellhighStrategy(StrategyParent):
     
                 appendlDF=self.getDupLastDayDF(currday,lastDealDayDF)
 
-                stockOutDF.append(appendlDF,ignore_index=True,sort=False)
+                stockOutDF=stockOutDF.append(appendlDF,ignore_index=True,sort=False)
 
                 '''                            
                 #如果直接停牌到endday

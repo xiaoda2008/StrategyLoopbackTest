@@ -591,7 +591,7 @@ if __name__ == '__main__':
                 else:
                     print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4),end=',')
                 
-                
+                #log.logger.info("在%s日期的利润率:%.2f"%(dtStr,round(todayTotalProfit/origInput,4)))
                 #沪深300指数
                 print(idxClose)
 
