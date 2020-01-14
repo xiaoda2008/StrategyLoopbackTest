@@ -595,8 +595,10 @@ if __name__ == '__main__':
                 #沪深300指数
                 print(idxClose)
 
-                tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/origInput,4),'HS300IncRate':round(idxClose/origIdxClose-1,4)},index=[1])
-
+                try:
+                    tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/origInput,4),'HS300IncRate':round(idxClose/origIdxClose-1,4)},index=[1])
+                except:
+                    print()
 
                 pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
     

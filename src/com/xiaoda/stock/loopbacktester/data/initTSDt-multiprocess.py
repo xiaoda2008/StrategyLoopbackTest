@@ -618,6 +618,13 @@ if __name__ == '__main__':
     #将指数数据存入数据库表中
     indexDF.to_sql(name='u_idx_hs300',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
 
+    sqlStr='alter table u_idx_hs300 modify column trade_date varchar(20) primary key;'
+
+    try:
+        mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
+    except sqlalchemy.exc.OperationalError:
+        log.logger.warning("修正HS300指数表出错，可能已经修正过")
+
     
     #2、获取股票列表并存入数据库
     sdf=sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')
