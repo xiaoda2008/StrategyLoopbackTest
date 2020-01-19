@@ -42,6 +42,7 @@ class CashCowStrategy(StrategyParent):
         for (stockCode,scdict) in sdict.items():
             if stockCode=="600519.SH":
                 continue
+
                         
             listdate=scdict['list_date']
             

@@ -10,6 +10,9 @@ from com.xiaoda.stock.loopbacktester.utils.FinanceDataUtils import FinanceDataPr
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
 from com.xiaoda.stock.loopbacktester.strategy.utils.RiskAvoidUtil import RiskAvoidProcessor
 from com.xiaoda.stock.loopbacktester.strategy.utils.StockListFilterUtil import StockListFilterProcessor
+import pandas
+##利用最小二乘法进行线性回归，拟合CAPM模型
+import statsmodels.api as sm
 
 class CCPlusNPRStrategy(StrategyParent):
     '''
@@ -35,15 +38,66 @@ class CCPlusNPRStrategy(StrategyParent):
         cfRatioDict={}
         
         #可以考虑多进程？
-        for (stockCode,scdict) in sdict.items():
-            if stockCode=="600519.SH":
-                continue
-                        
+        for (stockCode,scdict) in sdict.items():    
+            
             listdate=scdict['list_date']
             
             if listdate>startdateStr:
                 continue
             
+            
+            if stockCode=="600519.SH":
+                continue
+            
+            
+            
+            '''
+            endday=startdateStr
+            startday=sdProcessor.getCalDayByOffset(endday,-365*5)
+
+            #剔除上市第一天，上市第一天波动太大
+            if listdate>=startday:
+                startday=sdProcessor.getNextDealDay(listdate,False)
+                
+            #上市时间过短，不到一年，可以直接排除掉
+            if sdProcessor.getDateDistance(startday,endday)<365:
+                continue
+
+            stockDF=sdProcessor.getStockKData(stockCode,startday,endday,'qfq')
+            stockDF.set_index('trade_date',drop=True,inplace=True)
+        
+            idxDF=sdProcessor.getidxData('HS300',startday,endday)
+            
+            #print("处理%s"%(stockCode))
+            
+
+            sh_md_merge=pandas.merge(pandas.DataFrame(idxDF.pct_chg),pandas.DataFrame(stockDF.pct_chg),\
+                                 left_index=True,right_index=True,how='inner')
+             
+            #计算日无风险利率
+            Rf_annual=0.0334#以一年期的国债利率为无风险利率
+            Rf_daily=(1+Rf_annual)**(1/365)-1##年利率转化为日利率
+             
+            #计算风险溢价:Ri-Rf
+            risk_premium=sh_md_merge-Rf_daily
+            #risk_premium.head()
+            
+            #画出两个风险溢价的散点图，查看相关性
+            #plt.scatter(risk_premium.values[:,0],risk_premium.values[:,1])
+            #plt.xlabel("MD Daily Return")
+            #plt.xlabel("SH Index Daily Return")   
+            
+            md_capm=sm.OLS(risk_premium.pct_chg_y[1:],sm.add_constant(risk_premium.pct_chg_x[1:]))
+            result=md_capm.fit()               
+            
+            beta=result.params[1]
+
+            #筛选Beta
+            if(beta>1):
+                continue
+            '''
+            
+
             bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
             #bs为所有之前发布的所有资产负债表数据
             
@@ -94,8 +148,8 @@ class CCPlusNPRStrategy(StrategyParent):
 
 
             #防暴雷、防财务造假逻辑
-            if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
-                continue
+            #if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
+            #    continue
              
             #if total_mv<2000000:
                 #剔除市值在200亿以下的
@@ -122,8 +176,8 @@ class CCPlusNPRStrategy(StrategyParent):
             npRatioDict[stockCode]=profitRatio
             cfRatioDict[stockCode]=cashequRatio
             
-            self.log.logger.info('CCPlusNPRStrategy,profitRatio'+stockCode+','+str(profitRatio))            
-            self.log.logger.info('CCPlusNPRStrategy,cashequRatio:'+stockCode+','+str(cashequRatio))
+            self.log.logger.info('%s,profitRatio:%.4f,cashequRatio:%.4f,beta:%.4f'\
+                                 %(stockCode,profitRatio,cashequRatio,0))
 
         sortedNPRatioTuples=sorted(npRatioDict.items(),key=lambda x:x[1],reverse=True)
         sortedCFRatioTuples=sorted(cfRatioDict.items(),key=lambda x:x[1],reverse=True)
@@ -138,7 +192,7 @@ class CCPlusNPRStrategy(StrategyParent):
         for tscode,ratio in sortedCFRatioTuples:
             sortedCFRatioList.append(tscode)           
         
-                
+        
         intStockList=list(set(sortedNPRatioList[:50]).intersection(set(sortedCFRatioList[:50])))
 
         
@@ -148,7 +202,7 @@ class CCPlusNPRStrategy(StrategyParent):
         #选出的股票不要少于10支
         if len(returnStockList)<10:
             
-            intStockList=list(set(sortedNPRatioList[:80]).intersection(set(sortedCFRatioList[:80])))
+            intStockList=list(set(sortedNPRatioList[:60]).intersection(set(sortedCFRatioList[:60])))
  
             #删选以避免某一行业占比过高
             returnStockList=StockListFilterProcessor.filterStockList(intStockList, sdProcessor)        

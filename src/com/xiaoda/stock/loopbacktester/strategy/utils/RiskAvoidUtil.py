@@ -27,7 +27,7 @@ class RiskAvoidProcessor(object):
         except:
             goodwill=0
                     
-        if goodwill/totalAsset>0.5:
+        if goodwill/totalAsset>0.6:
             return True        
 
 

@@ -34,7 +34,7 @@ mysqlURL = 'mysql+mysqldb://ts:ts@localhost/tsdb?charset=utf8mb4'
 RetRate=-0.25
 IncRate=0.20
 
-nShare = 3 #第一次买入的数量，默认为10手，部分策略中，后续买入的数量，与该参数也相关
+nShare=1 #第一次买入的数量，默认为10手，部分策略中，后续买入的数量，与该参数也相关
 
 #券商佣金费率
 SecChargeRate = 0.00025

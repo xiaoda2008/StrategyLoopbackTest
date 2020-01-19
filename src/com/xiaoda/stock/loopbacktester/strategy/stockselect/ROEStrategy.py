@@ -40,6 +40,8 @@ class ROEStrategy(StrategyParent):
             if listdate>startdateStr:
                 continue
 
+
+
             #ROE=净利润/净资产
             #从资产负债表获取净资产数据
             

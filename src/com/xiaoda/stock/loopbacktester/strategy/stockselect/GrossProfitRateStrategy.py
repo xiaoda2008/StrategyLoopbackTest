@@ -40,6 +40,7 @@ class GrossProfitRateStrategy(StrategyParent):
             
             if listdate>startdateStr:
                 continue
+ 
             
             if stockCode=="600519.SH":
                 continue

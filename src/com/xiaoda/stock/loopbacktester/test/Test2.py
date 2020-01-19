@@ -17,10 +17,125 @@ from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
 import matplotlib.pyplot as plt
 
+import pandas as pd
+import pandas_datareader.data as web
+##利用最小二乘法进行线性回归，拟合CAPM模型
+import statsmodels.api as sm
+
 
 if __name__ == '__main__':
 
+    sdProcessor=StockDataProcessor()
 
+    startday='20190101'
+    endday='20200101'
+    
+    '''
+    #黄金价格
+    goldDF=web.DataReader(name='GOLDAMGBD228NLBM', data_source='fred',start=startday,end=endday)
+
+    goldDF=goldDF[goldDF['GOLDAMGBD228NLBM'].notnull()]
+
+    goldDF=goldDF.reset_index()
+    goldDF['DATE']=goldDF['DATE'].dt.strftime('%Y%m%d') 
+
+    goldDF=goldDF.rename(columns={'DATE': 'trade_date', 'GOLDAMGBD228NLBM': 'gold_price'})
+        
+    goldDF.set_index('trade_date',drop=True,inplace=True)
+
+    goldDF['pct_chg']=(goldDF['gold_price']-goldDF['gold_price'].shift(1))/goldDF['gold_price'].shift(1)
+
+    goldDF=goldDF[goldDF['pct_chg'].notnull()]
+        
+    idxDF=sdProcessor.getidxData('HS300',startday,endday)    
+
+    goldDF['pct_chg']=goldDF['pct_chg']*100
+
+    sh_md_merge=pd.merge(pd.DataFrame(idxDF.pct_chg),pd.DataFrame(goldDF.pct_chg),\
+                         left_index=True,right_index=True,how='inner')
+    
+
+    '''
+    
+    
+    #德国股指
+    #goldDF=web.DataReader(name='^GDAXI', data_source='yahoo',start=startday,end=endday)
+    #苹果股价
+    #cmpDF=web.DataReader(name='AAPL', data_source='yahoo',start=startday,end=endday)
+
+
+    '''
+    #道琼斯指数
+    cmpDF=web.DataReader(name='DJIA', data_source='yahoo',start=startday,end=endday)    
+
+    cmpDF=cmpDF[cmpDF['Adj Close'].notnull()]
+
+    cmpDF=cmpDF.reset_index()
+    cmpDF['Date']=cmpDF['Date'].dt.strftime('%Y%m%d')
+
+    cmpDF=cmpDF.rename(columns={'Date': 'trade_date', 'Adj Close': 'close_price'})
+        
+    cmpDF.set_index('trade_date',drop=True,inplace=True)
+
+    cmpDF['pct_chg']=(cmpDF['close_price']-cmpDF['close_price'].shift(1))/cmpDF['close_price'].shift(1)*100
+
+    cmpDF=cmpDF[cmpDF['pct_chg'].notnull()]
+        
+    idxDF=sdProcessor.getidxData('HS300',startday,endday)
+
+    sh_md_merge=pd.merge(pd.DataFrame(idxDF.pct_chg),pd.DataFrame(cmpDF.pct_chg),\
+                         left_index=True,right_index=True,how='inner')
+
+    '''
+
+    tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+    sdDataAPI=tushare.pro_api()
+    
+    #cmpDF=sdDataAPI.fund_nav(ts_code='000218.OF')
+    cmpDF=sdDataAPI.fund_nav(ts_code='519772.OF')
+    cmpDF=cmpDF.reindex(index=cmpDF.index[::-1])
+
+   
+    #print(cmpDF.columns)
+    #cmpDF=cmpDF.reset_index()    
+    
+    cmpDF=cmpDF.rename(columns={'end_date': 'trade_date'})
+    
+    cmpDF.set_index('trade_date',drop=True,inplace=True)
+
+    
+    cmpDF['pct_chg']=(cmpDF['accum_nav']-cmpDF['accum_nav'].shift(1))/cmpDF['accum_nav'].shift(1)*100
+
+    cmpDF=cmpDF[cmpDF['pct_chg'].notnull()]
+    idxDF=sdProcessor.getidxData('HS300',startday,endday)
+
+    sh_md_merge=pd.merge(pd.DataFrame(idxDF.pct_chg),pd.DataFrame(cmpDF.pct_chg),\
+                         left_index=True,right_index=True,how='inner')
+
+
+    
+    #计算日无风险利率
+    Rf_annual=0.0334#以一年期的国债利率为无风险利率
+    Rf_daily=(1+Rf_annual)**(1/365)-1##年利率转化为日利率
+     
+    #计算风险溢价:Ri-Rf
+    risk_premium=sh_md_merge-Rf_daily
+    #risk_premium.head()
+    
+    #画出两个风险溢价的散点图，查看相关性
+    plt.scatter(risk_premium.values[:,0],risk_premium.values[:,1])
+    plt.ylabel("Gold Daily Return")
+    plt.xlabel("HS300 Index Daily Return")   
+    
+    md_capm=sm.OLS(risk_premium.pct_chg_y[1:],sm.add_constant(risk_premium.pct_chg_x[1:]))
+    result=md_capm.fit()
+    print(result.summary())
+    print(result.params)
+ 
+ 
+    exit(0)
+   
+    
     host = host_subplot(111, axes_class=AA.Axes)
     plt.subplots_adjust(right=0.75)
     
