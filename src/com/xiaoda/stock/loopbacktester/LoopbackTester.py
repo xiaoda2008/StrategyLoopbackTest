@@ -547,7 +547,9 @@ if __name__ == '__main__':
             pltDF=pandas.DataFrame(data=[],columns=['Date','ProIncRate','HS300IncRate'])
             
             #获取最初的资金投入，以作为后续计算的依据
-            origInput=math.fabs(cashFlowDict.get(keysList[0])[0])
+            #不能用这个，因为可能会有某些股票在初始停牌，
+            #后续才真正可交易，产生了资金投入
+            #origInput=math.fabs(cashFlowDict.get(keysList[0])[0])
             
             dtStr=(keysList[0])[0:8]
             idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
@@ -573,6 +575,7 @@ if __name__ == '__main__':
                 print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
                 #当日发生资金净流量
                 print(cashFlowDict.get(key)[0],end=',')
+                totalCashOccupy=cashFlowDict.get(key)[1]
                 #截至当日资金净占用
                 print(cashFlowDict.get(key)[1],end=',')
                 #当前持仓总盈亏
@@ -596,7 +599,7 @@ if __name__ == '__main__':
                 print(idxClose)
 
                 try:
-                    tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/origInput,4),'HS300IncRate':round(idxClose/origIdxClose-1,4)},index=[1])
+                    tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/totalCashOccupy,4),'HS300IncRate':round(idxClose/origIdxClose-1,4)},index=[1])
                 except:
                     print()
 
