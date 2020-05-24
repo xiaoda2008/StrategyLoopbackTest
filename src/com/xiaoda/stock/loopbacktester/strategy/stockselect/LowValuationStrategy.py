@@ -30,6 +30,7 @@ class LowValuationStrategy(StrategyParent):
     def getSelectedStockList(self,sdProcessor,startdateStr):
         
         sdict=sdProcessor.getHS300Dict()
+        #sdict=sdProcessor.getSH50Dict()
         
         mValDict={}
 
@@ -89,6 +90,9 @@ class LowValuationStrategy(StrategyParent):
                 continue
              
  
+ 
+            
+            '''
             if netIncome2>netIncome1 or netIncome3>netIncome2:
                 continue
             elif totalRavenue2>totalRavenue1 or totalRavenue3>totalRavenue2:
@@ -101,7 +105,11 @@ class LowValuationStrategy(StrategyParent):
                 continue            
             else:
                 mValDict[stockCode]=percentInLst5Years
-            
+            '''
+           
+            if percentInLst5Years<0.1 and percentInLst5Years>0:
+                mValDict[stockCode]=percentInLst5Years
+           
             self.log.logger.info('LowValuationStrategy:'+stockCode+','+str(percentInLst5Years))
 
         sortedMValList=sorted(mValDict.items(),key=lambda x:x[1],reverse=False)
