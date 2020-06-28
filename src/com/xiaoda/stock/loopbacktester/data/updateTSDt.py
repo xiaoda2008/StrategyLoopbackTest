@@ -43,7 +43,6 @@ DAYONE='19911219'
 
 log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 
-mysqlProcessor=MysqlProcessor()
 
 def getlastquarterfirstday():
         today=dt.now()
@@ -157,6 +156,8 @@ if last_endday.strftime('%Y%m%d')>=endday:
 
 
 #3、获取指数信息
+
+#沪深300指数
 indexDF=sdDataAPI.index_daily(ts_code='000300.SH',start_date=startday,end_date=endday)
 
 try:
@@ -168,7 +169,17 @@ except Exception as e:
     else:
         raise e    
 
+#创业板指数
+indexDF=sdDataAPI.index_daily(ts_code='399006.SZ',start_date=startday,end_date=endday)
 
+try:
+    #将指数数据存入数据库表中
+    indexDF.to_sql(name='u_idx_cyb',con=mysqlEngine,chunksize=1000,if_exists='append',index=None)
+except Exception as e:
+    if type(e)==sqlalchemy.exc.IntegrityError:
+        pass
+    else:
+        raise e
 
 
 #找到之前最后一次处理财务报表的时间
@@ -1043,6 +1054,7 @@ while ix<length:
         log.logger.info("股票%s的数据更新处理完毕"%(stockCode))                   
     except Exception as e:
         log.logger.warning("股票%s的数据更新异常，需要重新处理"%(stockCode))
+        #time.sleep(1)
         #数据更新异常，需要继续重新更新
     else:
         ix=ix+1

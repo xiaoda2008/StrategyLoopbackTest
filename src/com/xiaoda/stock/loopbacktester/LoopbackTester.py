@@ -67,7 +67,8 @@ def printStockOutputHead(outputFile):
     print('日期,交易类型,当天收盘持仓市值,当天持仓总手数,累计投入,累计赎回,当天资金净占用,当天资金净流量,当前持仓平均成本,\
     当天收盘价格,当前持仓盈亏,最近一次交易类型,最近一次交易价格,当前全部投入回报率,本次交易手续费,当天是否交易(可能非交易日或停牌)')
     #sys.stdout=origStdout  #恢复标准输出流
-    
+
+
 #@fn_timer  
 def printTradeInfo(outputFile,currday,dealType,closePriceToday,holdShares,holdAvgPrice,netCashFlowToday,
                    totalInput,totalOutput,latestDealType,latestDealPrice,dealCharge):
@@ -236,63 +237,20 @@ def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
         #print("t6-t4:%s"%(t6-t4))
         #print("t6-t5:%s"%(t6-t5))
         
-        
-import argparse
-import warnings
-warnings.filterwarnings("ignore")
 
-if __name__ == '__main__':
-    
-    # 创建命令行解析器句柄，并自定义描述信息
-    parser = argparse.ArgumentParser(description="input all parameters")
-    # 定义必选参数 positionArg
-    # parser.add_argument("project_name")
-    # 定义可选参数module
-    parser.add_argument("--stockstrategy","-ss",type=str, default="RawStrategy",help="Enter the stock select strategy")
-    parser.add_argument("--tradestrategy", "-ts",type=str, default="SimpleStrategy",help="Enter the trade strategy")
-    parser.add_argument("--startdate", "-sd",type=str, default="20190701",help="Enter the start date")
-    parser.add_argument("--enddate", "-ed",type=str, default="20191031",help="Enter the end date")
-    # 指定参数类型（默认是 str）
-    # parser.add_argument('x', type=int, help='test the type')
-    # 设置参数的可选范围
-    # parser.add_argument('--verbosity3', '-v3', type=str, choices=['one', 'two', 'three', 'four'], help='test choices')
-    # 设置参数默认值
-    # parser.add_argument('--verbosity4', '-v4', type=str, choices=['one', 'two', 'three'], default=1,help='test default value')
-    args = parser.parse_args()  # 返回一个命名空间
-    #print(args)
-    params = vars(args)  # 返回 args 的属性和属性值的字典
-    v1=[]
 
-    stockSelectStrategyString=''
-    tradeStrategyString=''
-    startdate=''
-    enddate=''
-    
-    for k, v in params.items():
-        if k=='stockstrategy':
-            stockSelectStrategyString=v
-        elif k=='tradestrategy':
-            tradeStrategyString=v
-        elif k=='startdate':
-            startdate=v
-        elif k=='enddate':
-            enddate=v    
-    mysqlProcessor=MysqlProcessor()
-    sdf=mysqlProcessor.querySql('select content from u_data_desc where content_name=\'data_end_dealday\'')
-    if enddate>sdf.at[0,'content']:
-        enddate=sdf.at[0,'content']
-    
+
+#进行计算，输出Excel，并画图   
+def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startdate,enddate):
     
     stockSelectStrategyList=stockSelectStrategyString.split(',')
     tradeStrategyList=tradeStrategyString.split(',')
 
-    
     sdProcessor=StockDataProcessor()
     
     #通过STARTDATE找到第一个交易日
     firstDealDay=sdProcessor.getNextDealDay(startdate,True)
     
-        
     #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
     #可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
     #向前找30个交易日
@@ -388,14 +346,12 @@ if __name__ == '__main__':
                 process.append(p)
             
             for p in process:
-                p.join()           
-            
-
+                p.join()
 
             #完成所有股票的数据处理
             #需要通过扫描所有股票的计算结果
             #计算出整体的IRR
-        
+
             log.logger.info('开始处理IRR及Summary计算')
             #读取结果文件列表
             stockfileList=os.listdir(strOutputDir)
@@ -535,7 +491,7 @@ if __name__ == '__main__':
             sys.stdout=open(strOutputDir+'/Summary-xirr.csv','wt+')
             
             cashFlowList=[]
-            print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率,沪深300指数收盘')
+            print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率,创业板指数收盘,沪深300指数收盘')
             keysList=list(cashFlowDict.keys())
             keysList.sort()
             yesterdayTotalProfit=0
@@ -544,7 +500,7 @@ if __name__ == '__main__':
             lastIdxClose=0
             
             
-            pltDF=pandas.DataFrame(data=[],columns=['Date','ProIncRate','HS300IncRate'])
+            pltDF=pandas.DataFrame(data=[],columns=['Date','ProIncRate','CYBIncRate','HS300'])
             
             #获取最初的资金投入，以作为后续计算的依据
             #不能用这个，因为可能会有某些股票在初始停牌，
@@ -552,8 +508,14 @@ if __name__ == '__main__':
             #origInput=math.fabs(cashFlowDict.get(keysList[0])[0])
             
             dtStr=(keysList[0])[0:8]
-            idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
-            origIdxClose=idxDF.at[dtStr,'close']
+            
+            #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
+            
+            idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
+            origIdxClose1=idxDF1.at[dtStr,'close']
+
+            idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
+            origIdxClose2=idxDF2.at[dtStr,'close']
             
             
             for key in keysList:
@@ -565,11 +527,17 @@ if __name__ == '__main__':
                 #直接取上一交易日收盘点数
                 if sdProcessor.isDealDay(dtStr):
                     #根据日期，获取当天收盘指数
-                    idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
-                    idxClose=idxDF.at[dtStr,'close']
-                    lastIdxClose=idxClose
+                    #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
+                    idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
+                    idxClose1=idxDF1.at[dtStr,'close']
+                    lastIdxClose1=idxClose1
+                    
+                    idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
+                    idxClose2=idxDF2.at[dtStr,'close']
+                    lastIdxClose2=idxClose2
                 else:
-                    idxClose=lastIdxClose
+                    idxClose1=lastIdxClose1
+                    idxClose2=lastIdxClose2
                 
                 #日期
                 print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
@@ -595,11 +563,14 @@ if __name__ == '__main__':
                     print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4),end=',')
                 
                 #log.logger.info("在%s日期的利润率:%.2f"%(dtStr,round(todayTotalProfit/origInput,4)))
-                #沪深300指数
-                print(idxClose)
-
+                #创业板指数
+                print(idxClose1,end=',')
+                print(idxClose2)
+                
                 try:
-                    tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/totalCashOccupy,4),'HS300IncRate':round(idxClose/origIdxClose-1,4)},index=[1])
+                    tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/totalCashOccupy,4),\
+                                            'CYBIncRate':round(idxClose1/origIdxClose1-1,4),\
+                                            'HS300IncRate':round(idxClose2/origIdxClose2-1,4)},index=[1])
                 except:
                     print()
 
@@ -618,9 +589,11 @@ if __name__ == '__main__':
             
 
             plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
-                     pltDF['ProIncRate'].to_list(),label='ProfitRate',c='blue')            
+                     pltDF['ProIncRate'].to_list(),label='ProfitRate',c='blue')
             plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
-                     pltDF['HS300IncRate'].to_list(),label='HS300Rate',c='green')    
+                     pltDF['CYBIncRate'].to_list(),label='CYBRate',c='green')
+            plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
+                     pltDF['HS300IncRate'].to_list(),label='HS300',c='red')
             
             
             plt.title('Return ratio:%s,%s'%(stockSelectStrategyStr,tradeStrategyStr),fontsize=10)
@@ -705,3 +678,54 @@ if __name__ == '__main__':
             
             plt.savefig(strOutputDir+'/Summary.png')
             '''
+        
+import argparse
+import warnings
+warnings.filterwarnings("ignore")
+
+if __name__ == '__main__':
+    
+    # 创建命令行解析器句柄，并自定义描述信息
+    parser = argparse.ArgumentParser(description="input all parameters")
+    # 定义必选参数 positionArg
+    # parser.add_argument("project_name")
+    # 定义可选参数module
+    parser.add_argument("--stockstrategy","-ss",type=str, default="RawStrategy",help="Enter the stock select strategy")
+    parser.add_argument("--tradestrategy", "-ts",type=str, default="SimpleStrategy",help="Enter the trade strategy")
+    parser.add_argument("--startdate", "-sd",type=str, default="20190701",help="Enter the start date")
+    parser.add_argument("--enddate", "-ed",type=str, default="20191031",help="Enter the end date")
+    # 指定参数类型（默认是 str）
+    # parser.add_argument('x', type=int, help='test the type')
+    # 设置参数的可选范围
+    # parser.add_argument('--verbosity3', '-v3', type=str, choices=['one', 'two', 'three', 'four'], help='test choices')
+    # 设置参数默认值
+    # parser.add_argument('--verbosity4', '-v4', type=str, choices=['one', 'two', 'three'], default=1,help='test default value')
+    args = parser.parse_args()  # 返回一个命名空间
+    #print(args)
+    params = vars(args)  # 返回 args 的属性和属性值的字典
+    v1=[]
+
+    stockSelectStrategyString=''
+    tradeStrategyString=''
+    startdate=''
+    enddate=''
+    
+    for k, v in params.items():
+        if k=='stockstrategy':
+            stockSelectStrategyString=v
+        elif k=='tradestrategy':
+            tradeStrategyString=v
+        elif k=='startdate':
+            startdate=v
+        elif k=='enddate':
+            enddate=v    
+    mysqlProcessor=MysqlProcessor()
+    sdf=mysqlProcessor.querySql('select content from u_data_desc where content_name=\'data_end_dealday\'')
+    if enddate>sdf.at[0,'content']:
+        enddate=sdf.at[0,'content']
+    
+    if enddate<=startdate:
+        log.logger.error('开始时间'+startdate+'晚于或等于结束时间'+enddate)
+        pass
+    else:
+        compAndOutputXLSAndPlot(stockSelectStrategyString, tradeStrategyString, startdate, enddate)

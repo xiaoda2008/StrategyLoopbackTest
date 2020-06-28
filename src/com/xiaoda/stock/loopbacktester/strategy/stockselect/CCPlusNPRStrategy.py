@@ -196,6 +196,10 @@ class CCPlusNPRStrategy(StrategyParent):
         intStockList=list(set(sortedNPRatioList[:50]).intersection(set(sortedCFRatioList[:50])))
 
         
+        #是否有可能按照权重来确定购买的数量，比如说：
+        #对于CashCow的策略，根据股票计算出来的排序确定购买的数量
+        #排名越靠前的股票，买入的量越大？实际效果
+        
         #删选以避免某一行业占比过高
         returnStockList=StockListFilterProcessor.filterStockList(intStockList, sdProcessor)        
 

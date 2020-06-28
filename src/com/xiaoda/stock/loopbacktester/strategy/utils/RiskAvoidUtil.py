@@ -19,11 +19,11 @@ class RiskAvoidProcessor(object):
     @staticmethod
     def getRiskAvoidFlg(stockCode,ic,bs,cf,sdProcessor):
 
-        totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']
+        totalAsset=float(bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets'])
         
         try:
             #商誉
-            goodwill=bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill']      
+            goodwill=float(bs[bs['goodwill'].notnull()].reset_index(drop=True).at[0,'goodwill'])   
         except:
             goodwill=0
                     
@@ -38,26 +38,26 @@ class RiskAvoidProcessor(object):
             return False
 
         #货币资金
-        moneyCap=bs[bs['money_cap'].notnull()].reset_index(drop=True).at[0,'money_cap']
+        moneyCap=float(bs[bs['money_cap'].notnull()].reset_index(drop=True).at[0,'money_cap'])
         
         
         #短期借款
         if bs[bs['st_borr'].notnull()].empty:
             stBorr=0
         else:
-            stBorr=bs[bs['st_borr'].notnull()].reset_index(drop=True).at[0,'st_borr']
+            stBorr=float(bs[bs['st_borr'].notnull()].reset_index(drop=True).at[0,'st_borr'])
         
         #长期借款
         if bs[bs['lt_borr'].notnull()].empty:
             ltBorr=0
         else:
-            ltBorr=bs[bs['lt_borr'].notnull()].reset_index(drop=True).at[0,'lt_borr']
+            ltBorr=float(bs[bs['lt_borr'].notnull()].reset_index(drop=True).at[0,'lt_borr'])
         
         #应付债券
         if bs[bs['bond_payable'].notnull()].empty:
             bondPayable=0
         else:
-            bondPayable=bs[bs['bond_payable'].notnull()].reset_index(drop=True).at[0,'bond_payable']
+            bondPayable=float(bs[bs['bond_payable'].notnull()].reset_index(drop=True).at[0,'bond_payable'])
         
         #总资产
         totalAsset=bs[bs['total_assets'].notnull()].reset_index(drop=True).at[0,'total_assets']

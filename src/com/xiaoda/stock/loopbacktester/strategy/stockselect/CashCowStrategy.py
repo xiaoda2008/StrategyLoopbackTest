@@ -97,6 +97,11 @@ class CashCowStrategy(StrategyParent):
             #cf.at[0,'c_cash_equ_end_period']
 
 
+            #self.log.logger.info("debug:%s"%(stockCode))
+
+            #if stockCode=='002773.SZ':
+            #    print()
+                
             #防暴雷、防财务造假逻辑
             if RiskAvoidProcessor.getRiskAvoidFlg(stockCode, ic, bs, cf, sdProcessor)==True:
                 continue

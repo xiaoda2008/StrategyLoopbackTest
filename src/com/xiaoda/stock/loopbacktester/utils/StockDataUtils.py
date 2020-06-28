@@ -64,11 +64,17 @@ class StockDataProcessor(object):
         sql='select * from u_idx_hs300;'
         df=self.mysqlProcessor.querySql(sql)
         self.hs300idx=df.set_index('trade_date')
+
+        sql='select * from u_idx_cyb;'
+        df=self.mysqlProcessor.querySql(sql)
+        self.cybidx=df.set_index('trade_date')
     
     def getidxData(self,idxName,sd,ed):
         if idxName=='HS300':
             return self.hs300idx[sd:ed]
-        
+        if idxName=='CYB':
+            return self.cybidx[sd:ed]
+                
     def getTradeCalDF(self,startday,endday,dealDayOnly=False):
         #查询语句
         if dealDayOnly==False:

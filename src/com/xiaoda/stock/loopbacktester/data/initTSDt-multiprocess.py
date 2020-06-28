@@ -613,6 +613,8 @@ if __name__ == '__main__':
     
 
     #2、获取指数信息
+    
+    #沪深300指数
     indexDF=sdDataAPI.index_daily(ts_code='000300.SH',start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
     
     #将指数数据存入数据库表中
@@ -624,6 +626,19 @@ if __name__ == '__main__':
         mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
     except sqlalchemy.exc.OperationalError:
         log.logger.warning("修正HS300指数表出错，可能已经修正过")
+
+    #创业板指数
+    indexDF=sdDataAPI.index_daily(ts_code='399006.SZ',start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
+    
+    #将指数数据存入数据库表中
+    indexDF.to_sql(name='u_idx_cyb',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
+
+    sqlStr='alter table u_idx_cyb modify column trade_date varchar(20) primary key;'
+
+    try:
+        mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
+    except sqlalchemy.exc.OperationalError:
+        log.logger.warning("修正创业板指数表出错，可能已经修正过")
 
     
     #2、获取股票列表并存入数据库

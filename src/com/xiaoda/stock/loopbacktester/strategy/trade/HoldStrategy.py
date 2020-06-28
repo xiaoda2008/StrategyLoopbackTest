@@ -169,7 +169,7 @@ class HoldStrategy(StrategyParent):
         #continuousRiseOrFallCnt=0
 
         
-        
+
         
         closePriceToday=stock_k_data.at[currday,'close']
     
