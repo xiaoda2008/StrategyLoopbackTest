@@ -87,11 +87,16 @@ class StockDataProcessor(object):
         return tcDF
     
     def isDealDay(self,dtStr):
-        if self.tradeCalDF.at[dtStr,'is_open']==1:
-            return True
-        else:
+
+        try:
+            if self.tradeCalDF.at[dtStr,'is_open']==1:
+                return True
+            else:
+                return False
+        except KeyError:
+            #找不到相应的交易日，一般是超出范围，返回空值
             return False
-        
+    
     @staticmethod
     def getNextCalDay(todayDate):
         '''
@@ -174,16 +179,23 @@ class StockDataProcessor(object):
         else:
             dayOffset=datetime.timedelta(-1)
         
-        cnt=0
-        # 获取想要的日期的时间
-        while True:
-            cday=(cday+dayOffset)
-            if self.tradeCalDF.at[cday.strftime('%Y%m%d'),'is_open']==1:
-                cnt+=1
-                if cnt==abs(offset):
-                    break
-        return cday.strftime('%Y%m%d')
+        
+        try:
     
+            cnt=0
+            # 获取想要的日期的时间
+            while True:
+                cday=(cday+dayOffset)
+                #导致日期超限了，找不到，按理说找不到都应该标记为不是交易日
+                if self.tradeCalDF.at[cday.strftime('%Y%m%d'),'is_open']==1:
+                    cnt+=1
+                    if cnt==abs(offset):
+                        break
+            
+            return cday.strftime('%Y%m%d')
+        except KeyError:
+            #找不到相应的交易日，一般是超出范围，返回空值
+            return None
     
     def getStockInfo(self,stockCode):
         #查询语句
