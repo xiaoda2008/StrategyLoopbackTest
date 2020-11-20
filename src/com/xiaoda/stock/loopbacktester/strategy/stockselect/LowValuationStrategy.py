@@ -51,7 +51,7 @@ class LowValuationStrategy(StrategyParent):
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
                         
-            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
+            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,False)
             #ic为之前发布的所有利润表数据
 
             #获取最近的每日信息

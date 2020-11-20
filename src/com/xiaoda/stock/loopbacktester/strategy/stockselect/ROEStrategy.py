@@ -45,16 +45,16 @@ class ROEStrategy(StrategyParent):
             #ROE=净利润/净资产
             #从资产负债表获取净资产数据
             
-            bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,True)
+            bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
             #bs为所有之前发布的所有资产负债表数据
             
-            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
+            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,False)
             #ic为之前发布的所有利润表数据
             
             #获取现金流量表中，现金等价物总数
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
-                        
+            
             #有可能数据不全，直接跳过
             if bs.empty or ic.empty:
                 continue

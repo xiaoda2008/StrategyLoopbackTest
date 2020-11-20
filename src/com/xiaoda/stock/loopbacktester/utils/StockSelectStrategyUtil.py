@@ -11,6 +11,7 @@ from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROEStrategy import ROE
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.GrossProfitRateStrategy import GrossProfitRateStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.SelfSelectedStocksStrategy import SelfSelectedStocksStrategy
 from com.xiaoda.stock.loopbacktester.strategy.stockselect.LowValuationStrategy import LowValuationStrategy
+from com.xiaoda.stock.loopbacktester.strategy.stockselect.ROICStrategy import ROICStrategy
 
 class StockSelectStrategyProcessor(object):
     '''
@@ -24,6 +25,7 @@ class StockSelectStrategyProcessor(object):
         '''
         self.rawStrategy=RawStrategy()
         self.roeStrategy=ROEStrategy()
+        self.roicStrategy=ROICStrategy()
         self.ccStrategy=CashCowStrategy()
         self.nprStrategy=NetProfitRateStrategy()
         self.ccplusNPRStrategy=CCPlusNPRStrategy()
@@ -36,6 +38,8 @@ class StockSelectStrategyProcessor(object):
             return self.rawStrategy
         elif strategyName==self.roeStrategy.getStrategyName():
             return self.roeStrategy
+        elif strategyName==self.roicStrategy.getStrategyName():
+            return self.roicStrategy
         elif strategyName==self.ccStrategy.getStrategyName():
             return self.ccStrategy
         elif strategyName==self.nprStrategy.getStrategyName():

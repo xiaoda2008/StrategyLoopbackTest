@@ -110,6 +110,12 @@ if __name__ == '__main__':
     
     sdDataAPI = tushare.pro_api()
     
+    
+    
+    shn=sdDataAPI.stk_holdernumber(ts_code='300199.SZ', start_date='20160101', end_date='20181231')
+    
+    print()
+    
     bs = sdDataAPI.balancesheet(ts_code='001914.SZ',start_date='20150101',end_date=dt.now().strftime('%Y%m%d'))
      
     

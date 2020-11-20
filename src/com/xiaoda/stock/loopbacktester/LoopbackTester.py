@@ -356,6 +356,7 @@ def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startd
             #读取结果文件列表
             stockfileList=os.listdir(strOutputDir)
             
+            
             #记录csv内容的列表
             fileContentTupleList=[]
             
@@ -368,8 +369,13 @@ def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startd
             #log.logger.info("开始处理Summary计算")
 
 
+            #if len(fileContentTupleList)==0:
+            #    continue
+        
+            
+            
             savedStdout=sys.stdout  #保存标准输出流
-            sys.stdout=open(strOutputDir+'/Summary.csv','wt+')            
+            sys.stdout=open(strOutputDir+'/Summary.csv','wt+',newline='',encoding='utf-8-sig')            
             
             print('股票代码,股票名称,所属行业,最大资金占用,累计资金投入,累计资金赎回,最新盈亏,当前持仓金额')
             
@@ -488,7 +494,7 @@ def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startd
             sorted(cashFlowDict)
             
             savedStdout=sys.stdout  #保存标准输出流
-            sys.stdout=open(strOutputDir+'/Summary-xirr.csv','wt+')
+            sys.stdout=open(strOutputDir+'/Summary-xirr.csv','wt+',newline='',encoding='utf-8-sig')
             
             cashFlowList=[]
             print('日期,当日发生资金净流量,截至当日资金净占用,当日收盘持仓总盈亏,当日收盘持仓总市值,持仓当日产生盈亏,持仓当日盈亏率,创业板指数收盘,沪深300指数收盘')
@@ -507,118 +513,118 @@ def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startd
             #后续才真正可交易，产生了资金投入
             #origInput=math.fabs(cashFlowDict.get(keysList[0])[0])
             
-            dtStr=(keysList[0])[0:8]
-            
-            #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
-            
-            idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
-            origIdxClose1=idxDF1.at[dtStr,'close']
-
-            idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
-            origIdxClose2=idxDF2.at[dtStr,'close']
-            
-            
-            for key in keysList:
+            if len(keysList)>0:
+                dtStr=(keysList[0])[0:8]
                 
-                dtStr=key[0:8]
+                #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
                 
-                
-                #如果不是交易日
-                #直接取上一交易日收盘点数
-                if sdProcessor.isDealDay(dtStr):
-                    #根据日期，获取当天收盘指数
-                    #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
-                    idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
-                    idxClose1=idxDF1.at[dtStr,'close']
-                    lastIdxClose1=idxClose1
-                    
-                    idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
-                    idxClose2=idxDF2.at[dtStr,'close']
-                    lastIdxClose2=idxClose2
-                else:
-                    idxClose1=lastIdxClose1
-                    idxClose2=lastIdxClose2
-                
-                #日期
-                print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
-                #当日发生资金净流量
-                print(cashFlowDict.get(key)[0],end=',')
-                totalCashOccupy=cashFlowDict.get(key)[1]
-                #截至当日资金净占用
-                print(cashFlowDict.get(key)[1],end=',')
-                #当前持仓总盈亏
-                print(cashFlowDict.get(key)[2],end=',')
-                todayTotalProfit=cashFlowDict.get(key)[2]
-                #当天收盘持仓总市值
-                print(cashFlowDict.get(key)[3],end=',')
-                #持仓当日产生盈亏
-                todayProfit=todayTotalProfit-yesterdayTotalProfit
-                print(todayProfit,end=',')
-                yesterdayTotalProfit=todayTotalProfit
-                
-                #持仓当日盈亏率
-                if float(cashFlowDict.get(key)[3])==0:
-                    print(0,end=',')
-                else:
-                    print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4),end=',')
-                
-                #log.logger.info("在%s日期的利润率:%.2f"%(dtStr,round(todayTotalProfit/origInput,4)))
-                #创业板指数
-                print(idxClose1,end=',')
-                print(idxClose2)
-                
-                try:
-                    tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/totalCashOccupy,4),\
-                                            'CYBIncRate':round(idxClose1/origIdxClose1-1,4),\
-                                            'HS300IncRate':round(idxClose2/origIdxClose2-1,4)},index=[1])
-                except:
-                    print()
-
-                pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
+                idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
+                origIdxClose1=idxDF1.at[dtStr,'close']
     
+                idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
+                origIdxClose2=idxDF2.at[dtStr,'close']
                 
-                cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
-            
-            print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(startdate,enddate),end=',')
-            print(IRRProcessor.xirr2(cashFlowList))
+                
+                for key in keysList:
+                    
+                    dtStr=key[0:8]
+                    
+                    
+                    #如果不是交易日
+                    #直接取上一交易日收盘点数
+                    if sdProcessor.isDealDay(dtStr):
+                        #根据日期，获取当天收盘指数
+                        #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
+                        idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
+                        idxClose1=idxDF1.at[dtStr,'close']
+                        lastIdxClose1=idxClose1
+                        
+                        idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
+                        idxClose2=idxDF2.at[dtStr,'close']
+                        lastIdxClose2=idxClose2
+                    else:
+                        idxClose1=lastIdxClose1
+                        idxClose2=lastIdxClose2
+                    
+                    #日期
+                    print(key[0:4]+'/'+key[4:6]+'/'+key[6:8],end=',')
+                    #当日发生资金净流量
+                    print(cashFlowDict.get(key)[0],end=',')
+                    totalCashOccupy=cashFlowDict.get(key)[1]
+                    #截至当日资金净占用
+                    print(cashFlowDict.get(key)[1],end=',')
+                    #当前持仓总盈亏
+                    print(cashFlowDict.get(key)[2],end=',')
+                    todayTotalProfit=cashFlowDict.get(key)[2]
+                    #当天收盘持仓总市值
+                    print(cashFlowDict.get(key)[3],end=',')
+                    #持仓当日产生盈亏
+                    todayProfit=todayTotalProfit-yesterdayTotalProfit
+                    print(todayProfit,end=',')
+                    yesterdayTotalProfit=todayTotalProfit
+                    
+                    #持仓当日盈亏率
+                    if float(cashFlowDict.get(key)[3])==0:
+                        print(0,end=',')
+                    else:
+                        print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4),end=',')
+                    
+                    #log.logger.info("在%s日期的利润率:%.2f"%(dtStr,round(todayTotalProfit/origInput,4)))
+                    #创业板指数
+                    print(idxClose1,end=',')
+                    print(idxClose2)
+                    
+                    try:
+                        tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':round(todayTotalProfit/totalCashOccupy,4),\
+                                                'CYBIncRate':round(idxClose1/origIdxClose1-1,4),\
+                                                'HS300IncRate':round(idxClose2/origIdxClose2-1,4)},index=[1])
+                    except:
+                        print()
+    
+                    pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
+        
+                    
+                    cashFlowList.append((datetime.date(int(key[0:4]),int(key[4:6]),int(key[6:8])),float(cashFlowDict.get(key)[0])))
+                
+                print(tradeStrategy.getStrategyName()+'在%s到%s期间内IRR为：'%(startdate,enddate),end=',')
+                print(IRRProcessor.xirr2(cashFlowList))
+                
+                sys.stdout = savedStdout #恢复标准输出流  
+                
+    
+                plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
+                         pltDF['ProIncRate'].to_list(),label='ProfitRate',c='blue')
+                plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
+                         pltDF['CYBIncRate'].to_list(),label='CYBRate',c='green')
+                plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
+                         pltDF['HS300IncRate'].to_list(),label='HS300',c='red')
+                
+                
+                plt.title('Return ratio:%s,%s'%(stockSelectStrategyStr,tradeStrategyStr),fontsize=10)
+                #设置图表标题和标题字号
+                
+                plt.tick_params(axis='both',which='major',labelsize=8)
+                #设置刻度的字号
+                
+                plt.xlabel('Date',fontsize=8)
+                #设置x轴标签及其字号
+                
+                plt.ylabel('IncRate',fontsize=8)
+                #设置y轴标签及其字号
+               
+                #pltDF.plot()
+                plt.legend()#显示图例，如果注释改行，即使设置了图例仍然不显示
+                plt.grid(True)
+                
+                plt.savefig(strOutputDir+'/Summary.png')
+                plt.savefig(OODir+'/'+stockSelectStrategyStr+'-'+tradeStrategyStr+'-'+'Summary.png')
+                
+                plt.cla()
+                plt.clf()
+                plt.close()
             
             sys.stdout = savedStdout #恢复标准输出流
-            
-            
-            
-            
-
-            plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
-                     pltDF['ProIncRate'].to_list(),label='ProfitRate',c='blue')
-            plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
-                     pltDF['CYBIncRate'].to_list(),label='CYBRate',c='green')
-            plt.plot([dt.strptime(d,'%Y%m%d').date() for d in pltDF['Date'].to_list()],\
-                     pltDF['HS300IncRate'].to_list(),label='HS300',c='red')
-            
-            
-            plt.title('Return ratio:%s,%s'%(stockSelectStrategyStr,tradeStrategyStr),fontsize=10)
-            #设置图表标题和标题字号
-            
-            plt.tick_params(axis='both',which='major',labelsize=8)
-            #设置刻度的字号
-            
-            plt.xlabel('Date',fontsize=8)
-            #设置x轴标签及其字号
-            
-            plt.ylabel('IncRate',fontsize=8)
-            #设置y轴标签及其字号
-           
-            #pltDF.plot()
-            plt.legend()#显示图例，如果注释改行，即使设置了图例仍然不显示
-            plt.grid(True)
-            
-            plt.savefig(strOutputDir+'/Summary.png')
-            plt.savefig(OODir+'/'+stockSelectStrategyStr+'-'+tradeStrategyStr+'-'+'Summary.png')
-            
-            plt.cla()
-            plt.clf()
-            plt.close()
-            
+                            
             '''
             from matplotlib.pyplot import MultipleLocator
             #从pyplot导入MultipleLocator类，这个类用于设置刻度间隔

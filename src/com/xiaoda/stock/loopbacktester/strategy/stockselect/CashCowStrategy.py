@@ -58,7 +58,7 @@ class CashCowStrategy(StrategyParent):
             cf=self.finProcessor.getLatestCashFlowReport(stockCode,startdateStr,False)
             #cf为之前发布的所有现金流量表数据
             
-            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,True)
+            ic=self.finProcessor.getLatestIncomeReport(stockCode,startdateStr,False)
             #ic为之前发布的所有利润表数据
              
             #获取最近的每日信息
@@ -124,6 +124,8 @@ class CashCowStrategy(StrategyParent):
         for tscode, ratio in sortedCFRatioList[:30]:
             tmpStockList.append(tscode)
 
+        #这里应当保留每个股票的Ratio，以便后续进行人工筛选时，对同一行业或者类似行业的股票进行人工筛选
+        
         
         #删选以避免某一行业占比过高
         returnStockList=StockListFilterProcessor.filterStockList(tmpStockList, sdProcessor)        
