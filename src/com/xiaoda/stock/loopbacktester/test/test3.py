@@ -15,26 +15,54 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 
 if __name__ == '__main__':
     
-    pandas.set_option('display.max_rows',100)      #设置最大行数
-    pandas.set_option('display.max_columns', 100)  #设置最大列数
+    
+    ts="123456.OF"
+    
+    print(ts[:-3])
+    
+    pandas.set_option('display.max_rows',10000)      #设置最大行数
+    pandas.set_option('display.max_columns', 10000)  #设置最大列数
     
     #使用TuShare pro版本    
     tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+    
     sdDataAPI=tushare.pro_api()
 
 
-    df = sdDataAPI.fund_basic(market='O')
 
-    print()
-   
-    df = sdDataAPI.fund_nav(ts_code='165509.SZ')
+
+    df=sdDataAPI.fund_basic(ts_code='166002.OF')
+    
+    fundList=df['ts_code']
+    
+    ix=0
+    length=len(fundList)
+    while ix<length:
+        fundCode=fundList[ix]
+        print(fundCode)
+        if(fundCode[:-3]=='166002'):
+            print()
+
+        ix=ix+1
+    
+    
+    
+    df=sdDataAPI.fund_manager(ts_code='166002.OF')
     
     print()
     
+    df=sdDataAPI.fund_basic(market='E')
+    
+    print(df)
+    
+    df=sdDataAPI.fund_nav(ts_code='165509.SZ')
+    
+    print()
     
     #筛选过去三年，连续超越大盘（HS300，上证指数、创业板指数等）涨幅的基金
     #筛选过去三年，连续涨幅排名前n位的基金
     #筛选过去三年，连续收益在XX%以上的基金
+    
     
     
     
