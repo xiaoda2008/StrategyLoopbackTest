@@ -131,32 +131,10 @@ def processFundDataGet(fundList,startday,endday):
         fundCode=fundList[ix]
 
         try:
-            """
-            #首先先根据wind获取的基金代码，到tushare中获取基金信息
-            #获取信息后，将原有信息删除，替换为新获取的信息
-            #由于fund_basic接口每分钟只能调用10次，因此该数据获取没有多进程的必要性
-            #后续每天更新过程中，该部分内容则不需要更新，只需要按天更新基金净值、基金分红、复权因子等数据
-            #对于在ts表中没有的基金，单独查询基金信息并写入
-
-            sqlStr="delete from u_fund_list where ts_code='%s'"%(fundCode);
-            mysqlProcessor.execSql(mysqlSession, sqlStr, True)
-                        
-            if fundCode not in ts_fdList:
-                #如果ts表中没有该基金，需要单独查询基金信息并写入
-                fund_basic_data=sdDataAPI.fund_basic(ts_code=fundCode)
-                fund_basic_data.to_sql(name='u_fund_list',con=mysqlEngine,chunksize=1000,if_exists='append',index=None)
-                time.sleep(6)
-                log.logger.info('已补充%s基金的信息'%(fundCode))
-            else:
-                time.sleep(0.9)
-                log.logger.info('%s基金的信息不需要补充'%(fundCode))
-            """                
-            
             #基金净值
             fund_Nav=sdDataAPI.fund_nav(ts_code=fundCode)
             fund_Nav.to_sql(name='f_fund_nav_'+fundCode,
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
-            
             
             '''
             #日内行情，日内行情没意义？
@@ -182,20 +160,14 @@ def processFundDataGet(fundList,startday,endday):
         except Exception:#出现异常
             #出现异常，则还需要继续循环，继续对该股票继续处理
             traceback.print_exc()
-            log.logger.warning('处理%s的数据时出现异常，重新进行处理'%(fundCode))
+            log.logger.warning('%d：处理%s的数据时出现异常，重新进行处理'%(ix,fundCode))
             time.sleep(60)
             continue
         else:#未出现异常
-            log.logger.info('%d处理完%s的净值、日线行情、复权因子数据'%(ix,fundCode))
-            time.sleep(6)
-
+            log.logger.info('%d：处理完%s的净值、日线行情、复权因子数据'%(ix,fundCode))
+            time.sleep(8)
             #未出现异常，进行下一个股票的处理
             ix=ix+1
-    
-    #到最后，把所有ts查到的基金信息先写进表中
-    ts_fdListDF.to_sql(name='u_fund_list',con=mysqlEngine,chunksize=1000,if_exists='append',index=None)
-    
-    
     
      
 if __name__ == '__main__':
@@ -205,114 +177,7 @@ if __name__ == '__main__':
     mysqlProcessor=MysqlProcessor(fdMysqlURL)
     mysqlEngine=mysqlProcessor.getMysqlEngine()
     mysqlSession=mysqlProcessor.getMysqlSession()
-        
-    #使用TuShare pro版本    
-    tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
-    fdDataAPI = tushare.pro_api()
 
-    #1、获取公募基金列表，并存入数据库
-    #由于Tushare的基金获取需要5000以上积分才能获取全量
-    #因此，从wind获取基金清单，存入到基金列表中
-    #然后基于这个列表再到tushare获取各个基金的信息
-    
-    
-    #场外基金
-    fund_list_data_O=fdDataAPI.fund_basic(market='O') 
-    #场内基金
-    fund_list_data_E=fdDataAPI.fund_basic(market='E')
-    fund_list_data=fund_list_data_E.append(fund_list_data_O)
-    #将场内公募基金列表存入数据库表中
-    fund_list_data.to_sql(name='u_fund_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-    
-
-
-    """
-    #2、获取指数信息
-    
-    #沪深300指数
-    indexDF=sdDataAPI.index_daily(ts_code='000300.SH',start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
-    
-    #将指数数据存入数据库表中
-    indexDF.to_sql(name='u_idx_hs300',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
-    sqlStr='alter table u_idx_hs300 modify column trade_date varchar(20) primary key;'
-
-    try:
-        mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
-    except sqlalchemy.exc.OperationalError:
-        log.logger.warning("修正HS300指数表出错，可能已经修正过")
-
-    #创业板指数
-    indexDF=sdDataAPI.index_daily(ts_code='399006.SZ',start_date=startday,end_date=dt.now().strftime('%Y%m%d'))
-    
-    #将指数数据存入数据库表中
-    indexDF.to_sql(name='u_idx_cyb',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-
-    sqlStr='alter table u_idx_cyb modify column trade_date varchar(20) primary key;'
-
-    try:
-        mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
-    except sqlalchemy.exc.OperationalError:
-        log.logger.warning("修正创业板指数表出错，可能已经修正过")
-
-    
-    #2、获取股票列表并存入数据库
-    sdf=sdDataAPI.stock_basic(exchange='',list_status='L',fields='ts_code,symbol,name,area,industry,list_date')
-    
-    try:
-        #将股票列表存入数据库表中
-        sdf.to_sql(name='u_stock_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
-    except sqlalchemy.exc.IntegrityError:
-        log.logger.warning("股票列表获取出现错误，可能已经获取过")
-        
-    stockCodeList=list(sdf['ts_code'])
-    #完成部分信息更新
-    #partialUpdate(mysqlSession)
-    
-    sqlStr='alter table u_stock_list modify column ts_code varchar(20) primary key;'
-    sqlStr+='alter table u_stock_list add column HS300 tinyint(1) not null default 0;'
-    sqlStr+='alter table u_stock_list add column SH50 tinyint(1) not null default 0;'
-    sqlStr+='alter table u_stock_list add column SZ100 tinyint(1) not null default 0;'
-    sqlStr+='alter table u_stock_list add column ZZ500 tinyint(1) not null default 0;'
-    sqlStr+='alter table u_stock_list add column selfselected tinyint(1) not null default 0;'
-
-    try:
-        mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
-    except sqlalchemy.exc.OperationalError:
-        log.logger.warning("修正股票清单表出错，可能已经修正过")
-
-
-
-
-    '''
-    sqlStr1="create table u_data_desc (content_name varchar(100),content varchar(200) not null default '',comments varchar(300) not null default '');"
-    sqlStr2="insert into u_data_desc (content_name,content,comments) values ('last_total_update_time','','the time of last total data update');"
-    sqlStr3="insert into u_data_desc (content_name,content,comments) values ('data_start_dealday','','the start deal day(include) of all data');"
-    sqlStr4="insert into u_data_desc (content_name,content,comments) values ('data_end_dealday','','the end deal day(include) of all data');"
-    sqlStr5="insert into u_data_desc (content_name,content,comments) values ('finance_report_date_update_to','','the date of last update of finance report');"
-
-
-    try:
-        mysqlProcessor.execSql(mysqlSession,sqlStr1,True)       
-        mysqlProcessor.execSql(mysqlSession,sqlStr2,True)       
-        mysqlProcessor.execSql(mysqlSession,sqlStr3,True)       
-        mysqlProcessor.execSql(mysqlSession,sqlStr4,True)       
-        mysqlProcessor.execSql(mysqlSession,sqlStr5,True)       
-     
-    except sqlalchemy.exc.OperationalError:
-        log.logger.warning("初始化u_data_desc表出错")
-    '''
-    
-    #sqlStr='alter table u_stock_list add column is_data_available tinyint(1) default 0;'
-    #try:
-    #    mysqlProcessor.execSql(mysqlSession,sqlStr,True)       
-    #except sqlalchemy.exc.OperationalError:
-    #    log.logger.warning("修正股票清单表出错，可能已经修正过")
-
-
-
-    """
-     
     sdProcessor=StockDataProcessor()
     
     # 创建命令行解析器句柄，并自定义描述信息
@@ -351,32 +216,89 @@ if __name__ == '__main__':
     
     startday=sd
     endday=ed
+
+
+    #使用TuShare pro版本    
+    tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
+    fdDataAPI = tushare.pro_api()
+
+    #1、获取公募基金列表，并存入数据库
+    #由于Tushare的基金获取需要5000以上积分才能获取全量
+    #因此，从wind获取基金清单，存入到基金列表中
+    #然后基于这个列表再到tushare获取各个基金的信息
+     
+    #场外基金
+    tsFundListDF_O=fdDataAPI.fund_basic(market='O') 
+    #场内基金
+    tsFundListDF_E=fdDataAPI.fund_basic(market='E')
+    tsFundListDF=tsFundListDF_E.append(tsFundListDF_O)
+    #将公募基金列表存入数据库表中
+    tsFundListDF.to_sql(name='u_fund_list',con=mysqlEngine,chunksize=1000,if_exists='replace',index=None)
     
-    #fund_list_data=mysqlProcessor.querySql('select * from u_fund_list')
+    #Tushare获取的基金列表
+    tsFundList=list(tsFundListDF['ts_code'])
     
-    fundCodeList=list(fund_list_data['ts_code'])
+    #wind获取的基金列表
+    windFundListDF=mysqlProcessor.querySql('select * from u_wind_fund_list')
+    windFundList=list(windFundListDF['ts_code'])
+    
+    #求两个列表的差集，在wind的基金列表，但不在tushare的基金列表中的部分
+    #先把这部分基金的资料增加到基金列表中
+    difFdList=list(set(windFundList).difference(set(tsFundList)))
+      
+    ix=0
+    length=len(difFdList)
     
     
     
-    fdList=get8slListFromFundList(fundCodeList)
+    while ix<length:
+        fundCode=difFdList[ix]
+        try:
+            #查询基金信息并写入
+            fund_basic_data=fdDataAPI.fund_basic(ts_code=fundCode)
+            if len(fund_basic_data)>0:
+                fund_basic_data.to_sql(name='u_fund_list',con=mysqlEngine,chunksize=1000,if_exists='append',index=None)
+            else:
+                log.logger.error("%d：%s基金的基本信息无法获取"%(ix,fundCode))
+            #time.sleep(6)
+        except Exception:#出现异常
+            #出现异常，则还需要继续循环，继续对该股票继续处理
+            traceback.print_exc()
+            log.logger.warning('%d：单独处理%s基金基本信息插入出错，重新进行处理'%(ix,fundCode))
+            time.sleep(60)
+            continue
+        else:#未出现异常
+            log.logger.info('%d：单独处理%s基金基本信息插入完毕'%(ix,fundCode))
+            time.sleep(6)
+            #未出现异常，进行下一个股票的处理
+            ix=ix+1
+
     
-    #分8个进程，分别计算8段股票波动率
+    #单进程
+    #processFundDataGet(fundCodeList,startday,endday)
+    
+
+    #上面已经获取了所有基金的基本资料
+    #下面取获取所有基金交易信息
+    wholeFundListDF=mysqlProcessor.querySql('select * from u_fund_list')   
+    
+    wholeFundLists=wholeFundListDF['ts_code']
+    
+    #先用并集基金的所有净值、分红等信息获取回来
+    subWholeFdLists=get8slListFromFundList(wholeFundLists)
+    #分8个进程
     process=[]
 
-    for subStockList in fdList:
+    for subWholeFdList in subWholeFdLists:
         
-        p=multiprocessing.Process(target=processFundDataGet,args=(subStockList,startday,endday))
+        p=multiprocessing.Process(target=processFundDataGet,args=(subWholeFdList,startday,endday))
         p.start()
         process.append(p)
     
     for p in process:
         p.join()               
-    
-    
-    #单进程
-    #processFundDataGet(fundCodeList,startday,endday)
-    
-       
+
+           
     
        
     #完成所有数据的更新

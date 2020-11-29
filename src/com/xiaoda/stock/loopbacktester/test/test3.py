@@ -28,8 +28,19 @@ if __name__ == '__main__':
     
     sdDataAPI=tushare.pro_api()
 
+    #场内基金
+    tsFundListDF_E=sdDataAPI.fund_basic(market='E')
 
+    df1=sdDataAPI.fund_basic(ts_code='159956.OF')
 
+    df2=sdDataAPI.fund_manager(ts_code='159956.OF')
+    
+    df3=sdDataAPI.fund_div(ts_code='159956.OF')
+    
+    df3=sdDataAPI.fund_nav(ts_code='159956.OF')    
+    
+    
+    
 
     df=sdDataAPI.fund_basic(ts_code='166002.OF')
     
