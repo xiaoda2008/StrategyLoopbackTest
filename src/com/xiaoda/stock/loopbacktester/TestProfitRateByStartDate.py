@@ -271,7 +271,7 @@ if __name__ == '__main__':
     
     #起始测试日期
     #可以每月测一次，看看以任何一个月初进行计算
-    startdate='20200101'
+    startdate='20180101'
     #startdate='20180123'
     sdProcessor=StockDataProcessor()  
     startdate=sdProcessor.getNextDealDay(startdate, True)
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     #curr_time=datetime.datetime.now()
     #enddate=curr_time.strftime("%Y%m%d")
     #指定结束日期
-    enddate='20201106'
+    enddate='20201202'
     
     mysqlProcessor=MysqlProcessor()
     sdf=mysqlProcessor.querySql('select content from u_data_desc where content_name=\'data_end_dealday\'')
@@ -291,15 +291,15 @@ if __name__ == '__main__':
     #用于对照的指数
     #cmpIdx='HS300'
     
-    stockSelectStrategyName='ROEStrategy'
+    #stockSelectStrategyName='ROEStrategy'
     #stockSelectStrategyName='ROICStrategy'
     #stockSelectStrategyName='CCPlusNPRStrategy'
-    #stockSelectStrategyName='CashCowStrategy'
+    stockSelectStrategyName='CashCowStrategy'
     tradeSelectStrategyName='HoldStrategy'
     
     
     #回测间隔交易步日数量
-    ddayStep=30
+    ddayStep=90
     #目标收益率
     goalRet=0.2
     

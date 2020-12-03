@@ -133,30 +133,30 @@ def processFundDataGet(fundList,startday,endday):
         try:
             #基金净值
             fund_Nav=sdDataAPI.fund_nav(ts_code=fundCode)
-            fund_Nav.to_sql(name='f_fund_nav_'+fundCode,
+            fund_Nav.to_sql(name='f_fund_nav_'+fundCode[:-3],
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
             
             '''
             #日内行情，日内行情没意义？
-            fund_Nav=sdDataAPI.fund_daily(ts_code=fundCode, start_date=startday, end_date=endday)
-            fund_Nav.to_sql(name='f_fund_daily_'+fundCode,
+            fund_Daily=sdDataAPI.fund_daily(ts_code=fundCode, start_date=startday, end_date=endday)
+            fund_Daily.to_sql(name='f_fund_daily_'+fundCode[:-3],
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None)
             '''
             
             #复权因子，貌似只有场内基金有复权因子，场外没有，场外只有分红？
-            fund_Nav=sdDataAPI.fund_adj(ts_code=fundCode, start_date=startday, end_date=endday)
-            fund_Nav.to_sql(name='f_fund_adj_'+fundCode,
+            fund_Adj=sdDataAPI.fund_adj(ts_code=fundCode, start_date=startday, end_date=endday)
+            fund_Adj.to_sql(name='f_fund_adj_'+fundCode[:-3],
                       con=mysqlEngine,chunksize=100,if_exists='replace',index=None) 
             
             #基金分红数据
             #写入单一的表，不要每个基金一张表
-            fund_Nav=sdDataAPI.fund_div(ts_code=fundCode)
-            fund_Nav.to_sql(name='u_fund_div',con=mysqlEngine,chunksize=100,if_exists='append',index=None)             
+            fund_Div=sdDataAPI.fund_div(ts_code=fundCode)
+            fund_Div.to_sql(name='u_fund_div',con=mysqlEngine,chunksize=100,if_exists='append',index=None)             
 
             #基金经理
             #基金经理的信息，是否应该写入单一的表，而不是每个基金一张表?
-            fund_Nav=sdDataAPI.fund_manager(ts_code=fundCode)
-            fund_Nav.to_sql(name='u_fund_mgr',con=mysqlEngine,chunksize=100,if_exists='append',index=None)
+            fund_Mgr=sdDataAPI.fund_manager(ts_code=fundCode)
+            fund_Mgr.to_sql(name='u_fund_mgr',con=mysqlEngine,chunksize=100,if_exists='append',index=None)
         except Exception:#出现异常
             #出现异常，则还需要继续循环，继续对该股票继续处理
             traceback.print_exc()
