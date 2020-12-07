@@ -38,12 +38,12 @@ class SMAStrategy(StrategyParent):
     
     log = Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
     
-    def __init__(self):
+    def __init__(self,mysqlProcessor):
         '''
         Constructor
         '''
         self.name="SMAStrategy"
-        self.mysqlProcessor=MysqlProcessor()
+        self.mysqlProcessor=mysqlProcessor
         #sql='select * from u_vol_for_industry'
         #self.volForIndDF=self.mysqlProcessor.querySql(sql)
         #self.volForIndDF.set_index('industry',drop=True,inplace=True)

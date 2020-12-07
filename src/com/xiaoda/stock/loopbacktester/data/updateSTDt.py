@@ -35,8 +35,10 @@ from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 #from com.xiaoda.stock.loopbacktester.utils.ParamUtils import LOGGINGDIR
 from datetime import datetime as dt
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import tsmysqlURL
 
-mysqlProcessor=MysqlProcessor()
+
+mysqlProcessor=MysqlProcessor(tsmysqlURL)
 sdProcessor=StockDataProcessor()
 
 DAYONE='19911219'

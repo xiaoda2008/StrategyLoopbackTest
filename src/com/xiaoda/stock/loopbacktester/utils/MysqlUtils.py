@@ -8,7 +8,6 @@ import copy
 import sqlalchemy
 
 from sqlalchemy import Column, String,Integer,create_engine
-from com.xiaoda.stock.loopbacktester.utils.ParamUtils import mysqlURL
 from pandas.core.frame import DataFrame
 from sqlalchemy.orm import sessionmaker
 import traceback
@@ -22,10 +21,7 @@ class MysqlProcessor():
         Constructor
         '''
         #print("init of MysqlProcessor()")
-        if len(url)==0:
-            self.engine=create_engine(mysqlURL)
-        else:
-            self.engine=create_engine(url)
+        self.engine=create_engine(url)
             
         self.engine.connect()
         DBSession=sessionmaker(bind=self.engine)

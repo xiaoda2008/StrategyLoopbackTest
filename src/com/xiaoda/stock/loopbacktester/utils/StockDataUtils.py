@@ -10,6 +10,7 @@ import datetime
 from datetime import datetime as dt
 from sqlalchemy import Column, String,Integer,create_engine
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import tsmysqlURL
 
 class StockDataProcessor(object):
     '''
@@ -27,7 +28,7 @@ class StockDataProcessor(object):
         '''
         Constructor
         '''
-        self.mysqlProcessor=MysqlProcessor()
+        self.mysqlProcessor=MysqlProcessor(tsmysqlURL)
         #engine = MysqlProcessor.getMysqlEngine()
         #查询语句
         sql = "select * from u_trade_cal"

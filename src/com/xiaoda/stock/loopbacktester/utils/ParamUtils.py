@@ -28,7 +28,7 @@ OUTPUTDIR = 'D:/outputDir'
 #mysql连接地址
 #mysqlURL = 'mysql+pymysql://ts:ts@localhost/tsdb?charset=utf8mb4'
 #mysqlURL = 'mysql+mysqlconnector://ts:ts@localhost/tsdb?charset=utf8mb4'
-mysqlURL = 'mysql+mysqldb://ts:ts@localhost/tsdb?charset=utf8mb4'
+tsmysqlURL = 'mysql+mysqldb://st:st@localhost/stdb?charset=utf8mb4'
 
 fdMysqlURL='mysql+mysqldb://ts:ts@localhost/fddb?charset=utf8mb4'
 

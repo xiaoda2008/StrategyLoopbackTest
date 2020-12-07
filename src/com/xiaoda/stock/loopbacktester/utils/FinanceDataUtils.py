@@ -6,6 +6,8 @@ Created on 2019年11月18日
 import pandas
 import sqlalchemy
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import tsmysqlURL
+
 
 class FinanceDataProcessor(object):
     '''
@@ -30,8 +32,7 @@ class FinanceDataProcessor(object):
         '''
         Constructor
         ''' 
-        self.mysqlProcessor=MysqlProcessor()  
-
+        self.mysqlProcessor=MysqlProcessor(tsmysqlURL)
 
     def getLatestBalanceSheetReport(self,stockCode,dateStr,isAnnual=False):
         '''

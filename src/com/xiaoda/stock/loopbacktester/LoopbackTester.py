@@ -20,25 +20,22 @@ from timeit import default_timer as timer
 import time
 import pandas
 import math
-
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
-
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import tsmysqlURL
 from com.xiaoda.stock.loopbacktester.utils.LoggingUtils import Logger
-
 import multiprocessing
-
 from multiprocessing import Manager
 from com.xiaoda.stock.loopbacktester.utils.TradeStrategyUtil import TradeStrategyProcessor
 from com.xiaoda.stock.loopbacktester.utils.MysqlUtils import MysqlProcessor
 from com.xiaoda.stock.loopbacktester.utils.StockSelectStrategyUtil import StockSelectStrategyProcessor
-
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 from mpl_toolkits.axes_grid1 import host_subplot
-import mpl_toolkits.axisartist as AA
-
+import mpl_toolkits.axisartist as AA  
+import argparse
+import warnings
+warnings.filterwarnings("ignore")
 
 '''
 def fn_timer(fn):
@@ -53,11 +50,6 @@ def fn_timer(fn):
 
 '''
 
-#@fn_timer
-
-log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
-
-tradeStrategyProcessor=TradeStrategyProcessor()
 
 
 ''
@@ -201,6 +193,8 @@ def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
     
     #t1=timer()
     #print("t1:%s"%(t1))
+    mysqlProcessor=MysqlProcessor(tsmysqlURL)
+    tradeStrategyProcessor=TradeStrategyProcessor(mysqlProcessor)
     tradeStrategy=tradeStrategyProcessor.getStrategy(tradeStrategyName)
     '''        
     lastDealDay=sdProcessor.getLastDealDay(enddate,True)
@@ -241,7 +235,7 @@ def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
 
 
 #进行计算，输出Excel，并画图   
-def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startdate,enddate):
+def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrategyString,startdate,enddate):
     
     stockSelectStrategyList=stockSelectStrategyString.split(',')
     tradeStrategyList=tradeStrategyString.split(',')
@@ -289,7 +283,7 @@ def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startd
         #对所有策略进行循环：
         for tradeStrategyStr in tradeStrategyList:
             
-            tradeStrategy=TradeStrategyProcessor().getStrategy(tradeStrategyStr)
+            tradeStrategy=TradeStrategyProcessor(mysqlProcessor).getStrategy(tradeStrategyStr)
 
             if tradeStrategy==None:
                 log.logger.error('TradeStrategy：%s输入错误'%(tradeStrategyStr))
@@ -684,13 +678,15 @@ def compAndOutputXLSAndPlot(stockSelectStrategyString,tradeStrategyString,startd
             
             plt.savefig(strOutputDir+'/Summary.png')
             '''
-        
-import argparse
-import warnings
-warnings.filterwarnings("ignore")
+
 
 if __name__ == '__main__':
-    
+ 
+
+    log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
+    mysqlProcessor=MysqlProcessor(tsmysqlURL)
+    tradeStrategyProcessor=TradeStrategyProcessor(mysqlProcessor)
+     
     # 创建命令行解析器句柄，并自定义描述信息
     parser = argparse.ArgumentParser(description="input all parameters")
     # 定义必选参数 positionArg
@@ -725,7 +721,7 @@ if __name__ == '__main__':
             startdate=v
         elif k=='enddate':
             enddate=v    
-    mysqlProcessor=MysqlProcessor()
+
     sdf=mysqlProcessor.querySql('select content from u_data_desc where content_name=\'data_end_dealday\'')
     if enddate>sdf.at[0,'content']:
         enddate=sdf.at[0,'content']
@@ -734,4 +730,4 @@ if __name__ == '__main__':
         log.logger.error('开始时间'+startdate+'晚于或等于结束时间'+enddate)
         pass
     else:
-        compAndOutputXLSAndPlot(stockSelectStrategyString, tradeStrategyString, startdate, enddate)
+        compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString, tradeStrategyString, startdate, enddate)

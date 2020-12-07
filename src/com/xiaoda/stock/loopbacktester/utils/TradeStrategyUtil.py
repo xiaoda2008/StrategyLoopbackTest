@@ -17,17 +17,17 @@ class TradeStrategyProcessor(object):
     '''
 
 
-    def __init__(self):
+    def __init__(self,mysqlProcessor):
         '''
         Constructor
         '''
-        self.blshStrategy=BuylowSellhighStrategy()
-        #self.fblshStrategy=FloatingBuylowSellhighStrategy()
-        self.msStrategy=MultiStepStrategy()
-        #self.fmsStrategy=FloatingMultiStepStrategy()
-        self.hStrategy=HoldStrategy()
-        self.SMAStrategy=SMAStrategy()
-        self.blshPlusMAStrategy=BLSHPlusMAStrategy()
+        self.blshStrategy=BuylowSellhighStrategy(mysqlProcessor)
+        #self.fblshStrategy=FloatingBuylowSellhighStrategy(mysqlProcessor)
+        self.msStrategy=MultiStepStrategy(mysqlProcessor)
+        #self.fmsStrategy=FloatingMultiStepStrategy(mysqlProcessor)
+        self.hStrategy=HoldStrategy(mysqlProcessor)
+        self.SMAStrategy=SMAStrategy(mysqlProcessor)
+        self.blshPlusMAStrategy=BLSHPlusMAStrategy(mysqlProcessor)
     
     
     def getStrategy(self,strategyName):

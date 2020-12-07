@@ -25,12 +25,12 @@ class FloatingMultiStepStrategy(StrategyParent):
         （3）如果上涨计数continuousRiseCnt=2，则卖出全部持仓数
     '''
     
-    def __init__(self):
+    def __init__(self,mysqlProcessor):
         '''
         Constructor
         '''
         self.name="FloatingMultiStepStrategy"
-        self.mysqlProcessor=MysqlProcessor()
+        self.mysqlProcessor=mysqlProcessor
         
         #按理说这里应当是要从开始时间的前一年去取数才合理
         sql='select * from u_vol_for_industry'
