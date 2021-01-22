@@ -12,7 +12,6 @@ from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProces
 import math
 import sys
 import os
-from _ast import If
 
 
 def anaFdPerfDuringPeriod(mysqlProcessor,tsCode,bgDate,edDate):
@@ -38,10 +37,12 @@ if __name__ == '__main__':
      
     log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
      
-    #对所有基金经理的清单
-    #分析其所有管理的基金期间内
+     
+    
+    
+    #分析一：
+    #对所有基金经理的清单，分析其所有管理的基金期间内
     #获取的收益，以及年化收益
-    #写入数据库的引擎    
     fdMysqlProcessor=MysqlProcessor(fdMysqlURL)  
     
     
@@ -59,7 +60,6 @@ if __name__ == '__main__':
             u_fund_list list \
         WHERE\
             mgr.ts_code = list.ts_code \
-            and list.market='O'\
             and list.fund_type not like '%货币%'\
             and list.fund_type not like '%债%'\
             and list.issue_date <> ''\
@@ -81,8 +81,6 @@ if __name__ == '__main__':
     end_dealday=sdf.at[0,'content']
   
     sdProcessor=StockDataProcessor()
-
-
 
 
     #分析所有基金经理在任职期间的表现
@@ -132,14 +130,14 @@ if __name__ == '__main__':
         
         ix=ix+1
         
+                        
+    sys.stdout = savedStdout #恢复标准输出流
         
         
         
-    
+    #分析二：
     #分析所有基金经理在近10年内的表现情况    
     ix=0
-
-
 
     sdf=fdMysqlProcessor.querySql('select content from u_data_desc where content_name=\'data_end_dealday\'')
     lastDealDay=sdf.at[0,'content']
@@ -218,13 +216,22 @@ if __name__ == '__main__':
     ei=hs300DF.at[ed,'close']
     #2019年涨幅
     hs300ir2019=round(ei/si-1,4)
- 
+
     sd=sdProcessor.getNextDealDay('20200101', True)
-    ed=lastDealDay
+    ed=sdProcessor.getLastDealDay('20201231', True)
     si=hs300DF.at[sd,'open']
     ei=hs300DF.at[ed,'close']
     #2020年涨幅
-    hs300ir2020=round(ei/si-1,4) 
+    hs300ir2020=round(ei/si-1,4)
+ 
+    sd=sdProcessor.getNextDealDay('20210101', True)
+    ed=lastDealDay
+    si=hs300DF.at[sd,'open']
+    ei=hs300DF.at[ed,'close']
+    #2021年涨幅
+    hs300ir2021=round(ei/si-1,4)
+  
+  
   
     sqlStr="select * from u_idx_cyb order by trade_date"
     cybDF=tsMysqlProcessor.querySql(sqlStr)    
@@ -296,19 +303,26 @@ if __name__ == '__main__':
     ei=cybDF.at[ed,'close']
     #2019年涨幅
     cybir2019=round(ei/si-1,4)
- 
+
     sd=sdProcessor.getNextDealDay('20200101', True)
-    ed=lastDealDay
+    ed=sdProcessor.getLastDealDay('20201231', True)
     si=cybDF.at[sd,'open']
     ei=cybDF.at[ed,'close']
     #2020年涨幅
     cybir2020=round(ei/si-1,4) 
+ 
+    sd=sdProcessor.getNextDealDay('20210101', True)
+    ed=lastDealDay
+    si=cybDF.at[sd,'open']
+    ei=cybDF.at[ed,'close']
+    #2021年涨幅
+    cybir2021=round(ei/si-1,4) 
      
     
     
       
     savedStdout=sys.stdout  #保存标准输出流
-    sys.stdout=open('d:/perfAna.csv','wt+',newline='',encoding='utf-8-sig')            
+    sys.stdout=open('d:/mgrPerfAna.csv','wt+',newline='',encoding='utf-8-sig')            
     
     print('序号,基金经理,基金代码,基金名称,\
     2011期间收益,相对沪深300超额收益,相对创业板超额收益,\
@@ -320,7 +334,8 @@ if __name__ == '__main__':
     2017期间收益,相对沪深300超额收益,相对创业板超额收益,\
     2018期间收益,相对沪深300超额收益,相对创业板超额收益,\
     2019期间收益,相对沪深300超额收益,相对创业板超额收益,\
-    2020期间收益,相对沪深300超额收益,相对创业板超额收益')
+    2020期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2021期间收益,相对沪深300超额收益,相对创业板超额收益')
 
     while(ix<mgrNo):
         
@@ -346,6 +361,8 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2011)*100,2)),end=',')
         else:
             print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
         
         #2012    
         if bgDate<='20120101' and edDate>='20121231':
@@ -354,6 +371,8 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-hs300ir2012)*100,2)),end=',')
             print('%f%%'%(round((incRate-cybir2012)*100,2)),end=',')
         else:
+            print('-',end=',')
+            print('-',end=',')
             print('-',end=',')
         
         #2013    
@@ -364,6 +383,8 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2013)*100,2)),end=',')
         else:
             print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
         
         #2014    
         if bgDate<='20140101' and edDate>='20141231':
@@ -373,6 +394,8 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2014)*100,2)),end=',')
         else:
             print('-',end=',')  
+            print('-',end=',')
+            print('-',end=',')
         
         #2015    
         if bgDate<='20150101' and edDate>='20151231':
@@ -382,7 +405,8 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2015)*100,2)),end=',')
         else:
             print('-',end=',')
-        
+            print('-',end=',')
+            print('-',end=',')
         
         #2016    
         if bgDate<='20160101' and edDate>='20161231':
@@ -392,8 +416,9 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2016)*100,2)),end=',')
         else:
             print('-',end=',')
-        
-        
+            print('-',end=',')
+            print('-',end=',')
+                
         #2017    
         if bgDate<='20170101' and edDate>='20171231':
             incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20170101', '20171231')
@@ -402,8 +427,9 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2017)*100,2)),end=',')
         else:
             print('-',end=',')
-        
-        
+            print('-',end=',')
+            print('-',end=',')
+                
         #2018       
         if bgDate<='20180101' and edDate>='20181231':
             incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20180101', '20181231')
@@ -412,7 +438,8 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2018)*100,2)),end=',')
         else:
             print('-',end=',')
-        
+            print('-',end=',')
+            print('-',end=',')
         
         #2019    
         if bgDate<='20190101' and edDate>='20191231':
@@ -422,16 +449,30 @@ if __name__ == '__main__':
             print('%f%%'%(round((incRate-cybir2019)*100,2)),end=',')
         else:
             print('-',end=',')
-        
-        
+            print('-',end=',')
+            print('-',end=',')
+                
         #2020    
-        if bgDate<='20200101' and edDate>=end_dealday:
+        if bgDate<='20200101' and edDate>='20201231':
             incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20200101', '20201231')
             print('%f%%'%(round(incRate*100,2)),end=',')
             print('%f%%'%(round((incRate-hs300ir2020)*100,2)),end=',')
             print('%f%%'%(round((incRate-cybir2020)*100,2)),end=',')
         else:
             print('-',end=',')       
+            print('-',end=',')
+            print('-',end=',')
+
+        #2020    
+        if bgDate<='20210101' and edDate>=end_dealday:
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20210101', '20211231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2021)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2021)*100,2)),end=',')
+        else:
+            print('-',end=',')       
+            print('-',end=',')
+            print('-',end=',')
     
     
         print()
@@ -442,5 +483,188 @@ if __name__ == '__main__':
                     
     sys.stdout = savedStdout #恢复标准输出流
     
+    #分析三：
+    #对所有的基金，分析其最近十年的业绩表现
+     
+    sqlStr="SELECT\
+    list.ts_code,\
+    list.NAME fundName,\
+    list.management,\
+    list.issue_date issue_date\
+    FROM\
+    u_fund_list list\
+    WHERE\
+    list.market = 'O'\
+    AND list.fund_type NOT LIKE '%货币%'\
+    AND list.fund_type NOT LIKE '%债%'\
+    AND list.fund_type NOT LIKE '%保本%'\
+    AND list.fund_type NOT LIKE '%另类%'\
+    AND list.fund_type NOT LIKE '%商品%'\
+    AND list.issue_date <> ''\
+    AND list.delist_date IS NULL\
+    ORDER BY\
+    list.ts_code"
     
     
+    fdDF=fdMysqlProcessor.querySql(sqlStr)
+
+    fdNo=len(fdDF)
+              
+    
+    #分析所有基金经理在近10年内的表现情况    
+    ix=0
+
+    savedStdout=sys.stdout  #保存标准输出流
+    sys.stdout=open('d:/fdPerfAna.csv','wt+',newline='',encoding='utf-8-sig')            
+    
+    print('序号,基金代码,基金名称,\
+    2011期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2012期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2013期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2014期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2015期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2016期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2017期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2018期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2019期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2020期间收益,相对沪深300超额收益,相对创业板超额收益,\
+    2021期间收益,相对沪深300超额收益,相对创业板超额收益')
+
+    while(ix<fdNo):
+        
+        tsCode=fdDF.at[ix,'ts_code']
+        fdName=fdDF.at[ix,'fundName']
+        isDate=fdDF.at[ix,'issue_date']
+        
+        edDate=end_dealday
+
+        print("%d,%s,%s"%(ix,tsCode,fdName),end=',')
+        
+        #2011    
+        if isDate<='20110101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20110101', '20111231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2011)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2011)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2012    
+        if isDate<='20120101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20120101', '20121231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2012)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2012)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2013    
+        if isDate<='20130101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20130101', '20131231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2013)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2013)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2014    
+        if isDate<='20140101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20140101', '20141231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2014)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2014)*100,2)),end=',')
+        else:
+            print('-',end=',')  
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2015    
+        if isDate<='20150101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20150101', '20151231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2015)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2015)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2016    
+        if isDate<='20160101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20160101', '20161231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2016)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2016)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+         
+        #2017    
+        if isDate<='20170101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20170101', '20171231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2017)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2017)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2018       
+        if isDate<='20180101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20180101', '20181231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2018)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2018)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2019    
+        if isDate<='20190101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20190101', '20191231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2019)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2019)*100,2)),end=',')
+        else:
+            print('-',end=',')
+            print('-',end=',')
+            print('-',end=',')
+        
+        #2020    
+        if isDate<='20200101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20200101', '20201231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2020)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2020)*100,2)),end=',')
+        else:
+            print('-',end=',')       
+            print('-',end=',')
+            print('-',end=',')
+ 
+        #2021 
+        if isDate<='20210101':
+            incRate=anaFdPerfDuringPeriod(fdMysqlProcessor,tsCode, '20210101', '20211231')
+            print('%f%%'%(round(incRate*100,2)),end=',')
+            print('%f%%'%(round((incRate-hs300ir2021)*100,2)),end=',')
+            print('%f%%'%(round((incRate-cybir2021)*100,2)),end=',')
+        else:
+            print('-',end=',')       
+            print('-',end=',')
+            print('-',end=',') 
+    
+        print()
+    
+        log.logger.info('%d：处理完%s基金最近十年的数据'%(ix,tsCode))    
+    
+        ix=ix+1
+                    
+    sys.stdout = savedStdout #恢复标准输出流   

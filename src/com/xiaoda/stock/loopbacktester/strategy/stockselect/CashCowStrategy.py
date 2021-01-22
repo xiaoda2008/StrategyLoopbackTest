@@ -34,7 +34,10 @@ class CashCowStrategy(StrategyParent):
 
 
         #sdf = sdDataAPI.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+        #是否可以考虑放宽范围？会是什么效果？
         sdict=sdProcessor.getHS300Dict()
+        #sdict=sdProcessor.getZZ500Dict()
+        
         
         cfRatioDict={}
 
@@ -48,8 +51,7 @@ class CashCowStrategy(StrategyParent):
             
             if listdate>startdateStr:
                 continue
-            #if stockCode=='300796.SZ':
-            #   print()
+
 
             bs=self.finProcessor.getLatestBalanceSheetReport(stockCode,startdateStr,False)
             #bs为所有之前发布的所有资产负债表数据

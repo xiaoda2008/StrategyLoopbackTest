@@ -157,6 +157,13 @@ def processFundDataGet(fundList,startday,endday):
             #基金经理的信息，是否应该写入单一的表，而不是每个基金一张表?
             fund_Mgr=sdDataAPI.fund_manager(ts_code=fundCode)
             fund_Mgr.to_sql(name='u_fund_mgr',con=mysqlEngine,chunksize=100,if_exists='append',index=None)
+
+            #基金持仓信息
+            #基金持仓信息，是否应该写入单一的表，而不是每个基金一张表?
+            fund_fund_portfolio=sdDataAPI.fund_portfolio(ts_code=fundCode)
+            fund_fund_portfolio.to_sql(name='u_fund_portfolio',con=mysqlEngine,chunksize=100,if_exists='append',index=None)
+            
+                    
         except Exception:#出现异常
             #出现异常，则还需要继续循环，继续对该股票继续处理
             traceback.print_exc()

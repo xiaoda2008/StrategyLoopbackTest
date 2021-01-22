@@ -46,6 +46,10 @@ class StockDataProcessor(object):
         self.allStockDict=df.set_index('ts_code').to_dict(orient="index")
 
         #查询语句
+        sql = "select * from u_stock_list where ZZ500=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"    
+        df=self.mysqlProcessor.querySql(sql)
+        self.zz500Dict=df.set_index('ts_code').to_dict(orient="index")
+        
         sql = "select * from u_stock_list where HS300=1 and name not like '%ST%' and name not like '%退%' order by ts_code asc"    
         df=self.mysqlProcessor.querySql(sql)
         self.hs300Dict=df.set_index('ts_code').to_dict(orient="index")
@@ -65,11 +69,12 @@ class StockDataProcessor(object):
         sql='select * from u_idx_hs300;'
         df=self.mysqlProcessor.querySql(sql)
         self.hs300idx=df.set_index('trade_date')
-
+        
         sql='select * from u_idx_cyb;'
         df=self.mysqlProcessor.querySql(sql)
         self.cybidx=df.set_index('trade_date')
     
+    #这里没有处理非交易日的情况，可能导致非交易日的数据为空
     def getidxData(self,idxName,sd,ed):
         if idxName=='HS300':
             return self.hs300idx[sd:ed]
@@ -130,9 +135,11 @@ class StockDataProcessor(object):
                 负数表示向更早去找
                 正数表示向更晚去找
         '''
-        cday = dt.strptime(todayDate, "%Y%m%d").date()
+        cday=dt.strptime(todayDate, "%Y%m%d").date()
         
-        if offset>0:
+        if offset==0:
+            return todayDate
+        elif offset>0:
             dayOffset=datetime.timedelta(1)
         else:
             dayOffset=datetime.timedelta(-1)
@@ -179,7 +186,6 @@ class StockDataProcessor(object):
             dayOffset=datetime.timedelta(1)
         else:
             dayOffset=datetime.timedelta(-1)
-        
         
         try:
     
@@ -252,7 +258,9 @@ class StockDataProcessor(object):
      
     def getSH50Dict(self):
         return self.sh50Dict  
-
+    
+    def getZZ500Dict(self):
+        return self.zz500Dict  
     
     @staticmethod
     def mktallocation(stringx):

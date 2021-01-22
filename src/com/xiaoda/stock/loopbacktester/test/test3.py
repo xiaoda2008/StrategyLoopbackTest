@@ -28,6 +28,8 @@ if __name__ == '__main__':
     
     sdDataAPI=tushare.pro_api()
 
+
+    df=daily_basic_data=sdDataAPI.daily_basic(ts_code='689009.SH')
     #场内基金
     tsFundListDF_E=sdDataAPI.fund_basic(market='E')
 

@@ -27,7 +27,8 @@ class ROEStrategy(StrategyParent):
 
     #决定对哪些股票进行投资
     def getSelectedStockList(self,sdProcessor,startdateStr):
-        
+
+        #sdict=sdProcessor.getZZ500Dict()        
         sdict=sdProcessor.getHS300Dict()
         ROEDict={}
         

@@ -37,6 +37,8 @@ import argparse
 import warnings
 warnings.filterwarnings("ignore")
 
+
+
 '''
 def fn_timer(fn):
     def function_timer(*args, **kwargs):
@@ -49,6 +51,9 @@ def fn_timer(fn):
     return function_timer
 
 '''
+
+
+#log=Logger(os.path.split(__file__)[-1].split(".")[0]+'.log',level='info')
 
 
 
@@ -189,7 +194,7 @@ def get8slListFromStockList(stockList):
 
 #具体处理股票的处理
 #@fn_timer
-def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
+def processStock(log,stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
     
     #t1=timer()
     #print("t1:%s"%(t1))
@@ -224,7 +229,7 @@ def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
         if stockTradeDF.empty:
             continue
         else:
-            stockTradeDF.to_csv(outputFile,index=False,encoding='ANSI')
+            stockTradeDF.to_csv(outputFile,index=False,encoding='utf-8-sig')
         #t6=timer()
         #print("t6:%s"%(t6))
         #print("t6-t3:%s"%(t6-t3))
@@ -235,7 +240,7 @@ def processStock(stockList,tradeStrategyName,strOutputDir,firstDealDay,enddate):
 
 
 #进行计算，输出Excel，并画图   
-def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrategyString,startdate,enddate):
+def compAndOutputXLSAndPlot(log,mysqlProcessor,stockSelectStrategyString,tradeStrategyString,startdate,enddate):
     
     stockSelectStrategyList=stockSelectStrategyString.split(',')
     tradeStrategyList=tradeStrategyString.split(',')
@@ -243,13 +248,13 @@ def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrate
     sdProcessor=StockDataProcessor()
     
     #通过STARTDATE找到第一个交易日
-    firstDealDay=sdProcessor.getNextDealDay(startdate,True)
+    #firstDealDay=sdProcessor.getNextDealDay(startdate,True)
     
     #需要找到开始日期前面的20个交易日那天，从那一天开始获取数据
     #可能有企业临时停牌的问题，向前找20个交易日，有可能不够在后面扣除
     #向前找30个交易日
 
-    twentyDaysBeforeFirstOpenDay=sdProcessor.getDealDayByOffset(firstDealDay, -30)
+    #twentyDaysBeforeFirstOpenDay=sdProcessor.getDealDayByOffset(firstDealDay, -30)
     
     OODir=OUTPUTDIR+'/'+startdate+'-'+enddate
     
@@ -333,8 +338,8 @@ def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrate
         
             for subStockList in slList:
                 
-                p=multiprocessing.Process(target=processStock,args=(subStockList,tradeStrategy.getStrategyName(),strOutputDir,\
-                                 firstDealDay,enddate,))
+                p=multiprocessing.Process(target=processStock,args=(log,subStockList,tradeStrategy.getStrategyName(),\
+                                                                    strOutputDir,startdate,enddate,))
                 p.start()
         
                 process.append(p)
@@ -510,14 +515,22 @@ def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrate
             if len(keysList)>0:
                 dtStr=(keysList[0])[0:8]
                 
+                #由于指数表中不包含非交易日
+                #如果当前是非交易日，需要取前一天指数
+                if sdProcessor.isDealDay(dtStr)==False:
+                    idxDtStr=sdProcessor.getDealDayByOffset(dtStr, -1)
+                else:
+                    idxDtStr=dtStr
                 #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
                 
-                idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
-                origIdxClose1=idxDF1.at[dtStr,'close']
-    
-                idxDF2=sdProcessor.getidxData('HS300',dtStr,dtStr)
-                origIdxClose2=idxDF2.at[dtStr,'close']
+                idxDF1=sdProcessor.getidxData('CYB',idxDtStr,idxDtStr)
+
+                origIdxClose1=idxDF1.at[idxDtStr,'close']
+                lastIdxClose1=origIdxClose1
                 
+                idxDF2=sdProcessor.getidxData('HS300',idxDtStr,idxDtStr)
+                origIdxClose2=idxDF2.at[idxDtStr,'close']
+                lastIdxClose2=origIdxClose2
                 
                 for key in keysList:
                     
@@ -530,6 +543,7 @@ def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrate
                         #根据日期，获取当天收盘指数
                         #idxDF=sdProcessor.getidxData('HS300',dtStr,dtStr)
                         idxDF1=sdProcessor.getidxData('CYB',dtStr,dtStr)
+
                         idxClose1=idxDF1.at[dtStr,'close']
                         lastIdxClose1=idxClose1
                         
@@ -561,7 +575,7 @@ def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrate
                     if float(cashFlowDict.get(key)[3])==0:
                         print(0,end=',')
                     else:
-                        print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),4),end=',')
+                        print(round(todayProfit/(float(cashFlowDict.get(key)[3])-todayProfit),8),end=',')
                     
                     #log.logger.info("在%s日期的利润率:%.2f"%(dtStr,round(todayTotalProfit/origInput,4)))
                     #创业板指数
@@ -573,7 +587,9 @@ def compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString,tradeStrate
                                                 'CYBIncRate':round(idxClose1/origIdxClose1-1,4),\
                                                 'HS300IncRate':round(idxClose2/origIdxClose2-1,4)},index=[1])
                     except:
-                        print()
+                        tmpDF=pandas.DataFrame({'Date':dtStr,'ProIncRate':0,\
+                                                'CYBIncRate':0,\
+                                                'HS300IncRate':0},index=[1])
     
                     pltDF=pltDF.append(tmpDF,ignore_index=True,sort=False)
         
@@ -730,4 +746,4 @@ if __name__ == '__main__':
         log.logger.error('开始时间'+startdate+'晚于或等于结束时间'+enddate)
         pass
     else:
-        compAndOutputXLSAndPlot(mysqlProcessor,stockSelectStrategyString, tradeStrategyString, startdate, enddate)
+        compAndOutputXLSAndPlot(log,mysqlProcessor,stockSelectStrategyString, tradeStrategyString, startdate, enddate)

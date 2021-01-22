@@ -114,7 +114,7 @@ class HoldStrategy(StrategyParent):
         对stockCode股票从startday到endday之间的交易进行处理
         并返回一个结构，用于表示实际的每天的交易及每天的持仓信息
         '''
-        #if stockCode=='000661.SZ':
+        #if stockCode=='002304.SZ':
         #    pass
         
         #tc=timer()
@@ -124,11 +124,45 @@ class HoldStrategy(StrategyParent):
                                          '当天收盘价格','当前持仓盈亏','最近一次交易类型','最近一次交易价格',\
                                          '当前全部投入回报率','当天交易手续费','当天是否交易(可能非交易日或者停盘)'))
 
+        
+
+        
+
+
+
         #获取第一个交易日
         if self.sdProcessor.isDealDay(startday):
             firstDealDay=startday 
         else:
-            firstDealDay=self.sdProcessor.getNextCalDay(startday) 
+            
+            #对于一上来开始日期不是交易日的情况，应当现在结果里面输出几行空值，而不是直接跳过，否则后面在进行策略评估处理时
+            #会缺失数据
+                     
+            ln=self.sdProcessor.getDateDistance(startday,self.sdProcessor.getNextDealDay(startday,False))
+            
+            ix=0
+            
+            while ix<ln:
+                
+                dtStr=self.sdProcessor.getCalDayByOffset(startday, ix)
+                
+                appendlDF=pd.DataFrame([[dtStr,0,0,0,0,\
+                                             0,0,0,0,\
+                                             0,0,0,0,\
+                                             0,0,0]],
+                                        columns=['日期','交易类型','当天收盘持仓市值','当天持仓手数','累计投入金额',\
+                                         '累计赎回金额','当天资金净占用','当天资金净流量','当前持仓平均成本',\
+                                         '当天收盘价格','当前持仓盈亏','最近一次交易类型','最近一次交易价格',\
+                                         '当前全部投入回报率','当天交易手续费','当天是否交易(可能非交易日或者停盘)'])
+                
+                stockOutDF=stockOutDF.append(appendlDF,ignore_index=True,sort=False)
+            
+                ix=ix+1
+            
+            
+            
+            
+            firstDealDay=self.sdProcessor.getNextDealDay(startday,False)
         
         stock_k_data=self.sdProcessor.getStockKData(stockCode,firstDealDay,endday,'qfq')
 

@@ -26,7 +26,7 @@ sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32\Lib\si
 sys.path.append(r'C:\Users\picc\AppData\Local\Programs\Python\Python36-32')
 
 
-
+from com.xiaoda.stock.loopbacktester.utils.ParamUtils import tsmysqlURL
 from com.xiaoda.stock.loopbacktester.utils.StockDataUtils import StockDataProcessor
 import tushare
 from sqlalchemy.util.langhelpers import NoneType
@@ -153,7 +153,7 @@ def processStockDataGet(stockList,startday,endday):
     tushare.set_token('221f96cece132551e42922af6004a622404ae812e41a3fe175391df8')
     sdDataAPI = tushare.pro_api()
     #写入数据库的引擎    
-    mysqlProcessor=MysqlProcessor()
+    mysqlProcessor=MysqlProcessor(tsmysqlURL)
     mysqlEngine=mysqlProcessor.getMysqlEngine()
     mysqlSession=mysqlProcessor.getMysqlSession()
     
@@ -202,10 +202,10 @@ def processStockDataGet(stockList,startday,endday):
             MysqlProcessor.execSql(mysqlSession,sql,True)  
             sql='alter table s_finreport_balancesheet_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)              
-            sql='alter table s_finreport_balancesheet_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)  
+            #sql='alter table s_finreport_balancesheet_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            #MysqlProcessor.execSql(mysqlSession,sql,True)  
             sql='alter table s_finreport_balancesheet_%s add CONSTRAINT `FK_BS_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)              
+            MysqlProcessor.execSql(mysqlSession,sql,True)
 
 
             
@@ -241,8 +241,8 @@ def processStockDataGet(stockList,startday,endday):
             MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_cashflow_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)
-            sql='alter table s_finreport_cashflow_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)
+            #sql='alter table s_finreport_cashflow_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            #MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_cashflow_%s add CONSTRAINT `FK_CF_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)   
 
@@ -269,8 +269,8 @@ def processStockDataGet(stockList,startday,endday):
             MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_income_%s MODIFY COLUMN update_flag TINYINT(1) COLLATE utf8mb4_bin;'%(stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)
-            sql='alter table s_finreport_income_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
-            MysqlProcessor.execSql(mysqlSession,sql,True)
+            #sql='alter table s_finreport_income_%s add PRIMARY KEY (`ts_code`,`end_date`,`update_flag`);'%(stockCode[:6]) 
+            #MysqlProcessor.execSql(mysqlSession,sql,True)
             sql='alter table s_finreport_income_%s add CONSTRAINT `FK_IC_%s` FOREIGN KEY (`ts_code`) REFERENCES `u_stock_list` (`ts_code`);'%(stockCode[:6],stockCode[:6]) 
             MysqlProcessor.execSql(mysqlSession,sql,True)
                         
@@ -571,11 +571,11 @@ def processStockDataGet(stockList,startday,endday):
         except Exception as e:#出现异常
             #出现异常，则还需要继续循环，继续对该股票继续处理
             traceback.print_exc()
-            log.logger.warning('处理%s的数据时出现异常，重新进行处理'%(stockCode))
+            log.logger.warning('Exception when processing %s，try again'%(stockCode))
             time.sleep(0.3)
             continue
         else:#未出现异常
-            log.logger.info('处理完%s的财务报表、kdata、adjdata数据'%(stockCode))
+            log.logger.info('process finance report, kdata, adjdata for %s'%(stockCode))
             #partialUpdate(mysqlSession)
             
             #lastDataUpdate(mysqlSession,stockCode, "FR_StockCode")
@@ -590,7 +590,7 @@ def processStockDataGet(stockList,startday,endday):
 if __name__ == '__main__':
  
     #写入数据库的引擎    
-    mysqlProcessor=MysqlProcessor()
+    mysqlProcessor=MysqlProcessor(tsmysqlURL)
     mysqlEngine=mysqlProcessor.getMysqlEngine()
     mysqlSession=mysqlProcessor.getMysqlSession()
         

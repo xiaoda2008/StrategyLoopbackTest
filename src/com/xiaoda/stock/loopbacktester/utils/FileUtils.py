@@ -23,7 +23,7 @@ class FileProcessor(object):
             从文件中读取出内容，返回DataFrame
         '''
         tmp_lst = []
-        with open(fileStr, 'r') as f:
+        with open(fileStr, 'r', encoding='utf-8-sig') as f:
             reader=csv.reader(f)
             for row in reader:
                 tmp_lst.append(row)
